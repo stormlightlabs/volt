@@ -1,5 +1,5 @@
+import { computed, mount, signal } from "@volt";
 import { describe, expect, it } from "vitest";
-import { computed, mount, signal } from "../../src/index";
 
 describe("integration: list rendering", () => {
   it("creates a reactive todo list", () => {

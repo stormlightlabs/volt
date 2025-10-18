@@ -23,5 +23,5 @@
       "$console/*": ["./src/console/*"]
     }
   },
-  "include": ["src"]
+  "include": ["src", "tests"]
 }

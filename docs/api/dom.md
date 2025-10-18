@@ -9,8 +9,9 @@ DOM utility functions
 
 ## walkDOM
 
-Walk the DOM tree and collect all elements with data-x-* attributes.
-Returns elements in document order (parent before children).
+Walk the DOM tree and collect all elements with data-volt-* attributes in document order (parent before children).
+
+Skips children of elements with data-volt-for or data-volt-if since those will be processed when the parent element is cloned and mounted.
 
 ```typescript
 export function walkDOM(root: Element): Element[]
@@ -18,7 +19,7 @@ export function walkDOM(root: Element): Element[]
 
 ## hasVoltAttribute
 
-Check if an element has any data-x-* attributes.
+Check if an element has any data-volt-* attributes.
 
 ```typescript
 export function hasVoltAttribute(element: Element): boolean
@@ -26,7 +27,8 @@ export function hasVoltAttribute(element: Element): boolean
 
 ## getVoltAttributes
 
-Get all data-x-* attributes from an element.
+Get all data-volt-\* attributes from an element.
+Excludes charge metadata attributes (state, computed:*) that are processed separately.
 
 ```typescript
 export function getVoltAttributes(element: Element): Map<string, string>
@@ -60,7 +62,8 @@ export function toggleClass(element: Element, className: string, add: boolean): 
 ## parseClassBinding
 
 Parse a class binding expression.
-Supports both string values ("active") and object notation ({active: true}).
+Supports string values ("active"), object notation ({active: true}),
+and other primitives (true, false, numbers) which are converted to strings.
 
 ```typescript
 export function parseClassBinding(value: unknown): Map<string, boolean>

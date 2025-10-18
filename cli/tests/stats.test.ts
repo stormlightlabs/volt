@@ -1,14 +1,14 @@
+import { getLibSrcPath } from "$utils/paths.js";
 import { readFile } from "node:fs/promises";
-import { join } from "node:path";
+import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { getLibSrcPath } from "../src/utils/paths.js";
 
 describe("stats command", () => {
   it("should count lines excluding doc comments", async () => {
     const srcPath = await getLibSrcPath();
-    const testDir = join(srcPath, "core");
-    const signalFile = join(testDir, "signal.ts");
-    const content = await readFile(signalFile, "utf-8");
+    const testDir = path.join(srcPath, "core");
+    const signalFile = path.join(testDir, "signal.ts");
+    const content = await readFile(signalFile, "utf8");
 
     const lines = content.split("\n");
     let codeLines = 0;

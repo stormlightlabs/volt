@@ -20,6 +20,7 @@ export default defineConfig(({ mode }) => ({
   resolve: {
     alias: {
       "$types": path.resolve(__dirname, "./src/types"),
+      "@volt": path.resolve(__dirname, "./src/index.ts"),
       "@volt/core": path.resolve(__dirname, "./src/core"),
       "@volt/plugins": path.resolve(__dirname, "./src/plugins"),
     },

@@ -1,5 +1,5 @@
-import { persistPlugin, scrollPlugin, urlPlugin } from "@volt/plugins/index";
-import { computed, effect, mount, registerPlugin, signal } from "./index";
+import { computed, effect, mount, registerPlugin, signal } from "@volt";
+import { persistPlugin, scrollPlugin, urlPlugin } from "@volt/plugins";
 
 registerPlugin("persist", persistPlugin);
 registerPlugin("scroll", scrollPlugin);

@@ -5,20 +5,19 @@ updated: 2025-10-18
 
 # signal
 
-A reactive primitive that notifies subscribers when its value changes.
+Creates a new signal with the given initial value.
 
-## Signal
+@param initialValue - The initial value of the signal
+@returns A Signal object with get, set, and subscribe methods
 
-A reactive primitive that notifies subscribers when its value changes.
-
-## ComputedSignal
-
-A computed signal that derives its value from other signals.
+@example
+const count = signal(0);
+count.subscribe(value => console.log('Count:', value));
+count.set(1); // Logs: Count: 1
 
 ## signal
 
 Creates a new signal with the given initial value.
-Signals are reactive primitives that automatically notify subscribers when changed.
 
 ```typescript
 export function signal<T>(initialValue: T): Signal<T>
@@ -54,7 +53,6 @@ doubled.get(); // 20
 ## effect
 
 Creates a side effect that runs when dependencies change.
-Effects run immediately on creation and whenever dependencies update.
 
 ```typescript
 export function effect( effectFunction: () => void | (() => void), dependencies: Array<Signal<unknown> | ComputedSignal<unknown>>, ): () => void

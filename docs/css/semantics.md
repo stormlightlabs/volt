@@ -21,9 +21,9 @@ All design tokens defined in the stylesheet.
 - `--font-size-3xl`: `1.802rem`
 - `--font-size-4xl`: `2.027rem`
 - `--font-size-5xl`: `2.566rem`
-- `--font-sans`: `"Inter", "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif`
-- `--font-serif`: `"Iowan Old Style", "Palatino Linotype", "URW Palladio L", P052, serif`
-- `--font-mono`: `"SF Mono", "Cascadia Code", "Fira Code", "Roboto Mono", Consolas, monospace`
+- `--font-sans`: `"Inter", sans-serif`
+- `--font-serif`: `"Libre Baskerville", serif`
+- `--font-mono`: `"Google Sans Code", monospace`
 - `--line-height-tight`: `1.25`
 - `--line-height-base`: `1.6`
 - `--line-height-relaxed`: `1.8`
@@ -124,7 +124,7 @@ Dark Theme Overrides Automatically applied when user prefers dark color scheme
 
 ### `*, *::before, *::after`
 
-Modern CSS reset with sensible defaults
+CSS reset
 
 ### `html`
 
@@ -148,11 +148,11 @@ Paragraph spacing Generous spacing between paragraphs aids scanning
 
 ### `h1 + p, h2 + p, h3 + p, h4 + p, h5 + p, h6 + p`
 
-First paragraph after headings - No top margin Common convention in academic typography
+First paragraph after headings - No top margin Inspired by tufte.css
 
 ### `a`
 
-Links - Accessible and distinctive Uses accent color with underline for clarity
+Links Uses accent color with underline for clarity
 
 ### `em`
 
@@ -172,7 +172,7 @@ Small text Also used for Tufte-style sidenotes (see sidenotes section)
 
 ### `ul, ol`
 
-List spacing and indentation Nested lists inherit proper spacing
+List spacing and indentation Nested lists inherit spacing
 
 ### `li`
 
@@ -208,7 +208,7 @@ Citation element
 
 ### `code`
 
-Inline code Monospace font with subtle background for distinction
+Inline code Monospace font with subtle background
 
 ### `kbd`
 
@@ -228,7 +228,7 @@ Preformatted code blocks Horizontal scrolling for overflow, no word wrap
 
 ### `hr`
 
-Section dividers Centered decorative element with breathing room
+Section dividers Centered decorative element
 
 ### `table`
 
@@ -236,7 +236,7 @@ Table container for horizontal scrolling on small screens
 
 ### `thead`
 
-Table header styling Bold text with bottom border for separation
+Table header styling Bold text with bottom border
 
 ### `td`
 
@@ -296,15 +296,7 @@ Figures with captions Common in academic and technical writing
 
 ### `video, audio`
 
-Video and audio Responsive and accessible
-
-### `canvas, svg`
-
-Canvas and SVG
-
-### `iframe`
-
-iframe - Responsive wrapper
+Video and audio
 
 ### `article, section`
 
@@ -317,10 +309,6 @@ Aside Complementary content, styled distinctly
 ### `header`
 
 Header and Footer
-
-### `nav`
-
-Nav Navigation menus
 
 ### `details`
 

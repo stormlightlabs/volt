@@ -2,7 +2,7 @@
 
 ## Philosophy/Goals
 
-- Behavior is declared via `data-x-*` attributes.
+- Behavior is declared via `data-volt-*` attributes.
     - HTML drives the UI, not components.
 - Core under **20 KB gzipped**, zero dependencies.
 - Signals update the DOM directly without a virtual DOM.
@@ -20,13 +20,13 @@
 
 ## Concepts
 
-| Concept  | Description                                                                              |
-| -------- | ---------------------------------------------------------------------------------------- |
-| Signals  | Reactive primitives that automatically update DOM bindings when changed.                 |
-| Bindings | `data-x-text`, `data-x-html`, `data-x-class` connect attributes or text to expressions.  |
-| Actions  | `data-x-on-click`, `data-x-on-input`, etc. attach event handlers declaratively.          |
-| Streams  | `data-x-stream="/events"` listens for SSE or WebSocket updates and applies JSON patches. |
-| Plugins  | Modular extensions (`data-x-persist`, `data-x-animate`, etc.) that enhance the core.     |
+| Concept  | Description                                                                                       |
+| -------- | ------------------------------------------------------------------------------------------------- |
+| Signals  | Reactive primitives that automatically update DOM bindings when changed.                          |
+| Bindings | `data-volt-text`, `data-volt-html`, `data-volt-class` connect attributes or text to expressions.  |
+| Actions  | `data-volt-on-click`, `data-volt-on-input`, etc. attach event handlers declaratively.             |
+| Streams  | `data-volt-stream="/events"` listens for SSE or WebSocket updates and applies JSON patches.       |
+| Plugins  | Modular extensions (`data-volt-persist`, `data-volt-animate`, etc.) that enhance the core.        |
 
 ## Project Structure
 
@@ -44,7 +44,7 @@ volt/
 │   │   ├── patch.ts      # JSON patch engine
 │   │   ├── stream.ts     # SSE / WebSocket layer
 │   │   ├── plugin.ts     # plugin registration API
-│   │   └── binder.ts     # mounts and binds data-x-* attributes
+│   │   └── binder.ts     # mounts and binds data-volt-* attributes
 │   └── plugins/
 │       ├── persist.ts
 │       ├── scroll.ts

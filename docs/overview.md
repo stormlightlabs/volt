@@ -6,7 +6,7 @@ outline: deep
 
 Volt.js is a lightweight, hypermedia based reactive framework for building declarative UIs.
 
-It combines HTML-driven behavior via `data-x-*` attributes with signal-based reactivity.
+It combines HTML-driven behavior via `data-volt-*` attributes with signal-based reactivity.
 
 ## Architecture
 
@@ -33,13 +33,13 @@ No reactivity scheduler. Signals notify subscribers directly on change.
 
 ### Binding System
 
-Bindings connect signals to DOM via `data-x-*` attributes:
+Bindings connect signals to DOM via `data-volt-*` attributes:
 
 ```html
 <div id="app">
-  <p data-x-text="count">0</p>
-  <button data-x-on-click="increment">+</button>
-  <div data-x-if="isPositive">Positive</div>
+  <p data-volt-text="count">0</p>
+  <button data-volt-on-click="increment">+</button>
+  <div data-volt-if="isPositive">Positive</div>
 </div>
 ```
 
@@ -53,16 +53,16 @@ mount(document.querySelector('#app'), {
 
 Core bindings:
 
-- `data-x-text` - Update text content
-- `data-x-html` - Update HTML content
-- `data-x-class` - Toggle CSS classes
-- `data-x-on-*` - Attach event handlers
-- `data-x-if` - Conditional rendering
-- `data-x-for` - List rendering
+- `data-volt-text` - Update text content
+- `data-volt-html` - Update HTML content
+- `data-volt-class` - Toggle CSS classes
+- `data-volt-on-*` - Attach event handlers
+- `data-volt-if` - Conditional rendering
+- `data-volt-for` - List rendering
 
 ### Plugin System
 
-Extend functionality via custom `data-x-*` bindings:
+Extend functionality via custom `data-volt-*` bindings:
 
 ```js
 import { registerPlugin } from 'volt';

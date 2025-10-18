@@ -2,7 +2,7 @@
 
 ## Overview
 
-The plugin system enables extending the framework with custom `data-x-*` attribute bindings.
+The plugin system enables extending the framework with custom `data-volt-*` attribute bindings.
 
 Plugins follow the same binding patterns as core bindings (text, html, class, events) but can implement specialized behaviors like persistence, scrolling, and URL synchronization.
 
@@ -34,7 +34,7 @@ Plugins are registered using the `registerPlugin()` function:
 registerPlugin(name: string, handler: PluginHandler): void
 ```
 
-The plugin name becomes the `data-x-*` attribute suffix. For example, registering a plugin named `"tooltip"` enables `data-x-tooltip` attributes.
+The plugin name becomes the `data-volt-*` attribute suffix. For example, registering a plugin named `"tooltip"` enables `data-volt-tooltip` attributes.
 
 ### Plugin Handler
 
@@ -100,14 +100,14 @@ registerPlugin('tooltip', (context, value) => {
 
 Volt.js ships with three built-in plugins that must be explicitly registered.
 
-### data-x-persist
+### data-volt-persist
 
 Synchronizes signal values with persistent storage (`localStorage`, `sessionStorage`, `IndexedDB`).
 
 **Syntax:**
 
 ```html
-<input data-x-persist="signalName:storageType" />
+<input data-volt-persist="signalName:storageType" />
 ```
 
 **Storage Types:**
@@ -127,13 +127,13 @@ Synchronizes signal values with persistent storage (`localStorage`, `sessionStor
 
 ```html
 <!-- Persist counter to localStorage -->
-<div data-x-text="count" data-x-persist="count:local"></div>
+<div data-volt-text="count" data-volt-persist="count:local"></div>
 
 <!-- Persist form state to sessionStorage -->
-<input data-x-on-input="updateForm" data-x-persist="formData:session" />
+<input data-volt-on-input="updateForm" data-volt-persist="formData:session" />
 
 <!-- Persist large dataset to IndexedDB -->
-<div data-x-persist="userData:indexeddb"></div>
+<div data-volt-persist="userData:indexeddb"></div>
 ```
 
 **Custom Storage Adapters:**
@@ -152,7 +152,7 @@ registerStorageAdapter('custom', {
 });
 ```
 
-### data-x-scroll
+### data-volt-scroll
 
 Manages scroll behavior including position restoration, programmatic scrolling, scroll spy, and smooth scrolling.
 
@@ -160,16 +160,16 @@ Manages scroll behavior including position restoration, programmatic scrolling, 
 
 ```html
 <!-- Scroll position restoration -->
-<div data-x-scroll="restore:position"></div>
+<div data-volt-scroll="restore:position"></div>
 
 <!-- Scroll to element when signal changes -->
-<div data-x-scroll="scrollTo:targetId"></div>
+<div data-volt-scroll="scrollTo:targetId"></div>
 
 <!-- Scroll spy (updates signal when in viewport) -->
-<div data-x-scroll="spy:isVisible"></div>
+<div data-volt-scroll="spy:isVisible"></div>
 
 <!-- Smooth scroll behavior -->
-<div data-x-scroll="smooth:true"></div>
+<div data-volt-scroll="smooth:true"></div>
 ```
 
 **Behaviors:**
@@ -177,7 +177,7 @@ Manages scroll behavior including position restoration, programmatic scrolling, 
 **Position Restoration:**
 
 ```html
-<div id="content" data-x-scroll="restore:scrollPos">
+<div id="content" data-volt-scroll="restore:scrollPos">
   <!-- scroll position saved on scroll, restored on mount -->
 </div>
 ```
@@ -187,8 +187,8 @@ Saves scroll position to the specified signal and restores on mount.
 **Scroll-To:**
 
 ```html
-<button data-x-on-click="scrollToSection.set('section2')">Go to Section 2</button>
-<div id="section2" data-x-scroll="scrollTo:scrollToSection"></div>
+<button data-volt-on-click="scrollToSection.set('section2')">Go to Section 2</button>
+<div id="section2" data-volt-scroll="scrollTo:scrollToSection"></div>
 ```
 
 Scrolls to element when the specified signal changes to match element's ID or selector.
@@ -197,11 +197,11 @@ Scrolls to element when the specified signal changes to match element's ID or se
 
 ```html
 <nav>
-  <a data-x-class="{ active: section1Visible }">Section 1</a>
-  <a data-x-class="{ active: section2Visible }">Section 2</a>
+  <a data-volt-class="{ active: section1Visible }">Section 1</a>
+  <a data-volt-class="{ active: section2Visible }">Section 2</a>
 </nav>
-<div data-x-scroll="spy:section1Visible"></div>
-<div data-x-scroll="spy:section2Visible"></div>
+<div data-volt-scroll="spy:section1Visible"></div>
+<div data-volt-scroll="spy:section2Visible"></div>
 ```
 
 Updates signal with boolean visibility state using Intersection Observer.
@@ -209,12 +209,12 @@ Updates signal with boolean visibility state using Intersection Observer.
 **Smooth Scrolling:**
 
 ```html
-<div data-x-scroll="smooth:behavior"></div>
+<div data-volt-scroll="smooth:behavior"></div>
 ```
 
 Enables smooth scrolling with configurable behavior from signal.
 
-### data-x-url
+### data-volt-url
 
 Synchronizes signal values with URL parameters and hash-based routing.
 
@@ -222,13 +222,13 @@ Synchronizes signal values with URL parameters and hash-based routing.
 
 ```html
 <!-- One-way: Read URL param into signal on mount -->
-<input data-x-url="read:searchQuery" />
+<input data-volt-url="read:searchQuery" />
 
 <!-- Bidirectional: Keep URL and signal in sync -->
-<input data-x-url="sync:filter" />
+<input data-volt-url="sync:filter" />
 
 <!-- Hash-based routing -->
-<div data-x-url="hash:currentRoute"></div>
+<div data-volt-url="hash:currentRoute"></div>
 ```
 
 **Behaviors:**
@@ -237,7 +237,7 @@ Synchronizes signal values with URL parameters and hash-based routing.
 
 ```html
 <!-- Initialize signal from ?tab=profile -->
-<div data-x-url="read:tab"></div>
+<div data-volt-url="read:tab"></div>
 ```
 
 Reads URL parameter on mount and sets signal value. Signal changes do not update URL.
@@ -246,7 +246,7 @@ Reads URL parameter on mount and sets signal value. Signal changes do not update
 
 ```html
 <!-- Keep ?search=query in sync with searchQuery signal -->
-<input data-x-on-input="handleSearch" data-x-url="sync:searchQuery" />
+<input data-volt-on-input="handleSearch" data-volt-url="sync:searchQuery" />
 ```
 
 Changes to signal update URL parameter, changes to URL update signal. Uses History API for clean URLs.
@@ -255,8 +255,8 @@ Changes to signal update URL parameter, changes to URL update signal. Uses Histo
 
 ```html
 <!-- Sync with #/page/about -->
-<div data-x-url="hash:route"></div>
-<div data-x-text="route === '/page/about' ? 'About Page' : 'Home'"></div>
+<div data-volt-url="hash:route"></div>
+<div data-volt-text="route === '/page/about' ? 'About Page' : 'Home'"></div>
 ```
 
 Keeps hash portion of URL in sync with signal. Useful for client-side routing.

@@ -2,7 +2,7 @@
  * Async effect system with abort, race protection, debounce, throttle, and error handling
  */
 
-import type { AsyncEffectFunction, AsyncEffectOptions, ComputedSignal, Signal } from "../types/volt";
+import type { AsyncEffectFunction, AsyncEffectOptions, ComputedSignal, Signal } from "$types/volt";
 
 /**
  * Creates an async side effect that runs when dependencies change.

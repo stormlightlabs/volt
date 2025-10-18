@@ -2,7 +2,7 @@
  * Binder system for mounting and managing Volt.js bindings
  */
 
-import type { BindingContext, CleanupFunction, PluginContext, Scope, Signal } from "../types/volt";
+import type { BindingContext, CleanupFunction, PluginContext, Scope, Signal } from "$types/volt";
 import { getVoltAttributes, parseClassBinding, setHTML, setText, toggleClass, walkDOM } from "./dom";
 import { evaluate, extractDependencies, isSignal } from "./evaluator";
 import { executeGlobalHooks, notifyBindingCreated, notifyElementMounted, notifyElementUnmounted } from "./lifecycle";

@@ -29,4 +29,4 @@ export {
 } from "@volt/core/lifecycle";
 export { clearPlugins, getRegisteredPlugins, hasPlugin, registerPlugin, unregisterPlugin } from "@volt/core/plugin";
 export { computed, effect, signal } from "@volt/core/signal";
-export { persistPlugin, registerStorageAdapter, scrollPlugin, urlPlugin } from "@volt/plugins/index";
+export { persistPlugin, registerStorageAdapter, scrollPlugin, urlPlugin } from "@volt/plugins";

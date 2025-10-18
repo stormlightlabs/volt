@@ -1,6 +1,3 @@
-import { existsSync } from "node:fs";
-import { join } from "node:path";
-import { describe, expect, it } from "vitest";
 import {
   findMonorepoRoot,
   getDocsPath,
@@ -8,14 +5,17 @@ import {
   getLibPath,
   getLibSrcPath,
   getLibTestPath,
-} from "../src/utils/paths.js";
+} from "$utils/paths.js";
+import { existsSync } from "node:fs";
+import path from "node:path";
+import { describe, expect, it } from "vitest";
 
 describe("path utilities", () => {
   it("should find monorepo root from cli directory", async () => {
     const root = await findMonorepoRoot(process.cwd());
 
     expect(root).toBeTruthy();
-    expect(existsSync(join(root, "pnpm-workspace.yaml"))).toBe(true);
+    expect(existsSync(path.join(root, "pnpm-workspace.yaml"))).toBe(true);
   });
 
   it("should find lib package path", async () => {
@@ -23,7 +23,7 @@ describe("path utilities", () => {
 
     expect(libPath).toBeTruthy();
     expect(libPath).toContain("lib");
-    expect(existsSync(join(libPath, "package.json"))).toBe(true);
+    expect(existsSync(path.join(libPath, "package.json"))).toBe(true);
   });
 
   it("should find lib src path", async () => {
@@ -49,7 +49,7 @@ describe("path utilities", () => {
 
     expect(docsPath).toBeTruthy();
     expect(docsPath).toContain("docs");
-    expect(existsSync(join(docsPath, "package.json"))).toBe(true);
+    expect(existsSync(path.join(docsPath, "package.json"))).toBe(true);
   });
 
   it("should find examples directory path", async () => {

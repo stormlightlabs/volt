@@ -5,25 +5,31 @@ updated: 2025-10-18
 
 # evaluator
 
-Safe expression evaluation of simple expressions without using eval() for bindings
+Safe expression evaluation with operators support
 
-## Scope
+Implements a recursive descent parser for expressions without using eval()
 
-Safe expression evaluation of simple expressions without using eval() for bindings
+## isSignal
 
 ```typescript
-Record<string, unknown>
+export function isSignal(value: unknown): value is Dep
 ```
 
 ## evaluate
 
-Evaluate a simple expression against a scope object.
-Supports:
-- Property access: "count", "user.name", "items.length"
-- Simple literals: "true", "false", "null", "undefined"
-- Numbers: "42", "3.14"
-- Strings: "'hello'", '"world"'
+Evaluate an expression against a scope object.
+
+Supports literals, property access, operators, and member access.
 
 ```typescript
-export function evaluate(expression: string, scope: Scope): unknown
+export function evaluate(expr: string, scope: Scope): unknown
+```
+
+## extractDependencies
+
+Extract all signal dependencies from an expression by finding identifiers
+that correspond to signals in the scope.
+
+```typescript
+export function extractDependencies(expr: string, scope: Scope): Array<Dep>
 ```

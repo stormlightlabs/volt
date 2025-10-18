@@ -4,7 +4,7 @@
  * Handles declarative state initialization via data-volt-state and data-volt-computed
  */
 
-import type { ChargedRoot, ChargeResult, Scope } from "../types/volt";
+import type { ChargedRoot, ChargeResult, Scope } from "$types/volt";
 import { mount } from "./binder";
 import { evaluate, extractDependencies } from "./evaluator";
 import { computed, signal } from "./signal";

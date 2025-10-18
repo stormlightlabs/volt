@@ -1,4 +1,4 @@
-import type { ComputedSignal, Signal } from "../types/volt";
+import type { ComputedSignal, Signal } from "$types/volt";
 
 /**
  * Creates a new signal with the given initial value.

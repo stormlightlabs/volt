@@ -2,15 +2,15 @@
  * Plugin system for extending Volt.js with custom bindings
  */
 
-import type { PluginHandler } from "../types/volt";
+import type { PluginHandler } from "$types/volt";
 
 const pluginRegistry = new Map<string, PluginHandler>();
 
 /**
  * Register a custom plugin with a given name.
- * Plugins extend Volt.js with custom data-x-* attribute bindings.
+ * Plugins extend Volt.js with custom data-volt-* attribute bindings.
  *
- * @param name - Plugin name (will be used as data-x-{name})
+ * @param name - Plugin name (will be used as data-volt-{name})
  * @param handler - Plugin handler function
  *
  * @example

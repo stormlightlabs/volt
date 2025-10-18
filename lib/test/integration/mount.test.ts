@@ -1,5 +1,5 @@
+import { mount, signal } from "@volt";
 import { describe, expect, it } from "vitest";
-import { mount, signal } from "../../src/index";
 
 describe("integration: mount", () => {
   it("creates a reactive counter", () => {
