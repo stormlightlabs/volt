@@ -4,5 +4,5 @@
  * @packageDocumentation
  */
 
-export { signal, type Signal } from "./core/signal";
 export { mount } from "./core/binder";
+export { computed, type ComputedSignal, effect, type Signal, signal } from "./core/signal";

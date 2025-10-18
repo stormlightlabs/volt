@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { signal } from "../../src/core/signal";
+import { computed, effect, signal } from "../../src/core/signal";
 
 describe("signal", () => {
   it("creates a signal with an initial value", () => {
@@ -120,5 +120,188 @@ describe("signal", () => {
 
     expect(subscriber).toHaveBeenCalledTimes(1);
     expect(subscriber).toHaveBeenCalledWith(5);
+  });
+});
+
+describe("computed", () => {
+  it("computes initial value", () => {
+    const count = signal(5);
+    const doubled = computed(() => count.get() * 2, [count]);
+
+    expect(doubled.get()).toBe(10);
+  });
+
+  it("recomputes when dependency changes", () => {
+    const count = signal(5);
+    const doubled = computed(() => count.get() * 2, [count]);
+
+    expect(doubled.get()).toBe(10);
+
+    count.set(10);
+    expect(doubled.get()).toBe(20);
+
+    count.set(0);
+    expect(doubled.get()).toBe(0);
+  });
+
+  it("notifies subscribers when value changes", () => {
+    const count = signal(5);
+    const doubled = computed(() => count.get() * 2, [count]);
+    const subscriber = vi.fn();
+
+    doubled.subscribe(subscriber);
+
+    count.set(10);
+    expect(subscriber).toHaveBeenCalledWith(20);
+    expect(subscriber).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not notify when computed value is the same", () => {
+    const count = signal(5);
+    const isPositive = computed(() => count.get() > 0, [count]);
+    const subscriber = vi.fn();
+
+    isPositive.subscribe(subscriber);
+
+    count.set(10);
+    expect(subscriber).not.toHaveBeenCalled();
+
+    count.set(-1);
+    expect(subscriber).toHaveBeenCalledWith(false);
+    expect(subscriber).toHaveBeenCalledTimes(1);
+  });
+
+  it("supports multiple dependencies", () => {
+    const a = signal(2);
+    const b = signal(3);
+    const sum = computed(() => a.get() + b.get(), [a, b]);
+
+    expect(sum.get()).toBe(5);
+
+    a.set(5);
+    expect(sum.get()).toBe(8);
+
+    b.set(10);
+    expect(sum.get()).toBe(15);
+  });
+
+  it("can depend on other computed signals", () => {
+    const count = signal(2);
+    const doubled = computed(() => count.get() * 2, [count]);
+    const quadrupled = computed(() => doubled.get() * 2, [doubled]);
+
+    expect(quadrupled.get()).toBe(8);
+
+    count.set(5);
+    expect(doubled.get()).toBe(10);
+    expect(quadrupled.get()).toBe(20);
+  });
+
+  it("allows unsubscribing", () => {
+    const count = signal(5);
+    const doubled = computed(() => count.get() * 2, [count]);
+    const subscriber = vi.fn();
+
+    const unsubscribe = doubled.subscribe(subscriber);
+    unsubscribe();
+
+    count.set(10);
+    expect(subscriber).not.toHaveBeenCalled();
+  });
+});
+
+describe("effect", () => {
+  it("runs immediately on creation", () => {
+    const count = signal(0);
+    const effectFunction = vi.fn();
+
+    effect(effectFunction, [count]);
+
+    expect(effectFunction).toHaveBeenCalledTimes(1);
+  });
+
+  it("runs when dependency changes", () => {
+    const count = signal(0);
+    const effectFunction = vi.fn();
+
+    effect(effectFunction, [count]);
+
+    count.set(1);
+    count.set(2);
+
+    expect(effectFunction).toHaveBeenCalledTimes(3);
+  });
+
+  it("can be cleaned up", () => {
+    const count = signal(0);
+    const effectFunction = vi.fn();
+
+    const cleanup = effect(effectFunction, [count]);
+
+    expect(effectFunction).toHaveBeenCalledTimes(1);
+
+    cleanup();
+
+    count.set(1);
+    expect(effectFunction).toHaveBeenCalledTimes(1);
+  });
+
+  it("runs cleanup function from previous effect", () => {
+    const count = signal(0);
+    const innerCleanup = vi.fn();
+    const effectFunction = vi.fn(() => innerCleanup);
+
+    effect(effectFunction, [count]);
+
+    expect(innerCleanup).not.toHaveBeenCalled();
+
+    count.set(1);
+    expect(innerCleanup).toHaveBeenCalledTimes(1);
+
+    count.set(2);
+    expect(innerCleanup).toHaveBeenCalledTimes(2);
+  });
+
+  it("runs final cleanup when effect is disposed", () => {
+    const count = signal(0);
+    const innerCleanup = vi.fn();
+    const effectFunction = vi.fn(() => innerCleanup);
+
+    const cleanup = effect(effectFunction, [count]);
+
+    count.set(1);
+    expect(innerCleanup).toHaveBeenCalledTimes(1);
+
+    cleanup();
+    expect(innerCleanup).toHaveBeenCalledTimes(2);
+  });
+
+  it("supports multiple dependencies", () => {
+    const a = signal(1);
+    const b = signal(2);
+    const effectFunction = vi.fn();
+
+    effect(effectFunction, [a, b]);
+
+    expect(effectFunction).toHaveBeenCalledTimes(1);
+
+    a.set(5);
+    expect(effectFunction).toHaveBeenCalledTimes(2);
+
+    b.set(10);
+    expect(effectFunction).toHaveBeenCalledTimes(3);
+  });
+
+  it("can depend on computed signals", () => {
+    const count = signal(2);
+    const doubled = computed(() => count.get() * 2, [count]);
+    const effectFunction = vi.fn();
+
+    effect(effectFunction, [doubled]);
+
+    expect(effectFunction).toHaveBeenCalledTimes(1);
+
+    count.set(5);
+    expect(effectFunction).toHaveBeenCalledTimes(2);
   });
 });

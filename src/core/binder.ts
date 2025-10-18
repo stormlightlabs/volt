@@ -64,6 +64,12 @@ export function mount(root: Element, scope: Scope): CleanupFunction {
  * @param value - Attribute value (expression)
  */
 function bindAttribute(context: BindingContext, name: string, value: string): void {
+  if (name.startsWith("on-")) {
+    const eventName = name.slice(3);
+    bindEvent(context, eventName, value);
+    return;
+  }
+
   switch (name) {
     case "text": {
       bindText(context, value);
@@ -162,6 +168,35 @@ function bindClass(context: BindingContext, expression: string): void {
     const unsubscribe = signal.subscribe(update);
     context.cleanups.push(unsubscribe);
   }
+}
+
+/**
+ * Bind data-x-on-* to attach event listeners.
+ * Provides $el and $event in the scope for the event handler.
+ *
+ * @param context - Binding context
+ * @param eventName - Event name (e.g., "click", "input")
+ * @param expression - Expression to evaluate when event fires
+ */
+function bindEvent(context: BindingContext, eventName: string, expression: string): void {
+  const handler = (event: Event) => {
+    const eventScope: Scope = { ...context.scope, $el: context.element, $event: event };
+
+    try {
+      const result = evaluate(expression, eventScope);
+      if (typeof result === "function") {
+        result(event);
+      }
+    } catch (error) {
+      console.error(`Error in event handler (${eventName}):`, error);
+    }
+  };
+
+  context.element.addEventListener(eventName, handler);
+
+  context.cleanups.push(() => {
+    context.element.removeEventListener(eventName, handler);
+  });
 }
 
 /**
