@@ -1,6 +1,14 @@
+import path from "node:path";
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({
+  resolve: {
+    alias: {
+      "$types": path.resolve(__dirname, "./src/types"),
+      "@volt/core": path.resolve(__dirname, "./src/core"),
+      "@volt/plugins": path.resolve(__dirname, "./src/plugins"),
+    },
+  },
   test: {
     environment: "jsdom",
     setupFiles: "./test/setupTests.ts",

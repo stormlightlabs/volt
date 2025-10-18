@@ -4,7 +4,7 @@
  * Supports localStorage, sessionStorage, IndexedDB, and custom adapters
  */
 
-import type { PluginContext, Signal, StorageAdapter } from "../types/volt";
+import type { PluginContext, Signal, StorageAdapter } from "$types/volt";
 
 /**
  * Registry of custom storage adapters

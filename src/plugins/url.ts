@@ -3,7 +3,7 @@
  * Supports one-way read, bidirectional sync, and hash-based routing
  */
 
-import type { PluginContext, Signal } from "../types/volt";
+import type { PluginContext, Signal } from "$types/volt";
 
 /**
  * URL plugin handler.

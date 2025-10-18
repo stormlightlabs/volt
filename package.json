@@ -19,6 +19,7 @@
     "@eslint/js": "^9.38.0",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.9.1",
+    "@types/node": "^24.8.1",
     "@vitest/coverage-v8": "3.2.4",
     "dprint": "^0.50.2",
     "eslint": "^9.38.0",
@@ -32,12 +33,5 @@
     "vitest": "^3.2.4",
     "vue": "^3.5.22"
   },
-  "pnpm": {
-    "overrides": {
-      "vite": "npm:rolldown-vite@7.1.14"
-    },
-    "onlyBuiltDependencies": [
-      "dprint"
-    ]
-  }
+  "pnpm": { "overrides": { "vite": "npm:rolldown-vite@7.1.14" }, "onlyBuiltDependencies": ["dprint"] }
 }

@@ -3,7 +3,7 @@
  * Supports position restoration, scroll-to, scroll spy, and smooth scrolling
  */
 
-import type { PluginContext, Signal } from "../types/volt";
+import type { PluginContext, Signal } from "$types/volt";
 
 /**
  * Scroll plugin handler.
