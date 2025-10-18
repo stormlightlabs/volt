@@ -1,45 +1,7 @@
-/**
- * A reactive primitive that notifies subscribers when its value changes.
- */
-export interface Signal<T> {
-  /**
-   * Get the current value of the signal.
-   */
-  get(): T;
-
-  /**
-   * Update the signal's value.
-   * If the new value differs from the current value, subscribers will be notified.
-   */
-  set(value: T): void;
-
-  /**
-   * Subscribe to changes in the signal's value.
-   * The callback is invoked with the new value whenever it changes.
-   * Returns an unsubscribe function to remove the subscription.
-   */
-  subscribe(callback: (value: T) => void): () => void;
-}
-
-/**
- * A computed signal that derives its value from other signals.
- */
-export interface ComputedSignal<T> {
-  /**
-   * Get the current computed value.
-   */
-  get(): T;
-
-  /**
-   * Subscribe to changes in the computed value.
-   * Returns an unsubscribe function to remove the subscription.
-   */
-  subscribe(callback: (value: T) => void): () => void;
-}
+import type { ComputedSignal, Signal } from "../types/volt";
 
 /**
  * Creates a new signal with the given initial value.
- * Signals are reactive primitives that automatically notify subscribers when changed.
  *
  * @param initialValue - The initial value of the signal
  * @returns A Signal object with get, set, and subscribe methods
@@ -148,7 +110,6 @@ export function computed<T>(
 
 /**
  * Creates a side effect that runs when dependencies change.
- * Effects run immediately on creation and whenever dependencies update.
  *
  * @param effectFunction - Function to run as a side effect
  * @param dependencies - Array of signals this effect depends on

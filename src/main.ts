@@ -1,9 +1,17 @@
-import { computed, effect, mount, signal } from "./index";
+import { computed, effect, mount, registerPlugin, signal } from "./index";
+import { persistPlugin, scrollPlugin, urlPlugin } from "./plugins";
+
+registerPlugin("persist", persistPlugin);
+registerPlugin("scroll", scrollPlugin);
+registerPlugin("url", urlPlugin);
 
 const count = signal(0);
 const message = signal("Welcome to Volt.js!");
 const isActive = signal(true);
 const inputValue = signal("");
+const scrollPos = signal(0);
+const section1Visible = signal(false);
+const section2Visible = signal(false);
 
 const doubled = computed(() => count.get() * 2, [count]);
 
@@ -17,6 +25,9 @@ const scope = {
   message,
   isActive,
   inputValue,
+  scrollPos,
+  section1Visible,
+  section2Visible,
   classes: signal({ active: true, highlight: false }),
   increment: () => {
     count.set(count.get() + 1);

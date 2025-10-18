@@ -2,7 +2,7 @@
  * Safe expression evaluation of simple expressions without using eval() for bindings
  */
 
-export type Scope = Record<string, unknown>;
+import type { Scope } from "../types/volt";
 
 /**
  * Evaluate a simple expression against a scope object.
@@ -87,12 +87,10 @@ function resolvePath(path: string, scope: Scope): unknown {
  * @returns true if the value is a Signal
  */
 function isSignal(value: unknown): value is { get: () => unknown } {
-  return (
-    typeof value === "object" &&
-    value !== null &&
-    "get" in value &&
-    "set" in value &&
-    "subscribe" in value &&
-    typeof value.get === "function"
-  );
+  return (typeof value === "object"
+    && value !== null
+    && "get" in value
+    && "set" in value
+    && "subscribe" in value
+    && typeof value.get === "function");
 }

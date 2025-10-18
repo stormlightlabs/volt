@@ -2,23 +2,10 @@
  * Binder system for mounting and managing Volt.js bindings
  */
 
+import type { BindingContext, CleanupFunction, PluginContext, Scope, Signal } from "../types/volt";
 import { getVoltAttributes, parseClassBinding, setHTML, setText, toggleClass, walkDOM } from "./dom";
-import { evaluate, type Scope } from "./evaluator";
-import type { Signal } from "./signal";
-
-/**
- * Cleanup function returned by binding handlers
- */
-type CleanupFunction = () => void;
-
-/**
- * Context object available to all bindings
- */
-interface BindingContext {
-  element: Element;
-  scope: Scope;
-  cleanups: CleanupFunction[];
-}
+import { evaluate } from "./evaluator";
+import { getPlugin } from "./plugin";
 
 /**
  * Mount Volt.js on a root element and its descendants.
@@ -84,7 +71,17 @@ function bindAttribute(context: BindingContext, name: string, value: string): vo
       break;
     }
     default: {
-      console.warn(`Unknown binding: data-x-${name}`);
+      const plugin = getPlugin(name);
+      if (plugin) {
+        const pluginContext = createPluginContext(context);
+        try {
+          plugin(pluginContext, value);
+        } catch (error) {
+          console.error(`Error in plugin "${name}":`, error);
+        }
+      } else {
+        console.warn(`Unknown binding: data-x-${name}`);
+      }
     }
   }
 }
@@ -231,4 +228,23 @@ function findSignalInScope(scope: Scope, path: string): Signal<unknown> | undefi
   }
 
   return undefined;
+}
+
+/**
+ * Create a plugin context from a binding context.
+ * Provides the plugin with access to utilities and cleanup registration.
+ *
+ * @param bindingContext - Internal binding context
+ * @returns PluginContext for the plugin handler
+ */
+function createPluginContext(bindingContext: BindingContext): PluginContext {
+  return {
+    element: bindingContext.element,
+    scope: bindingContext.scope,
+    addCleanup: (fn) => {
+      bindingContext.cleanups.push(fn);
+    },
+    findSignal: (path) => findSignalInScope(bindingContext.scope, path),
+    evaluate: (expression) => evaluate(expression, bindingContext.scope),
+  };
 }

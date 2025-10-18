@@ -24,3 +24,4 @@ dist-ssr
 *.sw?
 
 **/.vitepress/cache/
+coverage/

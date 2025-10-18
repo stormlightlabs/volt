@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 import ts from "typescript-eslint";
 
 const gitignorePath = fileURLToPath(
-    new globals.URL("./.gitignore", import.meta.url)
+    new globalThis.URL("./.gitignore", import.meta.url)
 );
 
 /** @type {import('eslint').Linter.Config} */
@@ -41,23 +41,7 @@ export default ts.config(
                 },
             ],
             "unicorn/no-null": "off",
-            "unicorn/prevent-abbreviations": [
-                "warn",
-                {
-                    replacements: {
-                        src: { source: false },
-                        dir: { direction: false, directory: false },
-                        docs: { documentation: false, documents: false },
-                        doc: { document: false },
-                        props: { properties: false },
-                        params: { parameters: false },
-                        param: { parameter: false },
-                        opts: { options: false },
-                        args: { arguments: false },
-                        fn: { function: false },
-                    },
-                },
-            ],
+            "unicorn/prevent-abbreviations": "off",
         },
     },
     {

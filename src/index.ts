@@ -5,4 +5,6 @@
  */
 
 export { mount } from "./core/binder";
-export { computed, type ComputedSignal, effect, type Signal, signal } from "./core/signal";
+export { clearPlugins, getRegisteredPlugins, hasPlugin, registerPlugin, unregisterPlugin } from "./core/plugin";
+export { computed, effect, signal } from "./core/signal";
+export type { ComputedSignal, PluginContext, PluginHandler, Signal } from "./types/volt";

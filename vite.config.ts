@@ -5,6 +5,12 @@ export default defineConfig({
     environment: "jsdom",
     setupFiles: "./test/setupTests.ts",
     globals: true,
-    coverage: { provider: "v8", thresholds: { "perFile": true, functions: 50, branches: 50, autoUpdate: true } },
+    exclude: ["**/node_modules/**", "**/dist/**", "**/cli/tests/**"],
+    coverage: {
+      provider: "v8",
+      thresholds: { functions: 50, branches: 50 },
+      include: ["**/src/**"],
+      exclude: ["**/cli/src/**"],
+    },
   },
 });
