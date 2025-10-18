@@ -28,6 +28,7 @@ export default ts.config(
             "eslint.config.js",
             "vite.config.ts",
             "./examples/**",
+            "./docs/**",
         ],
         rules: {
             "no-undef": "off",
