@@ -1,6 +1,11 @@
 {
   "typescript": { "preferSingleLine": true, "jsx.bracketPosition": "sameLine" },
   "json": { "preferSingleLine": true, "lineWidth": 121, "indentWidth": 2 },
+  "markup": { "preferAttrsSingleLine": true, "printWidth": 121, "styleIndent": true },
   "excludes": ["**/node_modules"],
-  "plugins": ["https://plugins.dprint.dev/typescript-0.95.8.wasm", "https://plugins.dprint.dev/json-0.20.0.wasm"]
+  "plugins": [
+    "https://plugins.dprint.dev/typescript-0.95.8.wasm",
+    "https://plugins.dprint.dev/json-0.20.0.wasm",
+    "https://plugins.dprint.dev/g-plane/markup_fmt-v0.24.0.wasm"
+  ]
 }

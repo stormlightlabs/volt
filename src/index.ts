@@ -5,3 +5,4 @@
  */
 
 export { signal, type Signal } from "./core/signal";
+export { mount } from "./core/binder";

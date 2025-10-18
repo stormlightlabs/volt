@@ -51,6 +51,7 @@ export function evaluate(expression: string, scope: Scope): unknown {
 /**
  * Resolve a property path in a scope object.
  * Supports nested property access like "user.profile.name".
+ * Automatically unwraps signals by calling .get().
  *
  * @param path - The property path (e.g., "user.name")
  * @param scope - The scope object
@@ -72,5 +73,26 @@ function resolvePath(path: string, scope: Scope): unknown {
     }
   }
 
+  if (isSignal(current)) {
+    return current.get();
+  }
+
   return current;
+}
+
+/**
+ * Check if a value is a Signal.
+ *
+ * @param value - Value to check
+ * @returns true if the value is a Signal
+ */
+function isSignal(value: unknown): value is { get: () => unknown } {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "get" in value &&
+    "set" in value &&
+    "subscribe" in value &&
+    typeof value.get === "function"
+  );
 }
