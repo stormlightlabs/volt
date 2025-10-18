@@ -15,25 +15,25 @@
   --vp-c-sonics-green-1: #2a6b5d;
   --vp-c-sonics-green-2: #1f5248;
   --vp-c-sonics-green-3: #173F35;
-  --vp-c-sonics-green-soft: rgba(23, 63, 53, 0.14);
+  --vp-c-sonics-green-soft: #c5dbd7;
 
   /* SuperSonics Yellow - Secondary/Warning */
   --vp-c-sonics-yellow-1: #ffbb33;
   --vp-c-sonics-yellow-2: #ffad1a;
   --vp-c-sonics-yellow-3: #FFA300;
-  --vp-c-sonics-yellow-soft: rgba(255, 163, 0, 0.14);
+  --vp-c-sonics-yellow-soft: #ffefc2;
 
   /* SuperSonics Red - Danger */
   --vp-c-sonics-red-1: #c24348;
   --vp-c-sonics-red-2: #b03338;
   --vp-c-sonics-red-3: #9E2A2F;
-  --vp-c-sonics-red-soft: rgba(158, 42, 47, 0.14);
+  --vp-c-sonics-red-soft: #edd5d7;
 
   /* SuperSonics Bronze - Accent */
   --vp-c-sonics-bronze-1: #a3836b;
   --vp-c-sonics-bronze-2: #97735a;
   --vp-c-sonics-bronze-3: #8B634B;
-  --vp-c-sonics-bronze-soft: rgba(139, 99, 75, 0.14);
+  --vp-c-sonics-bronze-soft: #e8ddd3;
 }
 
 /**
@@ -45,25 +45,21 @@
   --vp-c-default-3: var(--vp-c-gray-3);
   --vp-c-default-soft: var(--vp-c-gray-soft);
 
-  /* Use Emerald Green as primary brand color */
   --vp-c-brand-1: var(--vp-c-sonics-green-1);
   --vp-c-brand-2: var(--vp-c-sonics-green-2);
   --vp-c-brand-3: var(--vp-c-sonics-green-3);
   --vp-c-brand-soft: var(--vp-c-sonics-green-soft);
 
-  /* Tips use Bronze accent */
   --vp-c-tip-1: var(--vp-c-sonics-bronze-1);
   --vp-c-tip-2: var(--vp-c-sonics-bronze-2);
   --vp-c-tip-3: var(--vp-c-sonics-bronze-3);
   --vp-c-tip-soft: var(--vp-c-sonics-bronze-soft);
 
-  /* Warnings use Yellow */
   --vp-c-warning-1: var(--vp-c-sonics-yellow-1);
   --vp-c-warning-2: var(--vp-c-sonics-yellow-2);
   --vp-c-warning-3: var(--vp-c-sonics-yellow-3);
   --vp-c-warning-soft: var(--vp-c-sonics-yellow-soft);
 
-  /* Danger uses Red */
   --vp-c-danger-1: var(--vp-c-sonics-red-1);
   --vp-c-danger-2: var(--vp-c-sonics-red-2);
   --vp-c-danger-3: var(--vp-c-sonics-red-3);
@@ -71,10 +67,10 @@
 }
 
 .dark {
-  /* Enhance dark mode background */
-  --vp-c-bg: #0d1117;
-  --vp-c-bg-soft: #161b22;
-  --vp-c-bg-mute: #1c2128;
+  --vp-c-bg: #1a1a1a;
+  --vp-c-bg-soft: #242424;
+  --vp-c-bg-mute: #2e2e2e;
+  --vp-c-bg-alt: #202020;
 }
 
 /**
@@ -92,9 +88,7 @@
   --vp-button-brand-active-bg: var(--vp-c-brand-1);
 }
 
-/**
- * Home
- **/
+
 :root {
   --vp-home-hero-name-color: transparent;
   --vp-home-hero-name-background: -webkit-linear-gradient(
@@ -123,9 +117,7 @@
   }
 }
 
-/**
- * Custom Block
- **/
+
 :root {
   --vp-custom-block-tip-border: transparent;
   --vp-custom-block-tip-text: var(--vp-c-text-1);

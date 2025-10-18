@@ -5,13 +5,13 @@ layout: home
 hero:
   name: "Volt.js"
   text: "A reactive, hypermedia framework."
-  tagline: My great project tagline
+  tagline: A reactive, hypermedia framework.
   actions:
     - theme: brand
-      text: Markdown Examples
-      link: /markdown-examples
+      text: Overview
+      link: /overview
     - theme: alt
-      text: API Examples
+      text: API Reference
       link: /api-examples
 
 features:

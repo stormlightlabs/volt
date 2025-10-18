@@ -9,10 +9,11 @@ Volt CSS embraces semantic HTML5 and lets the content structure define the prese
 ### Core Principles
 
 - **Classless**: Style semantic HTML elements directly.
-- Optimized line lengths, modular type scale, and generous whitespace optimized for reading
-- Automatic light and dark modes via `prefers-color-scheme` to respect user preferences with carefully calibrated color palettes for both modes.
-- **Accessibility**: WCAG AA contrast ratios, keyboard navigation support, and semantic HTML patterns
-- Mobile-first (ish) design that adapts gracefully from phones to wide desktop monitors without compromising readability.
+- **Accessible**: WCAG AA contrast ratios, keyboard navigation support, and semantic HTML patterns
+
+- Optimized line lengths, modular type scale, and whitespace optimized for reading
+- Automatic light and dark modes via `prefers-color-scheme`
+- Mobile-first (ish) design that doesn't compromise readability
 
 ## Inspiration
 
@@ -38,7 +39,7 @@ All semantic HTML5 elements are styled out of the box:
 
 ### Tufte-Style Sidenotes
 
-Inspired by Edward Tufte's beautiful book design, margin notes can be added using simple `<small>` elements within paragraphs.
+Inspired by Edward Tufte's design principles, margin notes can be added using simple `<small>` elements within paragraphs.
 
 **Desktop**: Notes appear in the right margin
 **Mobile**: Notes appear inline with subtle styling
@@ -78,8 +79,6 @@ The stylesheet automatically switches to dark mode when the user's system prefer
   /* Dark theme colors applied automatically */
 }
 ```
-
-Both themes use carefully selected colors with proper contrast ratios for accessibility.
 
 ## Usage
 
@@ -124,8 +123,12 @@ Include the stylesheet in your HTML `<head>`:
       <cite>Author Name</cite>
     </blockquote>
 
-    <pre><code>// Code blocks use monospace fonts
-const example = "syntax highlighting not included";</code></pre>
+    <pre>
+      <code>
+        // Code blocks use monospace fonts
+        const example = "syntax highlighting not included";
+      </code>
+    </pre>
 
     <table>
       <thead>
@@ -151,7 +154,7 @@ const example = "syntax highlighting not included";</code></pre>
 
 ### Forms
 
-Forms get  styling with focus states, required field indicators, and proper spacing:
+Forms get styling with focus states, required field indicators, and spacing between controls:
 
 ```html
 <form>
@@ -285,7 +288,7 @@ For older browsers, content remains readable but may lack advanced layout featur
 
 - All color combinations meet WCAG AA standards (4.5:1 for normal text, 3:1 for large text)
 - Clear, visible focus states for keyboard navigation
-- Encourages proper heading hierarchy, landmark regions, and form labels
+- Encourages logical heading hierarchy, landmark regions, and form labels
 - Works on all devices and respects user font size preferences
 - No animations that could trigger vestibular disorders
 
@@ -295,8 +298,8 @@ The complete stylesheet is approximately 15KB uncompressed, 3-4KB when gzipped
 
 For maximum performance:
 
-1. Serve with proper compression (gzip or brotli)
-2. Set appropriate cache headers
+1. Serve with compression (gzip or brotli)
+2. Set cache headers
 3. Consider inlining in `<style>` tags for above-the-fold content on single-page sites
 
 ## Design Decisions
