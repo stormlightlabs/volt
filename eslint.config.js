@@ -23,7 +23,12 @@ export default ts.config(
                 tsconfigRootDir: import.meta.dirname,
             },
         },
-        ignores: ["./cli/**", "eslint.config.js", "vite.config.ts"],
+        ignores: [
+            "./cli/**",
+            "eslint.config.js",
+            "vite.config.ts",
+            "./examples/**",
+        ],
         rules: {
             "no-undef": "off",
             "@typescript-eslint/no-unused-vars": [

@@ -8,8 +8,7 @@ import { evaluate } from "./evaluator";
 import { getPlugin } from "./plugin";
 
 /**
- * Mount Volt.js on a root element and its descendants.
- * Binds all data-x-* attributes to the provided scope.
+ * Mount Volt.js on a root element and its descendants and binds all data-x-* attributes to the provided scope.
  * Returns a cleanup function to unmount and dispose all bindings.
  *
  * @param root - Root element to mount on
@@ -24,8 +23,16 @@ export function mount(root: Element, scope: Scope): CleanupFunction {
     const attributes = getVoltAttributes(element);
     const context: BindingContext = { element, scope, cleanups: [] };
 
-    for (const [name, value] of attributes) {
-      bindAttribute(context, name, value);
+    if (attributes.has("for")) {
+      const forExpression = attributes.get("for")!;
+      bindFor(context, forExpression);
+    } else if (attributes.has("if")) {
+      const ifExpression = attributes.get("if")!;
+      bindIf(context, ifExpression);
+    } else {
+      for (const [name, value] of attributes) {
+        bindAttribute(context, name, value);
+      }
     }
 
     allCleanups.push(...context.cleanups);
@@ -68,6 +75,10 @@ function bindAttribute(context: BindingContext, name: string, value: string): vo
     }
     case "class": {
       bindClass(context, value);
+      break;
+    }
+    case "for": {
+      bindFor(context, value);
       break;
     }
     default: {
@@ -222,9 +233,172 @@ function findSignalInScope(scope: Scope, path: string): Signal<unknown> | undefi
   }
 
   if (
-    typeof current === "object" && current !== null && "get" in current && "set" in current && "subscribe" in current
+    typeof current === "object"
+    && current !== null
+    && "get" in current
+    && "subscribe" in current
+    && typeof (current as { get: unknown }).get === "function"
+    && typeof (current as { subscribe: unknown }).subscribe === "function"
   ) {
     return current as Signal<unknown>;
+  }
+
+  return undefined;
+}
+
+/**
+ * Bind data-x-for to render a list of items.
+ * Subscribes to array signal and re-renders when array changes.
+ *
+ * @param context - Binding context
+ * @param expression - Expression like "item in items" or "(item, index) in items"
+ */
+function bindFor(context: BindingContext, expression: string): void {
+  const parsed = parseForExpression(expression);
+  if (!parsed) {
+    console.error(`Invalid data-x-for expression: "${expression}"`);
+    return;
+  }
+
+  const { itemName, indexName, arrayPath } = parsed;
+  const template = context.element as HTMLElement;
+  const parent = template.parentElement;
+
+  if (!parent) {
+    console.error("data-x-for element must have a parent");
+    return;
+  }
+
+  const placeholder = document.createComment(`for: ${expression}`);
+  template.before(placeholder);
+  template.remove();
+
+  const renderedElements: Element[] = [];
+  const renderedCleanups: CleanupFunction[] = [];
+
+  const render = () => {
+    for (const cleanup of renderedCleanups) {
+      cleanup();
+    }
+    renderedCleanups.length = 0;
+
+    for (const element of renderedElements) {
+      element.remove();
+    }
+    renderedElements.length = 0;
+
+    const arrayValue = evaluate(arrayPath, context.scope);
+    if (!Array.isArray(arrayValue)) {
+      return;
+    }
+
+    for (const [index, item] of arrayValue.entries()) {
+      const clone = template.cloneNode(true) as Element;
+      delete (clone as HTMLElement).dataset.xFor;
+
+      const itemScope: Scope = { ...context.scope, [itemName]: item };
+      if (indexName) {
+        itemScope[indexName] = index;
+      }
+
+      const cleanup = mount(clone, itemScope);
+      renderedCleanups.push(cleanup);
+      renderedElements.push(clone);
+
+      placeholder.before(clone);
+    }
+  };
+
+  render();
+
+  const signal = findSignalInScope(context.scope, arrayPath);
+  if (signal) {
+    const unsubscribe = signal.subscribe(render);
+    context.cleanups.push(unsubscribe);
+  }
+
+  context.cleanups.push(() => {
+    for (const cleanup of renderedCleanups) {
+      cleanup();
+    }
+  });
+}
+
+/**
+ * Bind data-x-if to conditionally render an element.
+ * Subscribes to condition signal and shows/hides element when condition changes.
+ *
+ * @param context - Binding context
+ * @param expression - Expression to evaluate as condition
+ */
+function bindIf(context: BindingContext, expression: string): void {
+  const template = context.element as HTMLElement;
+  const parent = template.parentElement;
+
+  if (!parent) {
+    console.error("data-x-if element must have a parent");
+    return;
+  }
+
+  const placeholder = document.createComment(`if: ${expression}`);
+  template.before(placeholder);
+  template.remove();
+
+  let currentElement: Element | undefined;
+  let currentCleanup: CleanupFunction | undefined;
+
+  const render = () => {
+    const condition = evaluate(expression, context.scope);
+    const shouldShow = Boolean(condition);
+
+    if (shouldShow && !currentElement) {
+      currentElement = template.cloneNode(true) as Element;
+      delete (currentElement as HTMLElement).dataset.xIf;
+      currentCleanup = mount(currentElement, context.scope);
+      placeholder.before(currentElement);
+    } else if (!shouldShow && currentElement) {
+      if (currentCleanup) {
+        currentCleanup();
+      }
+      currentElement.remove();
+      currentElement = undefined;
+      currentCleanup = undefined;
+    }
+  };
+
+  render();
+
+  const signal = findSignalInScope(context.scope, expression);
+  if (signal) {
+    const unsubscribe = signal.subscribe(render);
+    context.cleanups.push(unsubscribe);
+  }
+
+  context.cleanups.push(() => {
+    if (currentCleanup) {
+      currentCleanup();
+    }
+  });
+}
+
+/**
+ * Parse a data-x-for expression.
+ * Supports: "item in items" or "(item, index) in items"
+ *
+ * @param expr - The for expression
+ * @returns Parsed parts or undefined if invalid
+ */
+function parseForExpression(expr: string): { itemName: string; indexName?: string; arrayPath: string } | undefined {
+  const trimmed = expr.trim();
+
+  const withIndex = /^\((\w+)\s*,\s*(\w+)\)\s+in\s+(.+)$/.exec(trimmed);
+  if (withIndex) {
+    return { itemName: withIndex[1], indexName: withIndex[2], arrayPath: withIndex[3].trim() };
+  }
+
+  const simple = /^(\w+)\s+in\s+(.+)$/.exec(trimmed);
+  if (simple) {
+    return { itemName: simple[1], indexName: undefined, arrayPath: simple[2].trim() };
   }
 
   return undefined;

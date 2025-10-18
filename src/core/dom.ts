@@ -5,20 +5,33 @@
 /**
  * Walk the DOM tree and collect all elements with data-x-* attributes.
  * Returns elements in document order (parent before children).
+ * Skips children of elements with data-x-for or data-x-if since those
+ * will be processed when the parent element is cloned and mounted.
  *
  * @param root - The root element to start walking from
  * @returns Array of elements with data-x-* attributes
  */
 export function walkDOM(root: Element): Element[] {
   const elements: Element[] = [];
-  const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT);
 
-  let node = walker.currentNode as Element;
-  do {
-    if (hasVoltAttribute(node)) {
-      elements.push(node);
+  function walk(element: Element): void {
+    if (hasVoltAttribute(element)) {
+      elements.push(element);
+
+      if (
+        Object.hasOwn((element as HTMLElement).dataset, "xFor")
+        || Object.hasOwn((element as HTMLElement).dataset, "xIf")
+      ) {
+        return;
+      }
     }
-  } while ((node = walker.nextNode() as Element));
+
+    for (const child of element.children) {
+      walk(child);
+    }
+  }
+
+  walk(root);
 
   return elements;
 }

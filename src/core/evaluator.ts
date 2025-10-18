@@ -7,10 +7,10 @@ import type { Scope } from "../types/volt";
 /**
  * Evaluate a simple expression against a scope object.
  * Supports:
- * - Property access: "count", "user.name", "items.length"
- * - Simple literals: "true", "false", "null", "undefined"
- * - Numbers: "42", "3.14"
- * - Strings: "'hello'", '"world"'
+ *  - Property access: "count", "user.name", "items.length"
+ *  - Simple literals: "true", "false", "null", "undefined"
+ *  - Numbers: "42", "3.14"
+ *  - Strings: "'hello'", '"world"'
  *
  * @param expression - The expression string to evaluate
  * @param scope - The scope object containing values
@@ -81,16 +81,16 @@ function resolvePath(path: string, scope: Scope): unknown {
 }
 
 /**
- * Check if a value is a Signal.
+ * Check if a value is a Signal or ComputedSignal.
  *
  * @param value - Value to check
- * @returns true if the value is a Signal
+ * @returns true if the value is a Signal or ComputedSignal
  */
 function isSignal(value: unknown): value is { get: () => unknown } {
   return (typeof value === "object"
     && value !== null
     && "get" in value
-    && "set" in value
     && "subscribe" in value
-    && typeof value.get === "function");
+    && typeof value.get === "function"
+    && typeof (value as { subscribe: unknown }).subscribe === "function");
 }
