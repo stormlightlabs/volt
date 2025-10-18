@@ -34,7 +34,6 @@
     - DOM mutation batching & cleanup
     - Internal test harness for bindings
     - DOM Testing Library integration tests
-    - Updated documentation examples
 
 ### Actions & Effects
 
@@ -45,8 +44,6 @@
     - `$el` and `$event` scoped references
     - Derived signals (`computed`, `effect`)
     - Async effects (e.g., fetch triggers)
-    - End-to-end examples (counter, form, live field updates)
-    - 90%+ unit test coverage on core modules
 
 ### Plugins Framework
 
@@ -60,7 +57,11 @@
         - `data-x-scroll`
         - `data-x-url`
     - Tests & registry
-    - Example in docs
+    - Example in docs/examples/plugins.md
+    - Setup test coverage with generous thresholds (~50%)
+    - End-to-end examples (counter, form, live field updates)
+        - `docs/examples/reactivity.md`
+            - `actions`, `effects`, `signals`
 
 ### Streaming & Patch Engine
 
@@ -70,6 +71,7 @@
     - JSON Patch parser and DOM applier
     - `data-x-stream` attribute
     - Reconnection/backoff logic
+    - Raise test coverage threshold to 60%
     - Integration test with mock SSE server
     - Benchmarks for patch vs re-render
     - Performance test suite
@@ -79,11 +81,11 @@
 **Goal:** Introduce persistent storage and offline-first behaviors.
 **Outcome:** Resilient state persistence and offline replay built into Volt.js.
 **Deliverables:**
-    - Persistent signals (localStorage, sessionStorage)
+    - Persistent signals (localStorage, sessionStorage, indexedDb)
     - Storage plugin (`data-x-persist`)
     - Offline queue for deferred stream events
     - Sync strategy API (merge, overwrite, patch)
-    - Example apps: note editor, counter with persistence
+    - Example apps: note editor ([golang](#examples)), counter with persistence ([spa](#examples))
 
 ### Animation & Transitions
 
@@ -126,7 +128,20 @@
 **Outcome:** Volt.js 1.0 is released as a mature, fully documented, type-safe, reactive web framework
 **Deliverables:**
     - Finalized plugin registry and CLI (`volt plugins list/init`)
-    - Versioned documentation (docs.voltjs.dev)
+    - Versioned documentation (stormlightlabs.github.io/volt)
     - Announcement post and release notes
-    - Long-term support plan (LTS cadence)
     - Community contribution guide & governance doc
+
+## Examples
+
+- SSR
+    - Django (separate repo)
+    - FastAPI + jinja2 (separate repo)
+    - Golang + templ (separate repo)
+    - Fastify (separate repo)
+    - Express
+    - Golang
+- SPA
+    - Web
+    - Tauri
+    - Wails
