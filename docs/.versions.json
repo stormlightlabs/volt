@@ -1,0 +1,158 @@
+{
+  "css/semantics.md": {
+    "version": "1.0",
+    "updated": "2025-10-18",
+    "hash": "5771ebe5cced18431c542d5ac24f2e483ae0a2cd6368d3de30e62cbc17b05326",
+    "sections": [
+      "## CSS Custom Properties",
+      "### Typography",
+      "### Spacing",
+      "### Layout",
+      "### Colors",
+      "### Effects",
+      "## Element Coverage",
+      "### Styled Elements",
+      "### Unstyled Elements",
+      "## Documentation Comments",
+      "### `:root`",
+      "### `@media (prefers-color-scheme: dark)`",
+      "### `*, *::before, *::after`",
+      "### `html`",
+      "### `body`",
+      "### `h1, h2, h3, h4, h5, h6`",
+      "### `h1`",
+      "### `p`",
+      "### `h1 + p, h2 + p, h3 + p, h4 + p, h5 + p, h6 + p`",
+      "### `a`",
+      "### `em`",
+      "### `mark`",
+      "### `sub, sup`",
+      "### `small`",
+      "### `ul, ol`",
+      "### `li`",
+      "### `li > ul, li > ol`",
+      "### `dl`",
+      "### `p:has(small)`",
+      "### `p small`",
+      "### `@media (max-width: 767px)`",
+      "### `blockquote`",
+      "### `cite`",
+      "### `code`",
+      "### `kbd`",
+      "### `samp`",
+      "### `var`",
+      "### `pre`",
+      "### `hr`",
+      "### `table`",
+      "### `thead`",
+      "### `td`",
+      "### `tbody tr:nth-child(even)`",
+      "### `tbody tr:hover`",
+      "### `form`",
+      "### `fieldset`",
+      "### `label`",
+      "### `textarea`",
+      "### `input[type=\"checkbox\"],`",
+      "### `input[type=\"file\"]`",
+      "### `input[type=\"range\"]`",
+      "### `progress, meter`",
+      "### `input[type=\"reset\"]`",
+      "### `img`",
+      "### `figure`",
+      "### `video, audio`",
+      "### `canvas, svg`",
+      "### `iframe`",
+      "### `article, section`",
+      "### `aside`",
+      "### `header`",
+      "### `nav`",
+      "### `details`",
+      "### `.sr-only`",
+      "### `@media print`",
+      "### `@media (max-width: 768px)`",
+      "### `@media (max-width: 480px)`"
+    ],
+    "history": [
+      {
+        "version": "1.0",
+        "date": "2025-10-18",
+        "hash": "5771ebe5cced18431c542d5ac24f2e483ae0a2cd6368d3de30e62cbc17b05326",
+        "added": 67,
+        "removed": 0,
+        "edited": 0
+      }
+    ]
+  },
+  "api/binder.md": {
+    "version": "1.0",
+    "updated": "2025-10-18",
+    "hash": "be8aac3c45149a3777d89f58e232935acb3720e6aa36f697eb11e58b416e0d09",
+    "sections": ["## mount"],
+    "history": [
+      {
+        "version": "1.0",
+        "date": "2025-10-18",
+        "hash": "be8aac3c45149a3777d89f58e232935acb3720e6aa36f697eb11e58b416e0d09",
+        "added": 1,
+        "removed": 0,
+        "edited": 0
+      }
+    ]
+  },
+  "api/dom.md": {
+    "version": "1.0",
+    "updated": "2025-10-18",
+    "hash": "72a59e5fa86de7b102089a7f84ff3d7c7674ab025dd75a4fb19264e50a7e32ab",
+    "sections": [
+      "## walkDOM",
+      "## hasVoltAttribute",
+      "## getVoltAttributes",
+      "## setText",
+      "## setHTML",
+      "## toggleClass",
+      "## parseClassBinding"
+    ],
+    "history": [
+      {
+        "version": "1.0",
+        "date": "2025-10-18",
+        "hash": "72a59e5fa86de7b102089a7f84ff3d7c7674ab025dd75a4fb19264e50a7e32ab",
+        "added": 7,
+        "removed": 0,
+        "edited": 0
+      }
+    ]
+  },
+  "api/evaluator.md": {
+    "version": "1.0",
+    "updated": "2025-10-18",
+    "hash": "fc8aa3ad16b62bdb2d16f86a476070a1acacb944b407b8c5edd033cb44fbf7f4",
+    "sections": ["## Scope", "## evaluate"],
+    "history": [
+      {
+        "version": "1.0",
+        "date": "2025-10-18",
+        "hash": "fc8aa3ad16b62bdb2d16f86a476070a1acacb944b407b8c5edd033cb44fbf7f4",
+        "added": 2,
+        "removed": 0,
+        "edited": 0
+      }
+    ]
+  },
+  "api/signal.md": {
+    "version": "1.0",
+    "updated": "2025-10-18",
+    "hash": "fcd3af42730ec609900fb5d1355b100ef3ab2506d9dd00396d6a582a363409e4",
+    "sections": ["## Signal", "## ComputedSignal", "## signal", "## computed", "## effect"],
+    "history": [
+      {
+        "version": "1.0",
+        "date": "2025-10-18",
+        "hash": "fcd3af42730ec609900fb5d1355b100ef3ab2506d9dd00396d6a582a363409e4",
+        "added": 5,
+        "removed": 0,
+        "edited": 0
+      }
+    ]
+  }
+}

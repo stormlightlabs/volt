@@ -1,3 +1,8 @@
+---
+version: 1.0
+updated: 2025-10-18
+---
+
 # Volt CSS Semantics
 
 Auto-generated documentation from base.css

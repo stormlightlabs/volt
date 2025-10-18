@@ -1,14 +1,16 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { echo } from "../console/echo";
+import { trackVersion } from "../versioning/tracker.js";
 
 type CSSComment = { selector: string; comment: string };
+
 type CSSVariable = { name: string; value: string; category: string };
+
 type ElementCoverage = { element: string; covered: boolean };
 
 /**
- * Extract CSS doc comments from CSS file
- * Parses block comments and associates them with selectors
+ * Extract CSS doc comments from CSS file by parsing block comments and associatint them with selectors
  */
 function extractCSSComments(cssContent: string): CSSComment[] {
   const comments: CSSComment[] = [];
@@ -71,8 +73,7 @@ function extractCSSComments(cssContent: string): CSSComment[] {
 }
 
 /**
- * Extract CSS custom properties (variables) from :root
- * Groups them by category based on naming conventions
+ * Extract CSS custom properties (variables) from :root, grouping them by category based on naming conventions
  */
 function extractCSSVariables(cssContent: string): CSSVariable[] {
   const variables: CSSVariable[] = [];
@@ -96,7 +97,7 @@ function extractCSSVariables(cssContent: string): CSSVariable[] {
       const match = trimmed.match(/^(--[a-z0-9-]+)\s*:\s*([^;]+);/);
       if (match) {
         const [, name, value] = match;
-        const category = categorizeCSSVariable(name);
+        const category = categorizeCSSVar(name);
         variables.push({ name, value: value.trim(), category });
       }
     }
@@ -108,7 +109,7 @@ function extractCSSVariables(cssContent: string): CSSVariable[] {
 /**
  * Categorize CSS variable by name prefix
  */
-function categorizeCSSVariable(name: string): string {
+function categorizeCSSVar(name: string): string {
   if (name.startsWith("--font")) return "Typography";
   if (name.startsWith("--line-height")) return "Typography";
   if (name.startsWith("--space")) return "Spacing";
@@ -121,10 +122,6 @@ function categorizeCSSVariable(name: string): string {
   return "Other";
 }
 
-/**
- * Validate CSS element coverage
- * Checks which HTML elements have styling defined
- */
 function validateElementCoverage(cssContent: string): ElementCoverage[] {
   const elementsToCheck = [
     "html",
@@ -274,9 +271,6 @@ function generateSemanticsDocs(comments: CSSComment[], variables: CSSVariable[],
   return lines.join("\n");
 }
 
-/**
- * Group HTML elements by category for better organization
- */
 function groupElementsByCategory(elements: string[]): Record<string, string[]> {
   const categories: Record<string, string[]> = {
     "Document Structure": [],
@@ -365,6 +359,7 @@ function groupElementsByCategory(elements: string[]): Record<string, string[]> {
 
 /**
  * CSS documentation command implementation
+ *
  * Generates semantics.md from base.css
  */
 export async function cssDocsCommand(): Promise<void> {
@@ -399,7 +394,10 @@ export async function cssDocsCommand(): Promise<void> {
   const markdown = generateSemanticsDocs(comments, variables, coverage);
 
   await mkdir(outputDir, { recursive: true });
-  await writeFile(outputPath, markdown, "utf8");
+
+  echo.info("\nTracking version...");
+  const versionedContent = await trackVersion(outputPath, markdown);
+  await writeFile(outputPath, versionedContent, "utf8");
 
   echo.success(`\nCSS documentation generated: docs/css/semantics.md\n`);
   echo.label("Summary:");

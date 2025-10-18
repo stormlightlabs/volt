@@ -2,6 +2,7 @@ import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import ts from "typescript";
 import { echo } from "../console/echo.js";
+import { trackVersion } from "../versioning/tracker.js";
 
 type Member = { name: string; type: string; docs?: string };
 
@@ -253,7 +254,8 @@ async function processFile(filePath: string, baseDir: string, outputDir: string)
   const markdown = generateMD(entries, moduleName, moduleDocs);
 
   const outputPath = path.join(outputDir, `${moduleName}.md`);
-  await writeFile(outputPath, markdown, "utf8");
+  const versionedContent = await trackVersion(outputPath, markdown);
+  await writeFile(outputPath, versionedContent, "utf8");
 
   echo.ok(`  Generated: ${relativePath} -> api/${moduleName}.md`);
 }
