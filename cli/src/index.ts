@@ -1,7 +1,8 @@
-import chalk from "chalk";
 import { Command } from "commander";
+import { cssDocsCommand } from "./commands/css-docs.js";
 import { docsCommand } from "./commands/docs.js";
 import { statsCommand } from "./commands/stats.js";
+import { echo } from "./console/echo.js";
 
 const program = new Command();
 
@@ -11,7 +12,7 @@ program.command("docs").description("Generate API documentation from TypeScript 
   try {
     await docsCommand();
   } catch (error) {
-    console.error(chalk.red("Error generating docs:"), error);
+    echo.err("Error generating docs:", error);
     process.exit(1);
   }
 });
@@ -23,9 +24,20 @@ program.command("stats").description("Display lines of code statistics").option(
   try {
     await statsCommand(options.full);
   } catch (error) {
-    console.error(chalk.red("Error generating stats:"), error);
+    echo.err("Error generating stats:", error);
     process.exit(1);
   }
 });
+
+program.command("css-docs").description("Generate CSS documentation from base.css comments and variables").action(
+  async () => {
+    try {
+      await cssDocsCommand();
+    } catch (error) {
+      echo.err("Error generating CSS docs:", error);
+      process.exit(1);
+    }
+  },
+);
 
 program.parse();

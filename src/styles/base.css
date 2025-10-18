@@ -1,0 +1,1070 @@
+/**
+ * Volt CSS - Classless stylesheet for elegant, readable web documents
+ *
+ * Design Philosophy:
+ * - Classless: Style semantic HTML5 elements directly
+ * - Dual theme: Automatic light/dark mode via prefers-color-scheme
+ * - Typography-first: Optimized for reading and information density
+ * - Accessible: WCAG AA contrast ratios, keyboard navigation support
+ * - Responsive: Mobile-first, adapts gracefully to all screen sizes
+ *
+ * Inspired by: magick.css, latex-css, sakura, matcha, mvp.css
+ */
+
+/* ==========================================================================
+   CSS Custom Properties - Design Tokens
+   ========================================================================== */
+
+/**
+ * Root-level CSS variables define the design system.
+ * Light theme is default, dark theme overrides via media query.
+ */
+:root {
+  /* Typography Scale - Modular scale based on 1.25 ratio */
+  --font-size-base: 18px;
+  --font-size-sm: 0.889rem;    /* 16px */
+  --font-size-lg: 1.125rem;    /* 20.25px */
+  --font-size-xl: 1.266rem;    /* 22.8px */
+  --font-size-2xl: 1.424rem;   /* 25.6px */
+  --font-size-3xl: 1.802rem;   /* 32.4px */
+  --font-size-4xl: 2.027rem;   /* 36.5px */
+  --font-size-5xl: 2.566rem;   /* 46.2px */
+
+  /* Font Families - Sans-serif with personality */
+  /* System fonts for performance, fallback to serif for character */
+  --font-sans: "Inter", "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-serif: "Iowan Old Style", "Palatino Linotype", "URW Palladio L", P052, serif;
+  --font-mono: "SF Mono", "Cascadia Code", "Fira Code", "Roboto Mono", Consolas, monospace;
+
+  /* Spacing Scale - Based on 0.5rem increments */
+  --space-xs: 0.25rem;   /* 4px */
+  --space-sm: 0.5rem;    /* 8px */
+  --space-md: 1rem;      /* 16px */
+  --space-lg: 1.5rem;    /* 24px */
+  --space-xl: 2rem;      /* 32px */
+  --space-2xl: 3rem;     /* 48px */
+  --space-3xl: 4rem;     /* 64px */
+
+  /* Line Heights - Optimized for readability */
+  --line-height-tight: 1.25;
+  --line-height-base: 1.6;
+  --line-height-relaxed: 1.8;
+
+  /* Layout Dimensions */
+  --content-width: 70ch;        /* Optimal line length for reading */
+  --sidenote-width: 18rem;      /* Width of margin notes */
+  --sidenote-gap: 2rem;         /* Space between content and sidenotes */
+
+  /* Light Theme Colors - Duotone palette for clarity */
+  --color-bg: #fefefe;
+  --color-bg-alt: #f5f5f5;      /* For code blocks, tables */
+  --color-text: #1a1a1a;
+  --color-text-muted: #666666;
+  --color-accent: #0066cc;      /* Links, primary actions */
+  --color-accent-hover: #0052a3;
+  --color-border: #d4d4d4;
+  --color-code-bg: #f8f8f8;
+  --color-mark: #fff3cd;        /* Highlighted text */
+  --color-success: #22863a;
+  --color-warning: #bf8700;
+  --color-error: #cb2431;
+
+  /* Shadows - Subtle depth */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+
+  /* Border Radius */
+  --radius-sm: 3px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+
+  /* Transitions */
+  --transition-fast: 150ms ease-in-out;
+  --transition-base: 250ms ease-in-out;
+}
+
+/**
+ * Dark Theme Overrides
+ * Automatically applied when user prefers dark color scheme
+ */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg: #1a1a1a;
+    --color-bg-alt: #2a2a2a;
+    --color-text: #e6e6e6;
+    --color-text-muted: #a0a0a0;
+    --color-accent: #4da6ff;
+    --color-accent-hover: #66b3ff;
+    --color-border: #404040;
+    --color-code-bg: #2a2a2a;
+    --color-mark: #4a4a00;
+    --color-success: #34d058;
+    --color-warning: #ffdf5d;
+    --color-error: #f97583;
+
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.5);
+  }
+}
+
+/* ==========================================================================
+   CSS Reset & Base Styles
+   ========================================================================== */
+
+/**
+ * Modern CSS reset with sensible defaults
+ */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+}
+
+/**
+ * Document root configuration
+ * Sets base font size for rem calculations
+ */
+html {
+  font-size: var(--font-size-base);
+  -webkit-text-size-adjust: 100%;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/**
+ * Body element - Primary container
+ * Sets default typography and colors for the entire document
+ */
+body {
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: var(--line-height-base);
+  color: var(--color-text);
+  background-color: var(--color-bg);
+
+  /* Center content with optimal reading width */
+  max-width: calc(var(--content-width) + var(--sidenote-width) + var(--sidenote-gap) * 2);
+  margin: 0 auto;
+  padding: var(--space-2xl) var(--space-lg);
+}
+
+/* ==========================================================================
+   Typography - Hierarchy & Rhythm
+   ========================================================================== */
+
+/**
+ * Headings hierarchy
+ * Uses modular scale for harmonious sizing
+ * Tighter line-height for larger text improves readability
+ */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 700;
+  line-height: var(--line-height-tight);
+  color: var(--color-text);
+  margin-top: var(--space-2xl);
+  margin-bottom: var(--space-md);
+  letter-spacing: -0.02em;  /* Slight negative tracking for display text */
+}
+
+/**
+ * Individual heading sizes
+ * h1-h3 use slightly larger weights for emphasis
+ */
+h1 {
+  font-size: var(--font-size-5xl);
+  margin-top: 0;  /* No top margin on first heading */
+}
+
+h2 {
+  font-size: var(--font-size-4xl);
+}
+
+h3 {
+  font-size: var(--font-size-3xl);
+}
+
+h4 {
+  font-size: var(--font-size-2xl);
+}
+
+h5 {
+  font-size: var(--font-size-xl);
+}
+
+h6 {
+  font-size: var(--font-size-lg);
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/**
+ * Paragraph spacing
+ * Generous spacing between paragraphs aids scanning
+ */
+p {
+  margin-bottom: var(--space-lg);
+  max-width: var(--content-width);
+}
+
+/**
+ * First paragraph after headings - No top margin
+ * Common convention in academic typography
+ */
+h1 + p, h2 + p, h3 + p, h4 + p, h5 + p, h6 + p {
+  margin-top: 0;
+}
+
+/**
+ * Links - Accessible and distinctive
+ * Uses accent color with underline for clarity
+ */
+a {
+  color: var(--color-accent);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+  transition: color var(--transition-fast);
+}
+
+a:hover {
+  color: var(--color-accent-hover);
+}
+
+a:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/**
+ * Emphasis and strong elements
+ */
+em {
+  font-style: italic;
+}
+
+strong {
+  font-weight: 700;
+}
+
+/**
+ * Marked/highlighted text
+ */
+mark {
+  background-color: var(--color-mark);
+  padding: 0.1em 0.2em;
+  border-radius: var(--radius-sm);
+}
+
+/**
+ * Subscript and superscript
+ * Prevents them from affecting line height
+ */
+sub, sup {
+  font-size: 0.75em;
+  line-height: 0;
+  position: relative;
+  vertical-align: baseline;
+}
+
+sup {
+  top: -0.5em;
+}
+
+sub {
+  bottom: -0.25em;
+}
+
+/**
+ * Small text
+ * Also used for Tufte-style sidenotes (see sidenotes section)
+ */
+small {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+/* ==========================================================================
+   Lists - Ordered & Unordered
+   ========================================================================== */
+
+/**
+ * List spacing and indentation
+ * Nested lists inherit proper spacing
+ */
+ul, ol {
+  margin-bottom: var(--space-lg);
+  padding-left: var(--space-xl);
+  max-width: var(--content-width);
+}
+
+/**
+ * List items
+ */
+li {
+  margin-bottom: var(--space-sm);
+}
+
+li::marker {
+  color: var(--color-accent);
+}
+
+/**
+ * Nested lists - Reduced spacing
+ */
+li > ul, li > ol {
+  margin-top: var(--space-sm);
+  margin-bottom: var(--space-sm);
+}
+
+/**
+ * Description lists - For key-value pairs
+ */
+dl {
+  margin-bottom: var(--space-lg);
+  max-width: var(--content-width);
+}
+
+dt {
+  font-weight: 700;
+  margin-top: var(--space-md);
+  margin-bottom: var(--space-xs);
+}
+
+dd {
+  margin-left: var(--space-xl);
+  margin-bottom: var(--space-sm);
+  color: var(--color-text-muted);
+}
+
+/* ==========================================================================
+   Tufte-Style Sidenotes
+   ========================================================================== */
+
+/**
+ * Sidenotes using <small> elements
+ * On desktop: positioned in right margin
+ * On mobile: inline with reduced emphasis
+ *
+ * Usage: Place <small> inside <p> where you want the note to appear
+ * Example: <p>Main text here <small>This appears in margin</small> more text.</p>
+ */
+@media (min-width: 768px) {
+  /**
+   * Parent paragraph must be positioned for absolute children
+   */
+  p:has(small) {
+    position: relative;
+  }
+
+  /**
+   * Pull small elements into the right margin
+   * Creates classic Tufte-style sidenote layout
+   */
+  p small {
+    position: absolute;
+    left: calc(100% + var(--sidenote-gap));
+    width: var(--sidenote-width);
+    font-size: 0.85rem;
+    line-height: var(--line-height-base);
+    margin-top: 0;
+    padding: var(--space-sm);
+    background-color: var(--color-bg-alt);
+    border-left: 2px solid var(--color-accent);
+    border-radius: var(--radius-sm);
+  }
+}
+
+/**
+ * Mobile sidenotes - Inline with subtle styling
+ */
+@media (max-width: 767px) {
+  p small {
+    display: block;
+    margin-top: var(--space-sm);
+    margin-bottom: var(--space-sm);
+    padding: var(--space-sm);
+    background-color: var(--color-bg-alt);
+    border-left: 2px solid var(--color-accent);
+    border-radius: var(--radius-sm);
+    font-size: 0.9rem;
+  }
+}
+
+/* ==========================================================================
+   Blockquotes & Citations
+   ========================================================================== */
+
+/**
+ * Blockquote styling
+ * Left border for visual distinction, italic for emphasis
+ */
+blockquote {
+  margin: var(--space-xl) 0;
+  padding: var(--space-md) var(--space-lg);
+  border-left: 4px solid var(--color-accent);
+  background-color: var(--color-bg-alt);
+  font-style: italic;
+  color: var(--color-text-muted);
+  max-width: var(--content-width);
+  border-radius: var(--radius-sm);
+}
+
+blockquote p:last-child {
+  margin-bottom: 0;
+}
+
+/**
+ * Citation element
+ */
+cite {
+  font-style: normal;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+blockquote cite::before {
+  content: " ";
+}
+
+/* ==========================================================================
+   Code & Preformatted Text
+   ========================================================================== */
+
+/**
+ * Inline code
+ * Monospace font with subtle background for distinction
+ */
+code {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  padding: 0.15em 0.4em;
+  background-color: var(--color-code-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+/**
+ * Keyboard input
+ * Styled like keys on a keyboard
+ */
+kbd {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  padding: 0.15em 0.4em;
+  background-color: var(--color-bg-alt);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 1px 0 var(--color-border), 0 0 0 2px var(--color-bg) inset;
+}
+
+/**
+ * Sample output
+ */
+samp {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+}
+
+/**
+ * Variable
+ */
+var {
+  font-family: var(--font-mono);
+  font-style: normal;
+  font-weight: 600;
+}
+
+/**
+ * Preformatted code blocks
+ * Horizontal scrolling for overflow, no word wrap
+ */
+pre {
+  margin: var(--space-xl) 0;
+  padding: var(--space-lg);
+  background-color: var(--color-code-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow-x: auto;
+  max-width: var(--content-width);
+  line-height: var(--line-height-base);
+}
+
+pre code {
+  padding: 0;
+  background: none;
+  border: none;
+  font-size: 0.875rem;
+}
+
+/* ==========================================================================
+   Horizontal Rules
+   ========================================================================== */
+
+/**
+ * Section dividers
+ * Centered decorative element with breathing room
+ */
+hr {
+  margin: var(--space-3xl) auto;
+  border: none;
+  border-top: 1px solid var(--color-border);
+  max-width: 50%;
+}
+
+/* ==========================================================================
+   Tables
+   ========================================================================== */
+
+/**
+ * Table container for horizontal scrolling on small screens
+ */
+table {
+  width: 100%;
+  max-width: var(--content-width);
+  margin: var(--space-xl) 0;
+  border-collapse: collapse;
+  overflow-x: auto;
+  display: block;
+}
+
+/**
+ * Table header styling
+ * Bold text with bottom border for separation
+ */
+thead {
+  background-color: var(--color-bg-alt);
+  border-bottom: 2px solid var(--color-border);
+}
+
+th {
+  padding: var(--space-sm) var(--space-md);
+  text-align: left;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+/**
+ * Table cells
+ */
+td {
+  padding: var(--space-sm) var(--space-md);
+  border-bottom: 1px solid var(--color-border);
+}
+
+/**
+ * Zebra striping for easier row scanning
+ */
+tbody tr:nth-child(even) {
+  background-color: var(--color-bg-alt);
+}
+
+/**
+ * Hover state for interactive tables
+ */
+tbody tr:hover {
+  background-color: var(--color-border);
+  transition: background-color var(--transition-fast);
+}
+
+/* ==========================================================================
+   Forms & Input Elements
+   ========================================================================== */
+
+/**
+ * Form container spacing
+ */
+form {
+  margin: var(--space-xl) 0;
+  max-width: var(--content-width);
+}
+
+/**
+ * Fieldset grouping
+ */
+fieldset {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-lg);
+  margin-bottom: var(--space-lg);
+}
+
+legend {
+  font-weight: 700;
+  padding: 0 var(--space-sm);
+  color: var(--color-text);
+}
+
+/**
+ * Labels
+ * Block display for better touch targets
+ */
+label {
+  display: block;
+  margin-bottom: var(--space-xs);
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+/**
+ * Required field indicator
+ */
+label:has(+ input[required])::after,
+label:has(+ textarea[required])::after,
+label:has(+ select[required])::after {
+  content: " *";
+  color: var(--color-error);
+}
+
+/**
+ * Text inputs and textareas
+ * Consistent sizing and interaction states
+ */
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]),
+select,
+textarea {
+  width: 100%;
+  padding: var(--space-sm) var(--space-md);
+  font-family: inherit;
+  font-size: 1rem;
+  line-height: var(--line-height-base);
+  color: var(--color-text);
+  background-color: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  margin-bottom: var(--space-md);
+}
+
+/**
+ * Focus states for inputs
+ * Clear visual feedback for keyboard navigation
+ */
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+}
+
+/**
+ * Disabled state
+ */
+input:disabled,
+select:disabled,
+textarea:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background-color: var(--color-bg-alt);
+}
+
+/**
+ * Textarea specific
+ */
+textarea {
+  resize: vertical;
+  min-height: 8rem;
+}
+
+/**
+ * Checkboxes and radio buttons
+ */
+input[type="checkbox"],
+input[type="radio"] {
+  margin-right: var(--space-xs);
+  accent-color: var(--color-accent);
+}
+
+/**
+ * File input
+ */
+input[type="file"] {
+  padding: var(--space-sm);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  margin-bottom: var(--space-md);
+}
+
+/**
+ * Range input
+ */
+input[type="range"] {
+  width: 100%;
+  margin: var(--space-md) 0;
+  accent-color: var(--color-accent);
+}
+
+/**
+ * Progress and meter
+ */
+progress, meter {
+  width: 100%;
+  height: 1.5rem;
+  margin: var(--space-md) 0;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+/* ==========================================================================
+   Buttons
+   ========================================================================== */
+
+/**
+ * Button styling
+ * Primary action style with hover and active states
+ */
+button,
+input[type="submit"],
+input[type="button"],
+input[type="reset"] {
+  display: inline-block;
+  padding: var(--space-sm) var(--space-lg);
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1;
+  color: white;
+  background-color: var(--color-accent);
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  text-decoration: none;
+  transition: background-color var(--transition-fast), transform var(--transition-fast);
+  margin-right: var(--space-sm);
+  margin-bottom: var(--space-sm);
+}
+
+button:hover,
+input[type="submit"]:hover,
+input[type="button"]:hover {
+  background-color: var(--color-accent-hover);
+}
+
+button:active,
+input[type="submit"]:active,
+input[type="button"]:active {
+  transform: translateY(1px);
+}
+
+/**
+ * Reset button - Subdued styling
+ */
+input[type="reset"] {
+  background-color: var(--color-bg-alt);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+}
+
+input[type="reset"]:hover {
+  background-color: var(--color-border);
+}
+
+/**
+ * Disabled buttons
+ */
+button:disabled,
+input[type="submit"]:disabled,
+input[type="button"]:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/**
+ * Focus state for buttons
+ */
+button:focus-visible,
+input[type="submit"]:focus-visible,
+input[type="button"]:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* ==========================================================================
+   Media Elements
+   ========================================================================== */
+
+/**
+ * Images
+ * Responsive by default, maintains aspect ratio
+ */
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  border-radius: var(--radius-sm);
+}
+
+/**
+ * Figures with captions
+ * Common in academic and technical writing
+ */
+figure {
+  margin: var(--space-xl) 0;
+  max-width: var(--content-width);
+}
+
+figcaption {
+  margin-top: var(--space-sm);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  font-style: italic;
+  text-align: center;
+}
+
+/**
+ * Video and audio
+ * Responsive and accessible
+ */
+video, audio {
+  max-width: 100%;
+  margin: var(--space-xl) 0;
+}
+
+/**
+ * Canvas and SVG
+ */
+canvas, svg {
+  max-width: 100%;
+  height: auto;
+}
+
+/* ==========================================================================
+   Embedded Content
+   ========================================================================== */
+
+/**
+ * iframe - Responsive wrapper
+ */
+iframe {
+  max-width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  margin: var(--space-xl) 0;
+}
+
+/* ==========================================================================
+   Semantic HTML5 Elements
+   ========================================================================== */
+
+/**
+ * Article and Section
+ * Spacing between major content blocks
+ */
+article, section {
+  margin-bottom: var(--space-3xl);
+}
+
+/**
+ * Aside
+ * Complementary content, styled distinctly
+ */
+aside {
+  padding: var(--space-lg);
+  margin: var(--space-xl) 0;
+  background-color: var(--color-bg-alt);
+  border-left: 4px solid var(--color-accent);
+  border-radius: var(--radius-sm);
+  max-width: var(--content-width);
+}
+
+/**
+ * Header and Footer
+ */
+header {
+  margin-bottom: var(--space-2xl);
+  padding-bottom: var(--space-xl);
+  border-bottom: 1px solid var(--color-border);
+}
+
+footer {
+  margin-top: var(--space-3xl);
+  padding-top: var(--space-xl);
+  border-top: 1px solid var(--color-border);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+/**
+ * Nav
+ * Navigation menus
+ */
+nav {
+  margin: var(--space-lg) 0;
+}
+
+nav ul {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+}
+
+nav li {
+  margin: 0;
+}
+
+/**
+ * Details and Summary
+ * Disclosure widget for expandable content
+ */
+details {
+  margin: var(--space-lg) 0;
+  padding: var(--space-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  max-width: var(--content-width);
+}
+
+summary {
+  font-weight: 700;
+  cursor: pointer;
+  user-select: none;
+  padding: var(--space-sm);
+  margin: calc(-1 * var(--space-sm));
+  transition: background-color var(--transition-fast);
+}
+
+summary:hover {
+  background-color: var(--color-bg-alt);
+}
+
+details[open] summary {
+  margin-bottom: var(--space-md);
+  border-bottom: 1px solid var(--color-border);
+}
+
+/* ==========================================================================
+   Utility Classes (Minimal, for framework integration)
+   ========================================================================== */
+
+/**
+ * Screen reader only
+ * Hides content visually but keeps it accessible to assistive technology
+ */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* ==========================================================================
+   Print Styles
+   ========================================================================== */
+
+/**
+ * Print-specific optimizations
+ */
+@media print {
+  body {
+    font-size: 12pt;
+    line-height: 1.5;
+    color: #000;
+    background: #fff;
+  }
+
+  a {
+    text-decoration: underline;
+    color: #000;
+  }
+
+  /* Display URLs after links */
+  a[href^="http"]::after {
+    content: " (" attr(href) ")";
+    font-size: 0.8em;
+  }
+
+  /* Hide sidenotes positioning, show inline */
+  @media (min-width: 768px) {
+    p small {
+      position: static;
+      width: auto;
+      left: auto;
+    }
+  }
+
+  /* Avoid page breaks inside elements */
+  h1, h2, h3, h4, h5, h6, p, li, blockquote {
+    page-break-inside: avoid;
+  }
+
+  /* Ensure images fit page */
+  img {
+    max-width: 100% !important;
+  }
+}
+
+/* ==========================================================================
+   Responsive Breakpoints
+   ========================================================================== */
+
+/**
+ * Tablet and below - Reduce spacing
+ */
+@media (max-width: 768px) {
+  :root {
+    --font-size-base: 16px;
+    --space-2xl: 2rem;
+    --space-3xl: 3rem;
+  }
+
+  body {
+    padding: var(--space-lg) var(--space-md);
+  }
+
+  h1 {
+    font-size: var(--font-size-4xl);
+  }
+
+  h2 {
+    font-size: var(--font-size-3xl);
+  }
+
+  /* Stack navigation vertically */
+  nav ul {
+    flex-direction: column;
+    gap: var(--space-sm);
+  }
+}
+
+/**
+ * Mobile - Further reduced spacing and sizing
+ */
+@media (max-width: 480px) {
+  :root {
+    --font-size-base: 15px;
+  }
+
+  body {
+    padding: var(--space-md) var(--space-sm);
+  }
+
+  h1 {
+    font-size: var(--font-size-3xl);
+  }
+
+  /* Reduce horizontal padding on smaller screens */
+  pre {
+    padding: var(--space-md);
+  }
+
+  table {
+    font-size: var(--font-size-sm);
+  }
+}

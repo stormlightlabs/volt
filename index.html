@@ -5,84 +5,60 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Volt.js Demo</title>
+    <link rel="stylesheet" href="/src/styles/base.css" />
     <style>
-      body {
-        font-family: system-ui, -apple-system, sans-serif;
-        max-width: 800px;
-        margin: 2rem auto;
-        padding: 0 1rem;
-        line-height: 1.6;
-      }
-      .card {
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        padding: 1.5rem;
-        margin: 1rem 0;
-      }
-      button {
-        background: #646cff;
-        color: white;
-        border: none;
-        padding: 0.6rem 1.2rem;
-        border-radius: 4px;
-        cursor: pointer;
-        margin: 0.5rem 0.5rem 0.5rem 0;
-        font-size: 1rem;
-      }
-      button:hover {
-        background: #535bf2;
-      }
+      /* Demo-specific utility classes */
       .active {
-        color: #646cff;
+        color: var(--color-accent);
         font-weight: bold;
       }
       .highlight {
-        background: #fff3cd;
+        background: var(--color-mark);
         padding: 0.25rem 0.5rem;
-        border-radius: 4px;
+        border-radius: var(--radius-sm);
       }
     </style>
   </head>
   <body>
     <div id="app">
-      <h1 data-x-text="message">Loading...</h1>
+      <header>
+        <h1 data-x-text="message">Loading...</h1>
+        <p>A reactive framework demo powered by Volt.js</p>
+      </header>
 
-      <div class="card">
-        <h2>Event Bindings & Computed Values</h2>
-        <p>
-          Count: <strong data-x-text="count">0</strong><br />
-          Doubled: <strong data-x-text="doubled">0</strong>
-        </p>
-        <button data-x-on-click="increment">Increment</button>
-        <button data-x-on-click="decrement">Decrement</button>
-        <button data-x-on-click="reset">Reset</button>
-        <button data-x-on-click="updateMessage">Update Message</button>
-      </div>
+      <article>
+        <section>
+          <h2>Event Bindings & Computed Values</h2>
+          <p>
+            Count: <strong data-x-text="count">0</strong><br />
+            Doubled: <strong data-x-text="doubled">0</strong>
+          </p>
+          <button data-x-on-click="increment">Increment</button>
+          <button data-x-on-click="decrement">Decrement</button>
+          <button data-x-on-click="reset">Reset</button>
+          <button data-x-on-click="updateMessage">Update Message</button>
+        </section>
 
-      <div class="card">
-        <h2>Form Input</h2>
-        <input
-          type="text"
-          data-x-on-input="handleInput"
-          placeholder="Type something..."
-          style="padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; width: 100%"
-        />
-        <p>You typed: <strong data-x-text="inputValue">nothing yet</strong></p>
-      </div>
+        <section>
+          <h2>Form Input</h2>
+          <input type="text" data-x-on-input="handleInput" placeholder="Type something..." />
+          <p>You typed: <strong data-x-text="inputValue">nothing yet</strong></p>
+        </section>
 
-      <div class="card">
-        <h2>Class Bindings</h2>
-        <p data-x-class="classes">This text has dynamic classes applied.</p>
-        <p>
-          Active: <span data-x-text="isActive">false</span>
-        </p>
-        <button data-x-on-click="toggleActive">Toggle Active</button>
-      </div>
+        <section>
+          <h2>Class Bindings</h2>
+          <p data-x-class="classes">This text has dynamic classes applied.</p>
+          <p>
+            Active: <span data-x-text="isActive">false</span>
+          </p>
+          <button data-x-on-click="toggleActive">Toggle Active</button>
+        </section>
 
-      <div class="card">
-        <h2>HTML Binding</h2>
-        <div data-x-html="'<em>This is rendered as HTML</em>'">Fallback content</div>
-      </div>
+        <section>
+          <h2>HTML Binding</h2>
+          <div data-x-html="'<em>This is rendered as HTML</em>'">Fallback content</div>
+        </section>
+      </article>
     </div>
     <script type="module" src="/src/main.ts"></script>
   </body>

@@ -1,9 +1,10 @@
-import chalk from "chalk";
 import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import ts from "typescript";
+import { echo } from "../console/echo.js";
 
 type Member = { name: string; type: string; docs?: string };
+
 type EntryKind = "function" | "interface" | "type" | "class";
 
 type DocumentEntry = {
@@ -20,7 +21,7 @@ type JSDocumentParsed = { description: string; examples: string[] };
 /**
  * Extract and parse JSDoc comment text
  */
-function extractJSDocument(node: ts.Node, sourceFile: ts.SourceFile): JSDocumentParsed {
+function extractJSDoc(node: ts.Node, sourceFile: ts.SourceFile): JSDocumentParsed {
   const fullText = sourceFile.getFullText();
   const ranges = ts.getLeadingCommentRanges(fullText, node.getFullStart());
 
@@ -79,7 +80,7 @@ function extractJSDocument(node: ts.Node, sourceFile: ts.SourceFile): JSDocument
 /**
  * Extract function signature
  */
-function extractFunctionSignature(node: ts.FunctionDeclaration, sourceFile: ts.SourceFile): string {
+function extractFnSig(node: ts.FunctionDeclaration, sourceFile: ts.SourceFile): string {
   const start = node.getStart(sourceFile);
   const end = node.body ? node.body.getStart(sourceFile) : node.getEnd();
   return sourceFile.text.substring(start, end).trim().replaceAll(/\s+/g, " ");
@@ -88,17 +89,14 @@ function extractFunctionSignature(node: ts.FunctionDeclaration, sourceFile: ts.S
 /**
  * Extract interface members
  */
-function extractInterfaceMembers(
-  node: ts.InterfaceDeclaration,
-  sourceFile: ts.SourceFile,
-): Array<{ name: string; type: string; docs?: string }> {
-  const members: Array<{ name: string; type: string; docs?: string }> = [];
+function extractIMembers(node: ts.InterfaceDeclaration, sourceFile: ts.SourceFile): Array<Member> {
+  const members: Array<Member> = [];
 
   for (const member of node.members) {
     if (ts.isPropertySignature(member) && member.name) {
       const name = member.name.getText(sourceFile);
       const type = member.type ? member.type.getText(sourceFile) : "unknown";
-      const { description } = extractJSDocument(member, sourceFile);
+      const { description } = extractJSDoc(member, sourceFile);
 
       members.push({ name, type, docs: description || undefined });
     }
@@ -108,63 +106,9 @@ function extractInterfaceMembers(
 }
 
 /**
- * Parse a TypeScript file and extract documentation
- */
-function parseFile(filePath: string, content: string): DocumentEntry[] {
-  const sourceFile = ts.createSourceFile(filePath, content, ts.ScriptTarget.Latest, true);
-  const entries: DocumentEntry[] = [];
-
-  function visit(node: ts.Node) {
-    if (ts.isFunctionDeclaration(node) && node.name) {
-      const modifiers = node.modifiers;
-      const isExported = modifiers?.some((m) => m.kind === ts.SyntaxKind.ExportKeyword);
-
-      if (isExported) {
-        const name = node.name.text;
-        const { description, examples } = extractJSDocument(node, sourceFile);
-        const signature = extractFunctionSignature(node, sourceFile);
-
-        entries.push({ name, kind: "function", description, examples, signature });
-      }
-    }
-
-    if (ts.isInterfaceDeclaration(node)) {
-      const modifiers = node.modifiers;
-      const isExported = modifiers?.some((m) => m.kind === ts.SyntaxKind.ExportKeyword);
-
-      if (isExported) {
-        const name = node.name.text;
-        const { description, examples } = extractJSDocument(node, sourceFile);
-        const members = extractInterfaceMembers(node, sourceFile);
-
-        entries.push({ name, kind: "interface", description, examples, members });
-      }
-    }
-
-    if (ts.isTypeAliasDeclaration(node)) {
-      const modifiers = node.modifiers;
-      const isExported = modifiers?.some((m) => m.kind === ts.SyntaxKind.ExportKeyword);
-
-      if (isExported) {
-        const name = node.name.text;
-        const { description, examples } = extractJSDocument(node, sourceFile);
-        const signature = node.type.getText(sourceFile);
-
-        entries.push({ name, kind: "type", description, examples, signature });
-      }
-    }
-
-    ts.forEachChild(node, visit);
-  }
-
-  visit(sourceFile);
-  return entries;
-}
-
-/**
  * Generate markdown for a documentation entry
  */
-function generateMarkdown(entries: DocumentEntry[], moduleName: string, moduleDocs: string): string {
+function generateMD(entries: DocumentEntry[], moduleName: string, moduleDocs: string): string {
   const lines: string[] = [];
 
   lines.push(`# ${moduleName}`, "");
@@ -210,32 +154,86 @@ function generateMarkdown(entries: DocumentEntry[], moduleName: string, moduleDo
 /**
  * Extract module-level documentation
  */
-function extractModuleDocs(content: string): string {
+function extractModDocs(content: string): string {
   const lines = content.split("\n");
-  const documentLines: string[] = [];
-  let inDocument = false;
+  const docLines: string[] = [];
+  let inDoc = false;
 
   for (const line of lines) {
     const trimmed = line.trim();
 
     if (trimmed === "/**") {
-      inDocument = true;
+      inDoc = true;
       continue;
     }
 
-    if (inDocument) {
+    if (inDoc) {
       if (trimmed === "*/") {
         break;
       }
 
       const cleaned = trimmed.replace(/^\*\s?/, "");
       if (!cleaned.startsWith("@packageDocumentation")) {
-        documentLines.push(cleaned);
+        docLines.push(cleaned);
       }
     }
   }
 
-  return documentLines.join("\n").trim();
+  return docLines.join("\n").trim();
+}
+
+/**
+ * Parse a TypeScript file and extract documentation
+ */
+function parseFile(filePath: string, content: string): DocumentEntry[] {
+  const sourceFile = ts.createSourceFile(filePath, content, ts.ScriptTarget.Latest, true);
+  const entries: DocumentEntry[] = [];
+
+  function visit(node: ts.Node) {
+    if (ts.isFunctionDeclaration(node) && node.name) {
+      const modifiers = node.modifiers;
+      const isExported = modifiers?.some((m) => m.kind === ts.SyntaxKind.ExportKeyword);
+
+      if (isExported) {
+        const name = node.name.text;
+        const { description, examples } = extractJSDoc(node, sourceFile);
+        const signature = extractFnSig(node, sourceFile);
+
+        entries.push({ name, kind: "function", description, examples, signature });
+      }
+    }
+
+    if (ts.isInterfaceDeclaration(node)) {
+      const modifiers = node.modifiers;
+      const isExported = modifiers?.some((m) => m.kind === ts.SyntaxKind.ExportKeyword);
+
+      if (isExported) {
+        const name = node.name.text;
+        const { description, examples } = extractJSDoc(node, sourceFile);
+        const members = extractIMembers(node, sourceFile);
+
+        entries.push({ name, kind: "interface", description, examples, members });
+      }
+    }
+
+    if (ts.isTypeAliasDeclaration(node)) {
+      const modifiers = node.modifiers;
+      const isExported = modifiers?.some((m) => m.kind === ts.SyntaxKind.ExportKeyword);
+
+      if (isExported) {
+        const name = node.name.text;
+        const { description, examples } = extractJSDoc(node, sourceFile);
+        const signature = node.type.getText(sourceFile);
+
+        entries.push({ name, kind: "type", description, examples, signature });
+      }
+    }
+
+    ts.forEachChild(node, visit);
+  }
+
+  visit(sourceFile);
+  return entries;
 }
 
 /**
@@ -249,15 +247,15 @@ async function processFile(filePath: string, baseDir: string, outputDir: string)
     return;
   }
 
-  const moduleDocs = extractModuleDocs(content);
+  const moduleDocs = extractModDocs(content);
   const relativePath = path.relative(baseDir, filePath);
   const moduleName = path.basename(relativePath, ".ts");
-  const markdown = generateMarkdown(entries, moduleName, moduleDocs);
+  const markdown = generateMD(entries, moduleName, moduleDocs);
 
   const outputPath = path.join(outputDir, `${moduleName}.md`);
   await writeFile(outputPath, markdown, "utf8");
 
-  console.log(chalk.green(`  Generated: ${relativePath} -> api/${moduleName}.md`));
+  echo.ok(`  Generated: ${relativePath} -> api/${moduleName}.md`);
 }
 
 /**
@@ -283,21 +281,21 @@ async function findTsFiles(dir: string, files: string[] = []): Promise<string[]>
  * Docs command implementation
  */
 export async function docsCommand(): Promise<void> {
-  const projectRoot = path.join(process.cwd(), "..");
-  const srcDir = path.join(projectRoot, "src");
-  const docsDir = path.join(projectRoot, "docs", "api");
+  const root = path.join(process.cwd(), "..");
+  const srcDir = path.join(root, "src");
+  const docsDir = path.join(root, "docs", "api");
 
-  console.log(chalk.blue.bold("\nGenerating API Documentation\n"));
+  echo.title("\nGenerating API Documentation\n");
 
   await mkdir(docsDir, { recursive: true });
 
   const files = await findTsFiles(srcDir);
 
-  console.log(chalk.cyan(`Found ${files.length} TypeScript files\n`));
+  echo.info(`Found ${files.length} TypeScript files\n`);
 
   for (const file of files) {
     await processFile(file, srcDir, docsDir);
   }
 
-  console.log(chalk.green.bold(`\nAPI documentation generated in docs/api/\n`));
+  echo.success(`\nAPI documentation generated in docs/api/\n`);
 }

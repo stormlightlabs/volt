@@ -1,6 +1,6 @@
-import chalk from "chalk";
 import { readdir, readFile, stat } from "node:fs/promises";
 import path from "node:path";
+import { echo } from "../console/echo.js";
 
 type FileStats = { path: string; lines: number; totalLines: number };
 type DirectoryStats = { totalLines: number; codeLines: number; files: FileStats[] };
@@ -93,15 +93,15 @@ export async function statsCommand(includeFull: boolean): Promise<void> {
   const srcDir = path.join(projectRoot, "src");
   const testDir = path.join(projectRoot, "test");
 
-  console.log(chalk.blue.bold("\nVolt.js Code Statistics\n"));
+  echo.title("\nVolt.js Code Statistics\n");
 
   const srcStats = await collectStats(srcDir, projectRoot);
 
-  console.log(chalk.cyan("Source Code (src/):"));
-  console.log(`  Files: ${srcStats.files.length}`);
-  console.log(`  Total Lines: ${srcStats.totalLines}`);
-  console.log(chalk.green(`  Code Lines: ${srcStats.codeLines}`));
-  console.log(`  Doc/Comments: ${srcStats.totalLines - srcStats.codeLines}`);
+  echo.label("Source Code (src/):");
+  echo.text(`  Files: ${srcStats.files.length}`);
+  echo.text(`  Total Lines: ${srcStats.totalLines}`);
+  echo.ok(`  Code Lines: ${srcStats.codeLines}`);
+  echo.text(`  Doc/Comments: ${srcStats.totalLines - srcStats.codeLines}`);
 
   let totalCode = srcStats.codeLines;
   let totalTotal = srcStats.totalLines;
@@ -111,29 +111,29 @@ export async function statsCommand(includeFull: boolean): Promise<void> {
   if (includeFull) {
     const testStats = await collectStats(testDir, projectRoot);
 
-    console.log(chalk.cyan("\nTest Code (test/):"));
-    console.log(`  Files: ${testStats.files.length}`);
-    console.log(`  Total Lines: ${testStats.totalLines}`);
-    console.log(chalk.green(`  Code Lines: ${testStats.codeLines}`));
-    console.log(`  Doc/Comments: ${testStats.totalLines - testStats.codeLines}`);
+    echo.label("\nTest Code (test/):");
+    echo.text(`  Files: ${testStats.files.length}`);
+    echo.text(`  Total Lines: ${testStats.totalLines}`);
+    echo.ok(`  Code Lines: ${testStats.codeLines}`);
+    echo.text(`  Doc/Comments: ${testStats.totalLines - testStats.codeLines}`);
 
     totalCode += testStats.codeLines;
     totalTotal += testStats.totalLines;
     totalFileCount += testStats.files.length;
   }
 
-  console.log(chalk.blue.bold("\nTotal:"));
-  console.log(`  Files: ${totalFileCount}`);
-  console.log(`  Total Lines: ${totalTotal}`);
-  console.log(chalk.green.bold(`  Code Lines: ${totalCode}`));
-  console.log(`  Doc/Comments: ${totalTotal - totalCode}`);
+  echo.title("\nTotal:");
+  echo.text(`  Files: ${totalFileCount}`);
+  echo.text(`  Total Lines: ${totalTotal}`);
+  echo.success(`  Code Lines: ${totalCode}`);
+  echo.text(`  Doc/Comments: ${totalTotal - totalCode}`);
 
   if (process.env.VERBOSE) {
-    console.log(chalk.yellow("\n\nFile Breakdown:"));
+    echo.warn("\n\nFile Breakdown:");
     for (const file of srcStats.files) {
-      console.log(`  ${file.path}: ${file.lines} lines`);
+      echo.text(`  ${file.path}: ${file.lines} lines`);
     }
   }
 
-  console.log();
+  echo.text();
 }
