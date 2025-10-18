@@ -44,13 +44,19 @@ program.command("css-docs").description("Generate CSS documentation from base.cs
 
 const example = program.command("example").description("Manage examples for Volt.js");
 
-example.command("new <name>").description("Create a new example with scaffolded files").action(async (name: string) => {
-  try {
-    await exampleCommand(name);
-  } catch (error) {
-    echo.err("Error creating example:", error);
-    process.exit(1);
-  }
-});
+example.command("new <name>").description("Create a new example with scaffolded files").option(
+  "--mode <mode>",
+  "Example mode: markup (declarative) or programmatic (imperative)",
+  "programmatic",
+).option("--standalone", "Create standalone example with local copies of volt.min.js and volt.min.css", false).action(
+  async (name: string, options: { mode: "markup" | "programmatic"; standalone: boolean }) => {
+    try {
+      await exampleCommand(name, options);
+    } catch (error) {
+      echo.err("Error creating example:", error);
+      process.exit(1);
+    }
+  },
+);
 
 program.parse();

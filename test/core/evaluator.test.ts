@@ -328,4 +328,239 @@ describe("evaluator", () => {
       expect(evaluate("(page - 1) * 10", scope)).toBe(10);
     });
   });
+
+  describe("method calls", () => {
+    it("calls methods on objects", () => {
+      const scope = { text: "hello world" };
+      expect(evaluate("text.toUpperCase()", scope)).toBe("HELLO WORLD");
+      expect(evaluate("text.substring(0, 5)", scope)).toBe("hello");
+    });
+
+    it("calls methods on arrays", () => {
+      const scope = { items: [1, 2, 3, 4, 5] };
+      expect(evaluate("items.slice(1, 3)", scope)).toEqual([2, 3]);
+      expect(evaluate("items.indexOf(3)", scope)).toBe(2);
+    });
+
+    it("calls methods on signals", () => {
+      const count = signal(5);
+      const scope = { count };
+      expect(evaluate("count.get()", scope)).toBe(5);
+    });
+
+    it("calls methods with multiple arguments", () => {
+      const scope = { text: "one,two,three" };
+      expect(evaluate("text.split(',')", scope)).toEqual(["one", "two", "three"]);
+    });
+
+    it("chains method calls", () => {
+      const scope = { text: "  hello  " };
+      expect(evaluate("text.trim().toUpperCase()", scope)).toBe("HELLO");
+    });
+
+    it("calls methods with no arguments", () => {
+      const scope = { arr: [1, 2, 3] };
+      expect(evaluate("arr.reverse()", scope)).toEqual([3, 2, 1]);
+    });
+  });
+
+  describe("ternary operator", () => {
+    it("evaluates simple ternary expressions", () => {
+      expect(evaluate("true ? 'yes' : 'no'", {})).toBe("yes");
+      expect(evaluate("false ? 'yes' : 'no'", {})).toBe("no");
+    });
+
+    it("evaluates ternary with variables", () => {
+      const scope = { count: 5, limit: 10 };
+      expect(evaluate("count > 0 ? 'positive' : 'zero or negative'", scope)).toBe("positive");
+      expect(evaluate("count === limit ? 'equal' : 'not equal'", scope)).toBe("not equal");
+    });
+
+    it("evaluates ternary with signals", () => {
+      const scope = { count: signal(1) };
+      expect(evaluate("count === 1 ? 'single' : 'multiple'", scope)).toBe("single");
+    });
+
+    it("evaluates nested ternary expressions", () => {
+      const scope = { value: 5 };
+      expect(evaluate("value < 0 ? 'negative' : value === 0 ? 'zero' : 'positive'", scope)).toBe("positive");
+    });
+
+    it("evaluates ternary with complex conditions", () => {
+      const scope = { age: 25, min: 18, max: 65 };
+      expect(evaluate("age >= min && age <= max ? 'valid' : 'invalid'", scope)).toBe("valid");
+    });
+
+    it("evaluates ternary for pluralization", () => {
+      expect(evaluate("1 === 1 ? 'item' : 'items'", {})).toBe("item");
+      expect(evaluate("5 === 1 ? 'item' : 'items'", {})).toBe("items");
+    });
+  });
+
+  describe("arrow functions", () => {
+    it("evaluates single-parameter arrow functions", () => {
+      const scope = { items: [1, 2, 3, 4, 5] };
+      const result = evaluate("items.filter(x => x > 2)", scope);
+      expect(result).toEqual([3, 4, 5]);
+    });
+
+    it("evaluates multi-parameter arrow functions", () => {
+      const scope = { items: ["a", "b", "c"] };
+      const result = evaluate("items.map((item, index) => index)", scope);
+      expect(result).toEqual([0, 1, 2]);
+    });
+
+    it("captures scope in arrow functions", () => {
+      const scope = { todos: [{ completed: false }, { completed: true }, { completed: false }] };
+      const result = evaluate("todos.filter(t => !t.completed)", scope);
+      expect(result).toEqual([{ completed: false }, { completed: false }]);
+    });
+
+    it("evaluates arrow functions with complex expressions", () => {
+      const scope = { items: [1, 2, 3] };
+      const result = evaluate("items.map(x => x * 2 + 1)", scope);
+      expect(result).toEqual([3, 5, 7]);
+    });
+
+    it("evaluates arrow functions with property access", () => {
+      const scope = { users: [{ name: "Alice", age: 25 }, { name: "Bob", age: 30 }] };
+      const result = evaluate("users.map(u => u.name)", scope);
+      expect(result).toEqual(["Alice", "Bob"]);
+    });
+
+    it("evaluates nested arrow functions", () => {
+      const scope = { matrix: [[1, 2], [3, 4]] };
+      const result = evaluate("matrix.map(row => row.map(n => n * 2))", scope);
+      expect(result).toEqual([[2, 4], [6, 8]]);
+    });
+
+    it("evaluates arrow functions with no parameters", () => {
+      const scope = { arr: [1, 2, 3] };
+      const mapper = evaluate("() => 42", scope);
+      expect(typeof mapper).toBe("function");
+      expect((mapper as () => number)()).toBe(42);
+    });
+  });
+
+  describe("object literals", () => {
+    it("evaluates empty object literals", () => {
+      expect(evaluate("{}", {})).toEqual({});
+    });
+
+    it("evaluates simple object literals", () => {
+      expect(evaluate("{ active: true, disabled: false }", {})).toEqual({ active: true, disabled: false });
+    });
+
+    it("evaluates object literals with variables", () => {
+      const scope = { isActive: true, count: 5 };
+      expect(evaluate("{ active: isActive, num: count }", scope)).toEqual({ active: true, num: 5 });
+    });
+
+    it("evaluates object literals with string keys", () => {
+      expect(evaluate("{ 'first-name': 'Alice', 'last-name': 'Smith' }", {})).toEqual({
+        "first-name": "Alice",
+        "last-name": "Smith",
+      });
+    });
+
+    it("evaluates object literals with expressions", () => {
+      const scope = { count: 5 };
+      expect(evaluate("{ value: count * 2, label: 'items' }", scope)).toEqual({ value: 10, label: "items" });
+    });
+
+    it("evaluates object literals with nested objects", () => {
+      expect(evaluate("{ user: { name: 'Bob', age: 30 } }", {})).toEqual({ user: { name: "Bob", age: 30 } });
+    });
+  });
+
+  describe("array literals", () => {
+    it("evaluates empty array literals", () => {
+      expect(evaluate("[]", {})).toEqual([]);
+    });
+
+    it("evaluates simple array literals", () => {
+      expect(evaluate("[1, 2, 3]", {})).toEqual([1, 2, 3]);
+      expect(evaluate("['a', 'b', 'c']", {})).toEqual(["a", "b", "c"]);
+    });
+
+    it("evaluates array literals with variables", () => {
+      const scope = { x: 5, y: 10 };
+      expect(evaluate("[x, y, 15]", scope)).toEqual([5, 10, 15]);
+    });
+
+    it("evaluates array literals with expressions", () => {
+      const scope = { count: 3 };
+      expect(evaluate("[count, count * 2, count * 3]", scope)).toEqual([3, 6, 9]);
+    });
+
+    it("evaluates nested array literals", () => {
+      expect(evaluate("[[1, 2], [3, 4]]", {})).toEqual([[1, 2], [3, 4]]);
+    });
+
+    it("evaluates mixed type array literals", () => {
+      expect(evaluate("[1, 'two', true, null]", {})).toEqual([1, "two", true, null]);
+    });
+  });
+
+  describe("spread operator", () => {
+    it("spreads arrays in array literals", () => {
+      const scope = { items: [2, 3, 4] };
+      expect(evaluate("[1, ...items, 5]", scope)).toEqual([1, 2, 3, 4, 5]);
+    });
+
+    it("spreads multiple arrays", () => {
+      const scope = { first: [1, 2], second: [3, 4] };
+      expect(evaluate("[...first, ...second]", scope)).toEqual([1, 2, 3, 4]);
+    });
+
+    it("spreads objects in object literals", () => {
+      const scope = { user: { name: "Alice", age: 25 } };
+      expect(evaluate("{ ...user, age: 26 }", scope)).toEqual({ name: "Alice", age: 26 });
+    });
+
+    it("spreads with new properties", () => {
+      const scope = { base: { a: 1, b: 2 } };
+      expect(evaluate("{ ...base, c: 3 }", scope)).toEqual({ a: 1, b: 2, c: 3 });
+    });
+
+    it("handles multiple spreads in objects", () => {
+      const scope = { obj1: { a: 1 }, obj2: { b: 2 } };
+      expect(evaluate("{ ...obj1, ...obj2, c: 3 }", scope)).toEqual({ a: 1, b: 2, c: 3 });
+    });
+  });
+
+  describe("enhanced evaluator integration", () => {
+    it("combines method calls with ternary operators", () => {
+      const scope = { text: "hello", minLength: 3 };
+      expect(evaluate("text.length >= minLength ? text.toUpperCase() : text", scope)).toBe("HELLO");
+    });
+
+    it("uses arrow functions with object literals", () => {
+      const scope = { items: [1, 2, 3] };
+      const result = evaluate("items.map(n => ({ value: n, doubled: n * 2 }))", scope);
+      expect(result).toEqual([{ value: 1, doubled: 2 }, { value: 2, doubled: 4 }, { value: 3, doubled: 6 }]);
+    });
+
+    it("uses spread in method call results", () => {
+      const scope = { todos: [{ id: 1 }, { id: 2 }], newTodo: { id: 3 } };
+      expect(evaluate("[...todos, newTodo]", scope)).toEqual([{ id: 1 }, { id: 2 }, { id: 3 }]);
+    });
+
+    it("evaluates complex todo app mutations", () => {
+      const scope = { todos: [{ id: 1, completed: false }, { id: 2, completed: true }] };
+      const result = evaluate("todos.filter(t => !t.completed)", scope);
+      expect(result).toEqual([{ id: 1, completed: false }]);
+    });
+
+    it("evaluates signal mutations with spread", () => {
+      const count = signal(5);
+      const scope = { count };
+      expect(evaluate("count.get() + 1", scope)).toBe(6);
+    });
+
+    it("handles complex class binding expressions", () => {
+      const scope = { isActive: true, isDisabled: false };
+      expect(evaluate("isActive ? 'active' : ''", scope)).toBe("active");
+    });
+  });
 });

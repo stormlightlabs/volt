@@ -1,13 +1,11 @@
 /**
  * Safe expression evaluation with operators support
+ *
  * Implements a recursive descent parser for expressions without using eval()
  */
 
 import type { Dep, Scope } from "$types/volt";
 
-/**
- * Token types for lexical analysis
- */
 type TokenType =
   | "NUMBER"
   | "STRING"
@@ -21,6 +19,13 @@ type TokenType =
   | "RBRACKET"
   | "LPAREN"
   | "RPAREN"
+  | "LBRACE"
+  | "RBRACE"
+  | "COMMA"
+  | "QUESTION"
+  | "COLON"
+  | "ARROW"
+  | "DOT_DOT_DOT"
   | "PLUS"
   | "MINUS"
   | "STAR"
@@ -44,9 +49,6 @@ type Token = { type: TokenType; value: unknown; start: number; end: number };
 
 /**
  * Tokenize an expression string into a stream of tokens
- *
- * @param expr - The expression string
- * @returns Array of tokens
  */
 function tokenize(expr: string): Token[] {
   const tokens: Token[] = [];
@@ -136,6 +138,11 @@ function tokenize(expr: string): Token[] {
         pos += 3;
         continue;
       }
+      if (threeChar === "...") {
+        tokens.push({ type: "DOT_DOT_DOT", value: "...", start, end: pos + 3 });
+        pos += 3;
+        continue;
+      }
     }
 
     if (pos + 1 < expr.length) {
@@ -158,6 +165,11 @@ function tokenize(expr: string): Token[] {
         }
         case "||": {
           tokens.push({ type: "OR_OR", value: "||", start, end: pos + 2 });
+          pos += 2;
+          continue;
+        }
+        case "=>": {
+          tokens.push({ type: "ARROW", value: "=>", start, end: pos + 2 });
           pos += 2;
           continue;
         }
@@ -230,6 +242,31 @@ function tokenize(expr: string): Token[] {
         pos++;
         break;
       }
+      case "{": {
+        tokens.push({ type: "LBRACE", value: "{", start, end: pos + 1 });
+        pos++;
+        break;
+      }
+      case "}": {
+        tokens.push({ type: "RBRACE", value: "}", start, end: pos + 1 });
+        pos++;
+        break;
+      }
+      case ",": {
+        tokens.push({ type: "COMMA", value: ",", start, end: pos + 1 });
+        pos++;
+        break;
+      }
+      case "?": {
+        tokens.push({ type: "QUESTION", value: "?", start, end: pos + 1 });
+        pos++;
+        break;
+      }
+      case ":": {
+        tokens.push({ type: "COLON", value: ":", start, end: pos + 1 });
+        pos++;
+        break;
+      }
       default: {
         throw new Error(`Unexpected character '${char}' at position ${pos}`);
       }
@@ -253,15 +290,25 @@ class Parser {
     this.scope = scope;
   }
 
-  /**
-   * Parse the expression and return the result
-   */
   parse(): unknown {
-    return this.parseExpression();
+    return this.parseExpr();
   }
 
-  private parseExpression(): unknown {
-    return this.parseLogicalOr();
+  private parseExpr(): unknown {
+    return this.parseTernary();
+  }
+
+  private parseTernary(): unknown {
+    const expr = this.parseLogicalOr();
+
+    if (this.match("QUESTION")) {
+      const trueBranch = this.parseExpr();
+      this.consume("COLON", "Expected ':' in ternary expression");
+      const falseBranch = this.parseExpr();
+      return expr ? trueBranch : falseBranch;
+    }
+
+    return expr;
   }
 
   private parseLogicalOr(): unknown {
@@ -391,18 +438,68 @@ class Parser {
 
     while (true) {
       if (this.match("DOT")) {
-        const property = this.consume("IDENTIFIER", "Expected property name after '.'");
-        object = this.getMember(object, property.value as string);
+        const prop = this.consume("IDENTIFIER", "Expected property name after '.'");
+        const propValue = this.getMember(object, prop.value as string);
+
+        if (this.check("LPAREN")) {
+          this.advance();
+          const args = this.parseArgumentList();
+          this.consume("RPAREN", "Expected ')' after arguments");
+          object = this.callMethod(object, prop.value as string, args);
+        } else {
+          object = propValue;
+        }
       } else if (this.match("LBRACKET")) {
-        const index = this.parseExpression();
+        const index = this.parseExpr();
         this.consume("RBRACKET", "Expected ']' after member access");
         object = this.getMember(object, index);
+      } else if (this.match("LPAREN")) {
+        const args = this.parseArgumentList();
+        this.consume("RPAREN", "Expected ')' after arguments");
+
+        if (typeof object === "function") {
+          object = (object as (...args: unknown[]) => unknown)(...args);
+        } else {
+          throw new TypeError("Attempting to call a non-function value");
+        }
       } else {
         break;
       }
     }
 
+    if (isSignal(object)) {
+      return (object as { get: () => unknown }).get();
+    }
+
     return object;
+  }
+
+  private parseArgumentList(): unknown[] {
+    const args: unknown[] = [];
+
+    if (this.check("RPAREN")) {
+      return args;
+    }
+
+    do {
+      args.push(this.parseExpr());
+    } while (this.match("COMMA"));
+
+    return args;
+  }
+
+  private callMethod(object: unknown, methodName: string, args: unknown[]): unknown {
+    if (object === null || object === undefined) {
+      throw new Error(`Cannot call method '${methodName}' on ${object}`);
+    }
+
+    const method = (object as Record<string, unknown>)[methodName];
+
+    if (typeof method !== "function") {
+      throw new TypeError(`'${methodName}' is not a function`);
+    }
+
+    return (method as (...args: unknown[]) => unknown).call(object, ...args);
   }
 
   private parsePrimary(): unknown {
@@ -412,16 +509,217 @@ class Parser {
 
     if (this.match("IDENTIFIER")) {
       const identifier = this.previous().value as string;
+
+      if (this.check("ARROW")) {
+        this.current--;
+        return this.parseArrowFunction();
+      }
+
       return this.resolvePropPath(identifier);
     }
 
     if (this.match("LPAREN")) {
-      const expr = this.parseExpression();
+      const start = this.current;
+
+      if (this.isArrowFunctionParams()) {
+        this.current = start - 1;
+        return this.parseArrowFunction();
+      }
+
+      const expr = this.parseExpr();
       this.consume("RPAREN", "Expected ')' after expression");
       return expr;
     }
 
+    if (this.match("LBRACKET")) {
+      return this.parseArrayLiteral();
+    }
+
+    if (this.match("LBRACE")) {
+      return this.parseObjectLiteral();
+    }
+
     throw new Error(`Unexpected token: ${this.peek().type}`);
+  }
+
+  private parseArrayLiteral(): unknown[] {
+    const elements: unknown[] = [];
+
+    if (this.match("RBRACKET")) {
+      return elements;
+    }
+
+    do {
+      if (this.match("DOT_DOT_DOT")) {
+        const spreadValue = this.parseExpr();
+        if (Array.isArray(spreadValue)) {
+          elements.push(...spreadValue);
+        } else {
+          throw new TypeError("Spread operator can only be used with arrays");
+        }
+      } else {
+        elements.push(this.parseExpr());
+      }
+    } while (this.match("COMMA"));
+
+    this.consume("RBRACKET", "Expected ']' after array elements");
+    return elements;
+  }
+
+  private parseObjectLiteral(): Record<string, unknown> {
+    const object: Record<string, unknown> = {};
+
+    if (this.match("RBRACE")) {
+      return object;
+    }
+
+    do {
+      if (this.match("DOT_DOT_DOT")) {
+        const spreadValue = this.parseExpr();
+        if (typeof spreadValue === "object" && spreadValue !== null && !Array.isArray(spreadValue)) {
+          Object.assign(object, spreadValue);
+        } else {
+          throw new Error("Spread operator can only be used with objects in object literals");
+        }
+      } else {
+        let key: string;
+
+        if (this.match("IDENTIFIER")) {
+          key = this.previous().value as string;
+        } else if (this.match("STRING")) {
+          key = this.previous().value as string;
+        } else {
+          throw new Error("Expected property key in object literal");
+        }
+
+        this.consume("COLON", "Expected ':' after property key");
+        const value = this.parseExpr();
+        object[key] = value;
+      }
+    } while (this.match("COMMA"));
+
+    this.consume("RBRACE", "Expected '}' after object properties");
+    return object;
+  }
+
+  private parseArrowFunction(): (...args: unknown[]) => unknown {
+    const params: string[] = [];
+
+    if (this.match("IDENTIFIER")) {
+      params.push(this.previous().value as string);
+    } else if (this.match("LPAREN")) {
+      if (!this.check("RPAREN")) {
+        do {
+          const param = this.consume("IDENTIFIER", "Expected parameter name");
+          params.push(param.value as string);
+        } while (this.match("COMMA"));
+      }
+      this.consume("RPAREN", "Expected ')' after parameters");
+    } else {
+      throw new Error("Expected arrow function parameters");
+    }
+
+    this.consume("ARROW", "Expected '=>' in arrow function");
+
+    if (this.match("LBRACE")) {
+      let braceDepth = 1;
+      while (braceDepth > 0 && !this.isAtEnd()) {
+        if (this.check("LBRACE")) braceDepth++;
+        if (this.check("RBRACE")) braceDepth--;
+        this.advance();
+      }
+      throw new Error("Arrow function block bodies are not yet supported. Use single expressions only.");
+    } else {
+      const exprTokens: Token[] = [];
+      let parenDepth = 0;
+      let bracketDepth = 0;
+      let braceDepth = 0;
+
+      outer: while (!this.isAtEnd()) {
+        const token = this.peek();
+
+        switch (token.type) {
+          case "LPAREN": {
+            parenDepth++;
+            break;
+          }
+          case "RPAREN": {
+            if (parenDepth === 0) break outer;
+            parenDepth--;
+            break;
+          }
+          case "LBRACKET": {
+            bracketDepth++;
+            break;
+          }
+          case "RBRACKET": {
+            if (bracketDepth === 0) break outer;
+            bracketDepth--;
+            break;
+          }
+          case "LBRACE": {
+            braceDepth++;
+            break;
+          }
+          case "RBRACE": {
+            if (braceDepth === 0) break outer;
+            braceDepth--;
+            break;
+          }
+          case "COMMA": {
+            if (parenDepth === 0 && bracketDepth === 0 && braceDepth === 0) {
+              break outer;
+            }
+            break;
+          }
+          default: {
+            break;
+          }
+        }
+
+        exprTokens.push(this.advance());
+      }
+
+      const capturedScope = this.scope;
+
+      return (...args: unknown[]) => {
+        const arrowScope: Scope = { ...capturedScope };
+        for (const [index, param] of params.entries()) {
+          arrowScope[param] = args[index];
+        }
+
+        const parser = new Parser([...exprTokens, { type: "EOF", value: null, start: 0, end: 0 }], arrowScope);
+        return parser.parse();
+      };
+    }
+  }
+
+  private isArrowFunctionParams(): boolean {
+    const saved = this.current;
+    let result = false;
+
+    try {
+      if (this.check("RPAREN")) {
+        this.advance();
+        if (this.check("ARROW")) {
+          result = true;
+        }
+      } else {
+        while (!this.isAtEnd() && !this.check("RPAREN")) {
+          if (!this.match("IDENTIFIER", "COMMA")) {
+            result = false;
+            break;
+          }
+        }
+        if (this.match("RPAREN") && this.check("ARROW")) {
+          result = true;
+        }
+      }
+    } finally {
+      this.current = saved;
+    }
+
+    return result;
   }
 
   private getMember(object: unknown, key: unknown): unknown {
@@ -429,7 +727,14 @@ class Parser {
       return undefined;
     }
 
-    // Access property - works on objects, strings, arrays, etc.
+    if (isSignal(object) && (key === "get" || key === "set" || key === "subscribe")) {
+      return (object as Record<string, unknown>)[key as string];
+    }
+
+    if (isSignal(object)) {
+      object = (object as { get: () => unknown }).get();
+    }
+
     const value = (object as Record<string | number, unknown>)[key as string | number];
 
     if (isSignal(value)) {
@@ -444,13 +749,7 @@ class Parser {
       return undefined;
     }
 
-    const value = this.scope[path];
-
-    if (isSignal(value)) {
-      return value.get();
-    }
-
-    return value;
+    return this.scope[path];
   }
 
   private match(...types: TokenType[]): boolean {
@@ -505,17 +804,17 @@ export function isSignal(value: unknown): value is Dep {
  *
  * Supports literals, property access, operators, and member access.
  *
- * @param expression - The expression string to evaluate
+ * @param expr - The expression string to evaluate
  * @param scope - The scope object containing values
  * @returns The evaluated result
  */
-export function evaluate(expression: string, scope: Scope): unknown {
+export function evaluate(expr: string, scope: Scope): unknown {
   try {
-    const tokens = tokenize(expression);
+    const tokens = tokenize(expr);
     const parser = new Parser(tokens, scope);
     return parser.parse();
   } catch (error) {
-    console.error(`Error evaluating expression "${expression}":`, error);
+    console.error(`Error evaluating expression "${expr}":`, error);
     return undefined;
   }
 }
@@ -524,14 +823,14 @@ export function evaluate(expression: string, scope: Scope): unknown {
  * Extract all signal dependencies from an expression by finding identifiers
  * that correspond to signals in the scope.
  *
- * @param expression - The expression to analyze
+ * @param expr - The expression to analyze
  * @param scope - The scope containing potential signal dependencies
  * @returns Array of signals found in the expression
  */
-export function extractDependencies(expression: string, scope: Scope): Array<Dep> {
+export function extractDependencies(expr: string, scope: Scope): Array<Dep> {
   const dependencies: Array<Dep> = [];
   const identifierRegex = /\b([a-zA-Z_$][\w$]*)\b/g;
-  const matches = expression.matchAll(identifierRegex);
+  const matches = expr.matchAll(identifierRegex);
   const seen = new Set<string>();
 
   for (const match of matches) {
