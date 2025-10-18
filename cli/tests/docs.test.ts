@@ -1,10 +1,12 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+import { getLibSrcPath } from "../src/utils/paths.js";
 
 describe("docs generation", () => {
   it("should extract function documentation", async () => {
-    const testFile = join(process.cwd(), "..", "src", "core", "signal.ts");
+    const srcPath = await getLibSrcPath();
+    const testFile = join(srcPath, "core", "signal.ts");
     const content = await readFile(testFile, "utf-8");
 
     expect(content).toContain("Creates a new signal");
@@ -14,8 +16,9 @@ describe("docs generation", () => {
   });
 
   it("should extract interface documentation", async () => {
-    const testFile = join(process.cwd(), "..", "src", "core", "signal.ts");
-    const content = await readFile(testFile, "utf-8");
+    const srcPath = await getLibSrcPath();
+    const typesFile = join(srcPath, "types", "volt.d.ts");
+    const content = await readFile(typesFile, "utf-8");
 
     expect(content).toContain("interface Signal");
     expect(content).toContain("interface ComputedSignal");

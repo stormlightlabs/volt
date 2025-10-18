@@ -3,58 +3,19 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { minify as terserMinify } from "terser";
 import { echo } from "../console/echo.js";
+import { findMonorepoRoot, getLibPath, getExamplesPath } from "../utils/paths.js";
 
 type BuildArtifacts = { jsPath: string; cssPath: string };
 
 /**
- * Find the project root by walking up the directory tree.
- *
- * Looks for a directory containing dist/assets/ or package.json with name "volt"
+ * Build the library using pnpm workspace commands
  */
-async function findProjectRoot(startDir: string): Promise<string> {
-  let currentDir = startDir;
-  const maxDepth = 10;
-  let depth = 0;
-
-  while (depth < maxDepth) {
-    const distAssetsPath = path.join(currentDir, "dist", "assets");
-    const packageJsonPath = path.join(currentDir, "package.json");
-
-    if (existsSync(distAssetsPath)) {
-      return currentDir;
-    }
-
-    if (existsSync(packageJsonPath)) {
-      try {
-        const pkgContent = JSON.parse(await readFile(packageJsonPath, "utf8"));
-        if (pkgContent.name === "volt") {
-          return currentDir;
-        }
-      } catch {
-        // No-Op: Continue searching
-      }
-    }
-
-    const parentDir = path.dirname(currentDir);
-    if (parentDir === currentDir) {
-      throw new Error("Could not find Volt project root. Make sure you're in the Volt project directory.");
-    }
-
-    currentDir = parentDir;
-    depth++;
-  }
-
-  throw new Error("Could not find Volt project root. Make sure you're in the Volt project directory.");
-}
-
-/**
- * Build the library using Vite in library mode
- */
-async function buildLibrary(root: string): Promise<void> {
+async function buildLibrary(): Promise<void> {
   const { execSync } = await import("node:child_process");
+  const monorepoRoot = await findMonorepoRoot();
 
   try {
-    execSync("pnpm vite build --mode lib", { cwd: root, stdio: "inherit" });
+    execSync("pnpm --filter volt build:lib", { cwd: monorepoRoot, stdio: "inherit" });
   } catch {
     throw new Error("Library build failed. Make sure Vite is configured correctly.");
   }
@@ -63,10 +24,11 @@ async function buildLibrary(root: string): Promise<void> {
 /**
  * Find the library build artifacts in dist/
  */
-async function findBuildArtifacts(root: string): Promise<BuildArtifacts> {
-  const distDir = path.join(root, "dist");
+async function findBuildArtifacts(): Promise<BuildArtifacts> {
+  const libPath = await getLibPath();
+  const distDir = path.join(libPath, "dist");
   const jsPath = path.join(distDir, "volt.js");
-  const cssPath = path.join(root, "src", "styles", "base.css");
+  const cssPath = path.join(libPath, "src", "styles", "base.css");
 
   if (!existsSync(jsPath)) {
     throw new Error(`Library JS not found at ${jsPath}. Build may have failed.`);
@@ -298,8 +260,7 @@ export async function exampleCommand(
   const mode = options.mode || "programmatic";
   const standalone = options.standalone || false;
 
-  const root = await findProjectRoot(process.cwd());
-  const examplesDir = path.join(root, "examples");
+  const examplesDir = await getExamplesPath();
   const exampleDir = path.join(examplesDir, name);
 
   echo.title(`\nCreating example: ${name}\n`);
@@ -307,10 +268,10 @@ export async function exampleCommand(
   echo.info(`Standalone: ${standalone ? "Yes" : "No (shared)"}\n`);
 
   echo.info("Building Volt.js library...");
-  await buildLibrary(root);
+  await buildLibrary();
 
   echo.info("Finding build artifacts...");
-  const artifacts = await findBuildArtifacts(root);
+  const artifacts = await findBuildArtifacts();
 
   echo.info("Creating minified build artifacts...");
   await createMinifiedArtifacts(artifacts, examplesDir);

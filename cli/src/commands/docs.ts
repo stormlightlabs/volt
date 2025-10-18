@@ -3,6 +3,7 @@ import path from "node:path";
 import ts from "typescript";
 import { echo } from "../console/echo.js";
 import { trackVersion } from "../versioning/tracker.js";
+import { getLibSrcPath, getDocsPath } from "../utils/paths.js";
 
 type Member = { name: string; type: string; docs?: string };
 
@@ -283,9 +284,9 @@ async function findTsFiles(dir: string, files: string[] = []): Promise<string[]>
  * Docs command implementation
  */
 export async function docsCommand(): Promise<void> {
-  const root = path.join(process.cwd(), "..");
-  const srcDir = path.join(root, "src");
-  const docsDir = path.join(root, "docs", "api");
+  const srcDir = await getLibSrcPath();
+  const docsPath = await getDocsPath();
+  const docsDir = path.join(docsPath, "api");
 
   echo.title("\nGenerating API Documentation\n");
 

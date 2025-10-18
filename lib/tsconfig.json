@@ -23,5 +23,5 @@
     "baseUrl": ".",
     "paths": { "$types/*": ["./src/types/*"], "@volt/core/*": ["./src/core/*"], "@volt/plugins/*": ["./src/plugins/*"] }
   },
-  "include": ["src", "test"]
+  "include": ["src", "lib/test"]
 }

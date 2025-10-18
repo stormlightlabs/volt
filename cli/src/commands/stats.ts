@@ -1,6 +1,7 @@
 import { readdir, readFile, stat } from "node:fs/promises";
 import path from "node:path";
 import { echo } from "../console/echo.js";
+import { getLibSrcPath, getLibTestPath, findMonorepoRoot } from "../utils/paths.js";
 
 type FileStats = { path: string; lines: number; totalLines: number };
 type DirectoryStats = { totalLines: number; codeLines: number; files: FileStats[] };
@@ -89,13 +90,12 @@ async function collectStats(directory: string, baseDir: string): Promise<Directo
  * Stats command implementation
  */
 export async function statsCommand(includeFull: boolean): Promise<void> {
-  const projectRoot = path.join(process.cwd(), "..");
-  const srcDir = path.join(projectRoot, "src");
-  const testDir = path.join(projectRoot, "test");
+  const monorepoRoot = await findMonorepoRoot();
+  const srcDir = await getLibSrcPath();
 
   echo.title("\nVolt.js Code Statistics\n");
 
-  const srcStats = await collectStats(srcDir, projectRoot);
+  const srcStats = await collectStats(srcDir, monorepoRoot);
 
   echo.label("Source Code (src/):");
   echo.text(`  Files: ${srcStats.files.length}`);
@@ -107,9 +107,9 @@ export async function statsCommand(includeFull: boolean): Promise<void> {
   let totalTotal = srcStats.totalLines;
   let totalFileCount = srcStats.files.length;
 
-  // Include tests if --full flag is set
   if (includeFull) {
-    const testStats = await collectStats(testDir, projectRoot);
+    const testDir = await getLibTestPath();
+    const testStats = await collectStats(testDir, monorepoRoot);
 
     echo.label("\nTest Code (test/):");
     echo.text(`  Files: ${testStats.files.length}`);

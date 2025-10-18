@@ -1,7 +1,8 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { echo } from "../console/echo";
+import { echo } from "../console/echo.js";
 import { trackVersion } from "../versioning/tracker.js";
+import { getLibSrcPath, getDocsPath } from "../utils/paths.js";
 
 type CSSComment = { selector: string; comment: string };
 
@@ -363,9 +364,10 @@ function groupElementsByCategory(elements: string[]): Record<string, string[]> {
  * Generates semantics.md from base.css
  */
 export async function cssDocsCommand(): Promise<void> {
-  const projectRoot = path.join(process.cwd(), "..");
-  const cssPath = path.join(projectRoot, "src", "styles", "base.css");
-  const outputDir = path.join(projectRoot, "docs", "css");
+  const libSrcPath = await getLibSrcPath();
+  const docsPath = await getDocsPath();
+  const cssPath = path.join(libSrcPath, "styles", "base.css");
+  const outputDir = path.join(docsPath, "css");
   const outputPath = path.join(outputDir, "semantics.md");
 
   echo.title("\nGenerating CSS Documentation\n");
