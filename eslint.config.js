@@ -1,0 +1,59 @@
+import { includeIgnoreFile } from "@eslint/compat";
+import js from "@eslint/js";
+import unicorn from "eslint-plugin-unicorn";
+import globals from "globals";
+import { fileURLToPath } from "node:url";
+import ts from "typescript-eslint";
+
+const gitignorePath = fileURLToPath(new URL("./.gitignore", import.meta.url));
+
+/** @type {import('eslint').Linter.Config} */
+export default ts.config(
+    includeIgnoreFile(gitignorePath),
+    js.configs.recommended,
+    unicorn.configs.recommended,
+    ...ts.configs.recommended,
+    {
+        languageOptions: {
+            globals: { ...globals.browser, ...globals.node },
+            parserOptions: {
+                project: ["./tsconfig.json"],
+                tsconfigRootDir: import.meta.dirname,
+            },
+        },
+        rules: {
+            "no-undef": "off",
+            "@typescript-eslint/no-unused-vars": [
+                "warn",
+                { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
+            ],
+            "@typescript-eslint/no-explicit-any": "off",
+            "unicorn/prefer-ternary": "off",
+            "no-console": "off",
+            "unicorn/filename-case": [
+                "warn",
+                {
+                    cases: { pascalCase: true, kebabCase: true },
+                    multipleFileExtensions: false,
+                },
+            ],
+            "unicorn/no-null": "off",
+            "unicorn/prevent-abbreviations": [
+                "warn",
+                {
+                    replacements: {
+                        props: { properties: false },
+                        params: { parameters: false },
+                        param: { parameter: false },
+                        opts: { options: false },
+                        args: { arguments: false },
+                        fn: { function: false },
+                    },
+                },
+            ],
+        },
+    },
+    {
+        rules: { "unicorn/prefer-top-level-await": "off" },
+    }
+);
