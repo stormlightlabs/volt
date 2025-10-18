@@ -1,8 +1,8 @@
+import { mount } from "@volt/core/binder";
+import { registerPlugin } from "@volt/core/plugin";
+import { signal } from "@volt/core/signal";
+import { persistPlugin, registerStorageAdapter } from "@volt/plugins/persist";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { mount } from "../../src/core/binder";
-import { registerPlugin } from "../../src/core/plugin";
-import { signal } from "../../src/core/signal";
-import { persistPlugin, registerStorageAdapter } from "../../src/plugins/persist";
 
 describe("persist plugin", () => {
   beforeEach(() => {
@@ -16,7 +16,7 @@ describe("persist plugin", () => {
       localStorage.setItem("volt:count", "42");
 
       const element = document.createElement("div");
-      element.dataset.xPersist = "count:local";
+      element.dataset.voltPersist = "count:local";
 
       const count = signal(0);
       mount(element, { count });
@@ -26,7 +26,7 @@ describe("persist plugin", () => {
 
     it("saves signal value to localStorage on change", async () => {
       const element = document.createElement("div");
-      element.dataset.xPersist = "count:local";
+      element.dataset.voltPersist = "count:local";
 
       const count = signal(0);
       mount(element, { count });
@@ -40,7 +40,7 @@ describe("persist plugin", () => {
 
     it("persists string values", async () => {
       const element = document.createElement("div");
-      element.dataset.xPersist = "name:local";
+      element.dataset.voltPersist = "name:local";
 
       const name = signal("Alice");
       mount(element, { name });
@@ -49,12 +49,12 @@ describe("persist plugin", () => {
 
       await new Promise((resolve) => setTimeout(resolve, 0));
 
-      expect(localStorage.getItem("volt:name")).toBe('"Bob"');
+      expect(localStorage.getItem("volt:name")).toBe("\"Bob\"");
     });
 
     it("persists object values", async () => {
       const element = document.createElement("div");
-      element.dataset.xPersist = "user:local";
+      element.dataset.voltPersist = "user:local";
 
       const user = signal({ name: "Alice", age: 30 });
       mount(element, { user });
@@ -64,12 +64,12 @@ describe("persist plugin", () => {
       await new Promise((resolve) => setTimeout(resolve, 0));
 
       const stored = localStorage.getItem("volt:user");
-      expect(stored).toBe('{"name":"Bob","age":35}');
+      expect(stored).toBe("{\"name\":\"Bob\",\"age\":35}");
     });
 
     it("does not override signal if localStorage is empty", () => {
       const element = document.createElement("div");
-      element.dataset.xPersist = "count:local";
+      element.dataset.voltPersist = "count:local";
 
       const count = signal(100);
       mount(element, { count });
@@ -83,7 +83,7 @@ describe("persist plugin", () => {
       sessionStorage.setItem("volt:sessionData", "123");
 
       const element = document.createElement("div");
-      element.dataset.xPersist = "sessionData:session";
+      element.dataset.voltPersist = "sessionData:session";
 
       const sessionData = signal(0);
       mount(element, { sessionData });
@@ -93,7 +93,7 @@ describe("persist plugin", () => {
 
     it("saves signal value to sessionStorage on change", async () => {
       const element = document.createElement("div");
-      element.dataset.xPersist = "sessionData:session";
+      element.dataset.voltPersist = "sessionData:session";
 
       const sessionData = signal(0);
       mount(element, { sessionData });
@@ -122,7 +122,7 @@ describe("persist plugin", () => {
       customStore.set("volt:data", 999);
 
       const element = document.createElement("div");
-      element.dataset.xPersist = "data:custom";
+      element.dataset.voltPersist = "data:custom";
 
       const data = signal(0);
       mount(element, { data });
@@ -156,7 +156,7 @@ describe("persist plugin", () => {
       customStore.set("volt:asyncData", 888);
 
       const element = document.createElement("div");
-      element.dataset.xPersist = "asyncData:async";
+      element.dataset.voltPersist = "asyncData:async";
 
       const asyncData = signal(0);
       mount(element, { asyncData });
@@ -171,13 +171,11 @@ describe("persist plugin", () => {
     it("logs error for invalid binding format", () => {
       const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
       const element = document.createElement("div");
-      element.dataset.xPersist = "invalidformat";
+      element.dataset.voltPersist = "invalidformat";
 
       mount(element, {});
 
-      expect(errorSpy).toHaveBeenCalledWith(
-        expect.stringContaining("Invalid persist binding"),
-      );
+      expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining("Invalid persist binding"));
 
       errorSpy.mockRestore();
     });
@@ -185,13 +183,11 @@ describe("persist plugin", () => {
     it("logs error when signal not found", () => {
       const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
       const element = document.createElement("div");
-      element.dataset.xPersist = "nonexistent:local";
+      element.dataset.voltPersist = "nonexistent:local";
 
       mount(element, {});
 
-      expect(errorSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Signal "nonexistent" not found'),
-      );
+      expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining("Signal \"nonexistent\" not found"));
 
       errorSpy.mockRestore();
     });
@@ -199,14 +195,12 @@ describe("persist plugin", () => {
     it("logs error for unknown storage type", () => {
       const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
       const element = document.createElement("div");
-      element.dataset.xPersist = "data:unknown";
+      element.dataset.voltPersist = "data:unknown";
 
       const data = signal(0);
       mount(element, { data });
 
-      expect(errorSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Unknown storage type: "unknown"'),
-      );
+      expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining("Unknown storage type: \"unknown\""));
 
       errorSpy.mockRestore();
     });
@@ -225,7 +219,7 @@ describe("persist plugin", () => {
       });
 
       const element = document.createElement("div");
-      element.dataset.xPersist = "data:faulty";
+      element.dataset.voltPersist = "data:faulty";
 
       const data = signal(0);
       mount(element, { data });
@@ -247,7 +241,7 @@ describe("persist plugin", () => {
   describe("cleanup", () => {
     it("stops persisting after unmount", async () => {
       const element = document.createElement("div");
-      element.dataset.xPersist = "count:local";
+      element.dataset.voltPersist = "count:local";
 
       const count = signal(0);
       const cleanup = mount(element, { count });

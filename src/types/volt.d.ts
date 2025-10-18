@@ -5,11 +5,7 @@ export type Scope = Record<string, unknown>;
 /**
  * Context object available to all bindings
  */
-export interface BindingContext {
-  element: Element;
-  scope: Scope;
-  cleanups: CleanupFunction[];
-}
+export type BindingContext = { element: Element; scope: Scope; cleanups: CleanupFunction[] };
 
 /**
  * Context object provided to plugin handlers.
@@ -102,3 +98,22 @@ export interface StorageAdapter {
   set(key: string, value: unknown): Promise<void> | void;
   remove(key: string): Promise<void> | void;
 }
+
+/**
+ * Information about a mounted Volt root after charging
+ *
+ * element: The root element that was mounted
+ * scope: The reactive scope created for this root
+ * cleanup: Cleanup function to unmount this root
+ */
+export type ChargedRoot = { element: Element; scope: Scope; cleanup: CleanupFunction };
+
+/**
+ * Result of charging Volt roots
+ *
+ * roots: Array of all charged roots
+ * cleanup: Cleanup function to unmount all roots
+ */
+export type ChargeResult = { roots: ChargedRoot[]; cleanup: CleanupFunction };
+
+export type Dep = { get: () => unknown; subscribe: (callback: (value: unknown) => void) => () => void };

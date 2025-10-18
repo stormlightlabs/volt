@@ -14,7 +14,7 @@ const storageAdapters = new Map<string, StorageAdapter>();
 /**
  * Register a custom storage adapter.
  *
- * @param name - Adapter name (used in data-x-persist="signal:name")
+ * @param name - Adapter name (used in data-volt-persist="signal:name")
  * @param adapter - Storage adapter implementation
  */
 export function registerStorageAdapter(name: string, adapter: StorageAdapter): void {
@@ -158,12 +158,12 @@ function getStorageAdapter(type: string): StorageAdapter | undefined {
  * Persist plugin handler.
  * Synchronizes signal values with persistent storage.
  *
- * Syntax: data-x-persist="signalPath:storageType"
+ * Syntax: data-volt-persist="signalPath:storageType"
  * Examples:
- *   - data-x-persist="count:local"
- *   - data-x-persist="formData:session"
- *   - data-x-persist="userData:indexeddb"
- *   - data-x-persist="settings:customAdapter"
+ *   - data-volt-persist="count:local"
+ *   - data-volt-persist="formData:session"
+ *   - data-volt-persist="userData:indexeddb"
+ *   - data-volt-persist="settings:customAdapter"
  */
 export function persistPlugin(context: PluginContext, value: string): void {
   const parts = value.split(":");

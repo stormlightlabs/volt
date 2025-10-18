@@ -1,7 +1,7 @@
+import { mount } from "@volt/core/binder";
+import { clearPlugins, registerPlugin } from "@volt/core/plugin";
+import { signal } from "@volt/core/signal";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { mount } from "../../src/core/binder";
-import { clearPlugins, registerPlugin } from "../../src/core/plugin";
-import { signal } from "../../src/core/signal";
 
 describe("plugin integration with binder", () => {
   beforeEach(() => {
@@ -13,7 +13,7 @@ describe("plugin integration with binder", () => {
     registerPlugin("custom", pluginHandler);
 
     const element = document.createElement("div");
-    element.dataset.xCustom = "testValue";
+    element.dataset.voltCustom = "testValue";
 
     const scope = { test: "value" };
     mount(element, scope);
@@ -34,11 +34,11 @@ describe("plugin integration with binder", () => {
   it("warns when unknown binding is used without plugin", () => {
     const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
     const element = document.createElement("div");
-    element.dataset.xUnknown = "value";
+    element.dataset.voltUnknown = "value";
 
     mount(element, {});
 
-    expect(warnSpy).toHaveBeenCalledWith("Unknown binding: data-x-unknown");
+    expect(warnSpy).toHaveBeenCalledWith("Unknown binding: data-volt-unknown");
 
     warnSpy.mockRestore();
   });
@@ -50,7 +50,7 @@ describe("plugin integration with binder", () => {
     });
 
     const element = document.createElement("div");
-    element.dataset.xFinder = "test";
+    element.dataset.voltFinder = "test";
 
     const count = signal(42);
     mount(element, { count });
@@ -65,7 +65,7 @@ describe("plugin integration with binder", () => {
     });
 
     const element = document.createElement("div");
-    element.dataset.xEvaluator = "count";
+    element.dataset.voltEvaluator = "count";
 
     const count = signal(100);
     mount(element, { count });
@@ -80,7 +80,7 @@ describe("plugin integration with binder", () => {
     });
 
     const element = document.createElement("div");
-    element.dataset.xCleaner = "test";
+    element.dataset.voltCleaner = "test";
 
     const unmount = mount(element, {});
 
@@ -99,8 +99,8 @@ describe("plugin integration with binder", () => {
     registerPlugin("plugin2", plugin2);
 
     const element = document.createElement("div");
-    element.dataset.xPlugin1 = "value1";
-    element.dataset.xPlugin2 = "value2";
+    element.dataset.voltPlugin1 = "value1";
+    element.dataset.voltPlugin2 = "value2";
 
     mount(element, {});
 
@@ -113,8 +113,8 @@ describe("plugin integration with binder", () => {
     registerPlugin("custom", pluginHandler);
 
     const element = document.createElement("div");
-    element.dataset.xText = "message";
-    element.dataset.xCustom = "customValue";
+    element.dataset.voltText = "message";
+    element.dataset.voltCustom = "customValue";
 
     const scope = { message: "Hello" };
     mount(element, scope);
@@ -132,7 +132,7 @@ describe("plugin integration with binder", () => {
     registerPlugin("bad", badPlugin);
 
     const element = document.createElement("div");
-    element.dataset.xBad = "value";
+    element.dataset.voltBad = "value";
 
     mount(element, {});
 
@@ -155,7 +155,7 @@ describe("plugin integration with binder", () => {
     });
 
     const element = document.createElement("div");
-    element.dataset.xReactive = "count";
+    element.dataset.voltReactive = "count";
 
     const count = signal(1);
     mount(element, { count });

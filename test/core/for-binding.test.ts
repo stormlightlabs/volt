@@ -2,10 +2,10 @@ import { mount } from "@volt/core/binder";
 import { signal } from "@volt/core/signal";
 import { describe, expect, it } from "vitest";
 
-describe("data-x-for binding", () => {
+describe("data-volt-for binding", () => {
   it("renders a list from array signal", () => {
     const container = document.createElement("div");
-    container.innerHTML = `<ul><li data-x-for="item in items" data-x-text="item"></li></ul>`;
+    container.innerHTML = `<ul><li data-volt-for="item in items" data-volt-text="item"></li></ul>`;
 
     const items = signal(["apple", "banana", "cherry"]);
     mount(container, { items });
@@ -21,7 +21,7 @@ describe("data-x-for binding", () => {
 
   it("updates list when signal changes", () => {
     const container = document.createElement("div");
-    container.innerHTML = `<ul><li data-x-for="item in items" data-x-text="item"></li></ul>`;
+    container.innerHTML = `<ul><li data-volt-for="item in items" data-volt-text="item"></li></ul>`;
 
     const items = signal(["one", "two"]);
     mount(container, { items });
@@ -51,8 +51,8 @@ describe("data-x-for binding", () => {
     const container = document.createElement("div");
     container.innerHTML = `
       <ul>
-        <li data-x-for="user in users">
-          <span data-x-text="user.name"></span>
+        <li data-volt-for="user in users">
+          <span data-volt-text="user.name"></span>
         </li>
       </ul>
     `;
@@ -71,8 +71,8 @@ describe("data-x-for binding", () => {
     const container = document.createElement("div");
     container.innerHTML = `
       <ul>
-        <li data-x-for="(item, i) in items">
-          <span data-x-text="i"></span>: <span data-x-text="item"></span>
+        <li data-volt-for="(item, i) in items">
+          <span data-volt-text="i"></span>: <span data-volt-text="item"></span>
         </li>
       </ul>
     `;
@@ -94,7 +94,7 @@ describe("data-x-for binding", () => {
 
   it("handles empty arrays", () => {
     const container = document.createElement("div");
-    container.innerHTML = `<ul><li data-x-for="item in items" data-x-text="item"></li></ul>`;
+    container.innerHTML = `<ul><li data-volt-for="item in items" data-volt-text="item"></li></ul>`;
 
     const items = signal<string[]>([]);
     mount(container, { items });
@@ -109,7 +109,7 @@ describe("data-x-for binding", () => {
 
   it("handles static arrays (non-signal)", () => {
     const container = document.createElement("div");
-    container.innerHTML = `<ul><li data-x-for="item in items" data-x-text="item"></li></ul>`;
+    container.innerHTML = `<ul><li data-volt-for="item in items" data-volt-text="item"></li></ul>`;
 
     mount(container, { items: ["static", "array"] });
 
@@ -123,8 +123,8 @@ describe("data-x-for binding", () => {
     const container = document.createElement("div");
     container.innerHTML = `
       <ul>
-        <li data-x-for="item in items">
-          <button data-x-on-click="handleClick" data-x-text="item.text"></button>
+        <li data-volt-for="item in items">
+          <button data-volt-on-click="handleClick" data-volt-text="item.text"></button>
         </li>
       </ul>
     `;
@@ -151,9 +151,9 @@ describe("data-x-for binding", () => {
   it("supports nested loops", () => {
     const container = document.createElement("div");
     container.innerHTML = `
-      <div data-x-for="group in groups">
+      <div data-volt-for="group in groups">
         <ul>
-          <li data-x-for="item in group.items" data-x-text="item"></li>
+          <li data-volt-for="item in group.items" data-volt-text="item"></li>
         </ul>
       </div>
     `;
@@ -176,7 +176,7 @@ describe("data-x-for binding", () => {
 
   it("properly cleans up when unmounting", () => {
     const container = document.createElement("div");
-    container.innerHTML = `<ul><li data-x-for="item in items" data-x-text="item.value"></li></ul>`;
+    container.innerHTML = `<ul><li data-volt-for="item in items" data-volt-text="item.value"></li></ul>`;
 
     const items = signal([{ value: signal("A") }, { value: signal("B") }]);
     const cleanup = mount(container, { items });
@@ -201,7 +201,7 @@ describe("data-x-for binding", () => {
 
   it("handles non-array values gracefully", () => {
     const container = document.createElement("div");
-    container.innerHTML = `<ul><li data-x-for="item in notAnArray" data-x-text="item"></li></ul>`;
+    container.innerHTML = `<ul><li data-volt-for="item in notAnArray" data-volt-text="item"></li></ul>`;
 
     mount(container, { notAnArray: "not an array" });
 
@@ -213,9 +213,9 @@ describe("data-x-for binding", () => {
     const container = document.createElement("div");
     container.innerHTML = `
       <ul>
-        <li data-x-for="todo in todos">
-          <span data-x-text="todo.title"></span>
-          <span data-x-class="todo.completed">Done</span>
+        <li data-volt-for="todo in todos">
+          <span data-volt-text="todo.title"></span>
+          <span data-volt-class="todo.completed">Done</span>
         </li>
       </ul>
     `;

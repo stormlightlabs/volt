@@ -1,6 +1,6 @@
+import { mount } from "@volt/core/binder";
+import { signal } from "@volt/core/signal";
 import { describe, expect, it } from "vitest";
-import { mount } from "../../src/core/binder";
-import { signal } from "../../src/core/signal";
 
 describe("binder", () => {
   describe("mount", () => {
@@ -12,9 +12,9 @@ describe("binder", () => {
       cleanup();
     });
 
-    it("binds data-x-text to element text content", () => {
+    it("binds data-volt-text to element text content", () => {
       const element = document.createElement("div");
-      element.dataset.xText = "message";
+      element.dataset.voltText = "message";
 
       const scope = { message: "Hello, World!" };
       mount(element, scope);
@@ -24,7 +24,7 @@ describe("binder", () => {
 
     it("updates text content when signal changes", () => {
       const element = document.createElement("div");
-      element.dataset.xText = "count";
+      element.dataset.voltText = "count";
 
       const count = signal(0);
       const scope = { count };
@@ -39,9 +39,9 @@ describe("binder", () => {
       expect(element.textContent).toBe("10");
     });
 
-    it("binds data-x-html to element HTML content", () => {
+    it("binds data-volt-html to element HTML content", () => {
       const element = document.createElement("div");
-      element.dataset.xHtml = "content";
+      element.dataset.voltHtml = "content";
 
       const scope = { content: "<strong>Bold</strong>" };
       mount(element, scope);
@@ -51,7 +51,7 @@ describe("binder", () => {
 
     it("updates HTML content when signal changes", () => {
       const element = document.createElement("div");
-      element.dataset.xHtml = "html";
+      element.dataset.voltHtml = "html";
 
       const html = signal("<em>Italic</em>");
       const scope = { html };
@@ -63,9 +63,9 @@ describe("binder", () => {
       expect(element.innerHTML).toBe("<strong>Bold</strong>");
     });
 
-    it("binds data-x-class with string value", () => {
+    it("binds data-volt-class with string value", () => {
       const element = document.createElement("div");
-      element.dataset.xClass = "classes";
+      element.dataset.voltClass = "classes";
 
       const scope = { classes: "active highlight" };
       mount(element, scope);
@@ -74,9 +74,9 @@ describe("binder", () => {
       expect(element.classList.contains("highlight")).toBe(true);
     });
 
-    it("binds data-x-class with object value", () => {
+    it("binds data-volt-class with object value", () => {
       const element = document.createElement("div");
-      element.dataset.xClass = "classes";
+      element.dataset.voltClass = "classes";
 
       const scope = { classes: { active: true, disabled: false } };
       mount(element, scope);
@@ -87,7 +87,7 @@ describe("binder", () => {
 
     it("updates classes when signal changes", () => {
       const element = document.createElement("div");
-      element.dataset.xClass = "classes";
+      element.dataset.voltClass = "classes";
 
       const classes = signal({ active: false, disabled: false });
       const scope = { classes };
@@ -106,7 +106,7 @@ describe("binder", () => {
 
     it("removes old classes when signal changes", () => {
       const element = document.createElement("div");
-      element.dataset.xClass = "classes";
+      element.dataset.voltClass = "classes";
 
       const classes = signal("foo bar");
       const scope = { classes };
@@ -127,8 +127,8 @@ describe("binder", () => {
       const child2 = document.createElement("span");
       parent.append(child1, child2);
 
-      child1.dataset.xText = "first";
-      child2.dataset.xText = "second";
+      child1.dataset.voltText = "first";
+      child2.dataset.voltText = "second";
 
       const scope = { first: "First", second: "Second" };
       mount(parent, scope);
@@ -140,7 +140,7 @@ describe("binder", () => {
 
     it("cleans up subscriptions on unmount", () => {
       const element = document.createElement("div");
-      element.dataset.xText = "count";
+      element.dataset.voltText = "count";
 
       const count = signal(0);
       const scope = { count };
@@ -157,8 +157,8 @@ describe("binder", () => {
 
     it("handles multiple bindings on the same element", () => {
       const element = document.createElement("div");
-      element.dataset.xText = "message";
-      element.dataset.xClass = "classes";
+      element.dataset.voltText = "message";
+      element.dataset.voltClass = "classes";
 
       const message = signal("Hello");
       const classes = signal("active");
@@ -177,7 +177,7 @@ describe("binder", () => {
 
     it("evaluates nested property paths", () => {
       const element = document.createElement("div");
-      element.dataset.xText = "user.name";
+      element.dataset.voltText = "user.name";
 
       const scope = { user: { name: "Alice" } };
       mount(element, scope);
@@ -187,7 +187,7 @@ describe("binder", () => {
 
     it("handles static values (no signals)", () => {
       const element = document.createElement("div");
-      element.dataset.xText = "message";
+      element.dataset.voltText = "message";
 
       const scope = { message: "Static" };
       mount(element, scope);
@@ -197,7 +197,7 @@ describe("binder", () => {
 
     it("handles literal expressions", () => {
       const element = document.createElement("div");
-      element.dataset.xText = "'Hello'";
+      element.dataset.voltText = "'Hello'";
 
       mount(element, {});
 

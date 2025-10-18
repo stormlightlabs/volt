@@ -4,11 +4,11 @@
 
 import type { BindingContext, CleanupFunction, PluginContext, Scope, Signal } from "../types/volt";
 import { getVoltAttributes, parseClassBinding, setHTML, setText, toggleClass, walkDOM } from "./dom";
-import { evaluate } from "./evaluator";
+import { evaluate, extractDependencies, isSignal } from "./evaluator";
 import { getPlugin } from "./plugin";
 
 /**
- * Mount Volt.js on a root element and its descendants and binds all data-x-* attributes to the provided scope.
+ * Mount Volt.js on a root element and its descendants and binds all data-volt-* attributes to the provided scope.
  * Returns a cleanup function to unmount and dispose all bindings.
  *
  * @param root - Root element to mount on
@@ -50,17 +50,23 @@ export function mount(root: Element, scope: Scope): CleanupFunction {
 }
 
 /**
- * Bind a single data-x-* attribute to an element.
+ * Bind a single data-volt-* attribute to an element.
  * Routes to the appropriate binding handler.
  *
  * @param context - Binding context
- * @param name - Attribute name (without data-x- prefix)
+ * @param name - Attribute name (without data-volt- prefix)
  * @param value - Attribute value (expression)
  */
 function bindAttribute(context: BindingContext, name: string, value: string): void {
   if (name.startsWith("on-")) {
     const eventName = name.slice(3);
     bindEvent(context, eventName, value);
+    return;
+  }
+
+  if (name.startsWith("bind:")) {
+    const attrName = name.slice(5);
+    bindAttr(context, attrName, value);
     return;
   }
 
@@ -77,6 +83,10 @@ function bindAttribute(context: BindingContext, name: string, value: string): vo
       bindClass(context, value);
       break;
     }
+    case "model": {
+      bindModel(context, value);
+      break;
+    }
     case "for": {
       bindFor(context, value);
       break;
@@ -91,14 +101,14 @@ function bindAttribute(context: BindingContext, name: string, value: string): vo
           console.error(`Error in plugin "${name}":`, error);
         }
       } else {
-        console.warn(`Unknown binding: data-x-${name}`);
+        console.warn(`Unknown binding: data-volt-${name}`);
       }
     }
   }
 }
 
 /**
- * Bind data-x-text to update element's text content.
+ * Bind data-volt-text to update element's text content.
  * Subscribes to signals in the expression and updates on change.
  *
  * @param context - Binding context
@@ -120,11 +130,9 @@ function bindText(context: BindingContext, expression: string): void {
 }
 
 /**
- * Bind data-x-html to update element's HTML content.
- * Subscribes to signals in the expression and updates on change.
+ * Bind data-volt-html to update element's HTML content.
  *
- * @param context - Binding context
- * @param expression - Expression to evaluate
+ * Subscribes to signals in the expression and updates on change.
  */
 function bindHTML(context: BindingContext, expression: string): void {
   const update = () => {
@@ -142,7 +150,7 @@ function bindHTML(context: BindingContext, expression: string): void {
 }
 
 /**
- * Bind data-x-class to toggle CSS classes.
+ * Bind data-volt-class to toggle CSS classes.
  * Supports both string and object notation.
  * Subscribes to signals in the expression and updates on change.
  *
@@ -179,7 +187,7 @@ function bindClass(context: BindingContext, expression: string): void {
 }
 
 /**
- * Bind data-x-on-* to attach event listeners.
+ * Bind data-volt-on-* to attach event listeners.
  * Provides $el and $event in the scope for the event handler.
  *
  * @param context - Binding context
@@ -208,12 +216,154 @@ function bindEvent(context: BindingContext, eventName: string, expression: strin
 }
 
 /**
- * Find a signal in the scope by resolving a simple property path.
- * Returns the signal if found, otherwise undefined.
+ * Bind data-volt-model for two-way data binding on form elements.
+ * Syncs the signal value with the input value bidirectionally.
  *
- * @param scope - Scope object
- * @param path - Property path (e.g., "count" or "user.name")
- * @returns Signal if found, undefined otherwise
+ * @param context - Binding context
+ * @param signalPath - Path to the signal in scope
+ */
+function bindModel(context: BindingContext, signalPath: string): void {
+  const signal = findSignalInScope(context.scope, signalPath);
+  if (!signal) {
+    console.error(`Signal "${signalPath}" not found for data-volt-model`);
+    return;
+  }
+
+  const element = context.element as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
+  const type = element instanceof HTMLInputElement ? element.type : null;
+  const initialValue = signal.get();
+  setElementValue(element, initialValue, type);
+
+  const unsubscribe = signal.subscribe(() => {
+    const value = signal.get();
+    setElementValue(element, value, type);
+  });
+  context.cleanups.push(unsubscribe);
+
+  const eventName = type === "checkbox" || type === "radio" ? "change" : "input";
+
+  const handler = () => {
+    const value = getElementValue(element, type);
+    (signal as Signal<unknown>).set(value);
+  };
+
+  element.addEventListener(eventName, handler);
+  context.cleanups.push(() => {
+    element.removeEventListener(eventName, handler);
+  });
+}
+
+/**
+ * Set element value based on type
+ */
+function setElementValue(
+  element: HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement,
+  value: unknown,
+  type: string | null,
+): void {
+  if (element instanceof HTMLInputElement) {
+    switch (type) {
+      case "checkbox": {
+        element.checked = Boolean(value);
+
+        break;
+      }
+      case "radio": {
+        element.checked = element.value === String(value);
+        break;
+      }
+      case "number": {
+        element.value = String(value ?? "");
+        break;
+      }
+      default: {
+        element.value = String(value ?? "");
+      }
+    }
+  } else if (element instanceof HTMLSelectElement) {
+    element.value = String(value ?? "");
+  } else if (element instanceof HTMLTextAreaElement) {
+    element.value = String(value ?? "");
+  }
+}
+
+/**
+ * Get element value based on type
+ */
+function getElementValue(
+  element: HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement,
+  type: string | null,
+): unknown {
+  if (element instanceof HTMLInputElement) {
+    if (type === "checkbox") {
+      return element.checked;
+    }
+    if (type === "number") {
+      return element.valueAsNumber;
+    }
+    return element.value;
+  }
+
+  if (element instanceof HTMLSelectElement) {
+    return element.value;
+  }
+
+  if (element instanceof HTMLTextAreaElement) {
+    return element.value;
+  }
+
+  return "";
+}
+
+/**
+ * Bind data-volt-bind:attr for generic attribute binding.
+ *
+ * Updates any HTML attribute reactively based on expression value.
+ */
+function bindAttr(context: BindingContext, attrName: string, expression: string): void {
+  const update = () => {
+    const value = evaluate(expression, context.scope);
+
+    const booleanAttrs = new Set([
+      "disabled",
+      "checked",
+      "selected",
+      "readonly",
+      "required",
+      "multiple",
+      "autofocus",
+      "autoplay",
+      "controls",
+      "loop",
+      "muted",
+    ]);
+
+    if (booleanAttrs.has(attrName)) {
+      if (value) {
+        context.element.setAttribute(attrName, "");
+      } else {
+        context.element.removeAttribute(attrName);
+      }
+    } else {
+      if (value === null || value === undefined || value === false) {
+        context.element.removeAttribute(attrName);
+      } else {
+        context.element.setAttribute(attrName, String(value));
+      }
+    }
+  };
+
+  update();
+
+  const dependencies = extractDependencies(expression, context.scope);
+  for (const dependency of dependencies) {
+    const unsubscribe = dependency.subscribe(update);
+    context.cleanups.push(unsubscribe);
+  }
+}
+
+/**
+ * Find a signal in the scope by resolving a simple property path.
  */
 function findSignalInScope(scope: Scope, path: string): Signal<unknown> | undefined {
   const trimmed = path.trim();
@@ -232,14 +382,7 @@ function findSignalInScope(scope: Scope, path: string): Signal<unknown> | undefi
     }
   }
 
-  if (
-    typeof current === "object"
-    && current !== null
-    && "get" in current
-    && "subscribe" in current
-    && typeof (current as { get: unknown }).get === "function"
-    && typeof (current as { subscribe: unknown }).subscribe === "function"
-  ) {
+  if (isSignal(current)) {
     return current as Signal<unknown>;
   }
 
@@ -247,7 +390,7 @@ function findSignalInScope(scope: Scope, path: string): Signal<unknown> | undefi
 }
 
 /**
- * Bind data-x-for to render a list of items.
+ * Bind data-volt-for to render a list of items.
  * Subscribes to array signal and re-renders when array changes.
  *
  * @param context - Binding context
@@ -256,7 +399,7 @@ function findSignalInScope(scope: Scope, path: string): Signal<unknown> | undefi
 function bindFor(context: BindingContext, expression: string): void {
   const parsed = parseForExpression(expression);
   if (!parsed) {
-    console.error(`Invalid data-x-for expression: "${expression}"`);
+    console.error(`Invalid data-volt-for expression: "${expression}"`);
     return;
   }
 
@@ -265,7 +408,7 @@ function bindFor(context: BindingContext, expression: string): void {
   const parent = template.parentElement;
 
   if (!parent) {
-    console.error("data-x-for element must have a parent");
+    console.error("data-volt-for element must have a parent");
     return;
   }
 
@@ -294,7 +437,7 @@ function bindFor(context: BindingContext, expression: string): void {
 
     for (const [index, item] of arrayValue.entries()) {
       const clone = template.cloneNode(true) as Element;
-      delete (clone as HTMLElement).dataset.xFor;
+      delete (clone as HTMLElement).dataset.voltFor;
 
       const itemScope: Scope = { ...context.scope, [itemName]: item };
       if (indexName) {
@@ -325,44 +468,75 @@ function bindFor(context: BindingContext, expression: string): void {
 }
 
 /**
- * Bind data-x-if to conditionally render an element.
- * Subscribes to condition signal and shows/hides element when condition changes.
+ * Bind data-volt-if to conditionally render an element.
+ * Supports data-volt-else on the next sibling element.
+ * Subscribes to condition signal and shows/hides elements when condition changes.
  *
  * @param context - Binding context
  * @param expression - Expression to evaluate as condition
  */
 function bindIf(context: BindingContext, expression: string): void {
-  const template = context.element as HTMLElement;
-  const parent = template.parentElement;
+  const ifTemplate = context.element as HTMLElement;
+  const parent = ifTemplate.parentElement;
 
   if (!parent) {
-    console.error("data-x-if element must have a parent");
+    console.error("data-volt-if element must have a parent");
     return;
   }
 
+  let elseTemplate: HTMLElement | undefined;
+  let nextSibling = ifTemplate.nextElementSibling;
+
+  while (nextSibling && nextSibling.nodeType !== 1) {
+    nextSibling = nextSibling.nextElementSibling;
+  }
+
+  if (nextSibling && Object.hasOwn((nextSibling as HTMLElement).dataset, "voltElse")) {
+    elseTemplate = nextSibling as HTMLElement;
+    elseTemplate.remove();
+  }
+
   const placeholder = document.createComment(`if: ${expression}`);
-  template.before(placeholder);
-  template.remove();
+  ifTemplate.before(placeholder);
+  ifTemplate.remove();
 
   let currentElement: Element | undefined;
   let currentCleanup: CleanupFunction | undefined;
+  let currentBranch: "if" | "else" | undefined;
 
   const render = () => {
     const condition = evaluate(expression, context.scope);
     const shouldShow = Boolean(condition);
 
-    if (shouldShow && !currentElement) {
-      currentElement = template.cloneNode(true) as Element;
-      delete (currentElement as HTMLElement).dataset.xIf;
-      currentCleanup = mount(currentElement, context.scope);
-      placeholder.before(currentElement);
-    } else if (!shouldShow && currentElement) {
-      if (currentCleanup) {
-        currentCleanup();
-      }
+    const targetBranch = shouldShow ? "if" : (elseTemplate ? "else" : undefined);
+
+    if (targetBranch === currentBranch) {
+      return;
+    }
+
+    if (currentCleanup) {
+      currentCleanup();
+      currentCleanup = undefined;
+    }
+    if (currentElement) {
       currentElement.remove();
       currentElement = undefined;
-      currentCleanup = undefined;
+    }
+
+    if (targetBranch === "if") {
+      currentElement = ifTemplate.cloneNode(true) as Element;
+      delete (currentElement as HTMLElement).dataset.voltIf;
+      currentCleanup = mount(currentElement, context.scope);
+      placeholder.before(currentElement);
+      currentBranch = "if";
+    } else if (targetBranch === "else" && elseTemplate) {
+      currentElement = elseTemplate.cloneNode(true) as Element;
+      delete (currentElement as HTMLElement).dataset.voltElse;
+      currentCleanup = mount(currentElement, context.scope);
+      placeholder.before(currentElement);
+      currentBranch = "else";
+    } else {
+      currentBranch = undefined;
     }
   };
 
@@ -382,11 +556,9 @@ function bindIf(context: BindingContext, expression: string): void {
 }
 
 /**
- * Parse a data-x-for expression.
- * Supports: "item in items" or "(item, index) in items"
+ * Parse a data-volt-for expression
  *
- * @param expr - The for expression
- * @returns Parsed parts or undefined if invalid
+ * Supports: "item in items" or "(item, index) in items"
  */
 function parseForExpression(expr: string): { itemName: string; indexName?: string; arrayPath: string } | undefined {
   const trimmed = expr.trim();
@@ -406,10 +578,8 @@ function parseForExpression(expr: string): { itemName: string; indexName?: strin
 
 /**
  * Create a plugin context from a binding context.
- * Provides the plugin with access to utilities and cleanup registration.
  *
- * @param bindingContext - Internal binding context
- * @returns PluginContext for the plugin handler
+ * Provides the plugin with access to utilities and cleanup registration.
  */
 function createPluginContext(bindingContext: BindingContext): PluginContext {
   return {

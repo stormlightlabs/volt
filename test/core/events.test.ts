@@ -5,7 +5,7 @@ import { signal } from "../../src/core/signal";
 describe("event bindings", () => {
   it("binds click events", () => {
     const button = document.createElement("button");
-    button.dataset.xOnClick = "handleClick";
+    button.dataset.voltOnClick = "handleClick";
 
     const handleClick = vi.fn();
     mount(button, { handleClick });
@@ -17,7 +17,7 @@ describe("event bindings", () => {
 
   it("provides $event to the handler", () => {
     const button = document.createElement("button");
-    button.dataset.xOnClick = "handleClick";
+    button.dataset.voltOnClick = "handleClick";
 
     const handleClick = vi.fn();
     mount(button, { handleClick });
@@ -29,10 +29,10 @@ describe("event bindings", () => {
 
   it("provides $el in the scope", () => {
     const button = document.createElement("button");
-    button.dataset.xOnClick = "clicked";
+    button.dataset.voltOnClick = "clicked";
 
     const clicked = signal(false);
-    button.dataset.xOnClick = "setClicked";
+    button.dataset.voltOnClick = "setClicked";
 
     const setClicked = vi.fn(() => {
       clicked.set(true);
@@ -48,7 +48,7 @@ describe("event bindings", () => {
 
   it("handles input events", () => {
     const input = document.createElement("input");
-    input.dataset.xOnInput = "handleInput";
+    input.dataset.voltOnInput = "handleInput";
 
     const handleInput = vi.fn();
     mount(input, { handleInput });
@@ -61,7 +61,7 @@ describe("event bindings", () => {
 
   it("cleans up event listeners on unmount", () => {
     const button = document.createElement("button");
-    button.dataset.xOnClick = "handleClick";
+    button.dataset.voltOnClick = "handleClick";
 
     const handleClick = vi.fn();
     const cleanup = mount(button, { handleClick });
@@ -77,8 +77,8 @@ describe("event bindings", () => {
 
   it("supports multiple event bindings on the same element", () => {
     const button = document.createElement("button");
-    button.dataset.xOnClick = "handleClick";
-    button.dataset.xOnMouseover = "handleMouseover";
+    button.dataset.voltOnClick = "handleClick";
+    button.dataset.voltOnMouseover = "handleMouseover";
 
     const handleClick = vi.fn();
     const handleMouseover = vi.fn();
@@ -95,7 +95,7 @@ describe("event bindings", () => {
 
   it("can update signals in event handlers", () => {
     const button = document.createElement("button");
-    button.dataset.xOnClick = "increment";
+    button.dataset.voltOnClick = "increment";
 
     const count = signal(0);
     const increment = () => {
@@ -115,7 +115,7 @@ describe("event bindings", () => {
 
   it("handles submit events", () => {
     const form = document.createElement("form");
-    form.dataset.xOnSubmit = "handleSubmit";
+    form.dataset.voltOnSubmit = "handleSubmit";
 
     const handleSubmit = vi.fn((event) => {
       event.preventDefault();
@@ -132,7 +132,7 @@ describe("event bindings", () => {
 
   it("handles change events on inputs", () => {
     const input = document.createElement("input");
-    input.dataset.xOnChange = "handleChange";
+    input.dataset.voltOnChange = "handleChange";
 
     const handleChange = vi.fn();
     mount(input, { handleChange });
@@ -145,7 +145,7 @@ describe("event bindings", () => {
   it("can access element properties via $el", () => {
     const input = document.createElement("input");
     input.value = "initial";
-    input.dataset.xOnInput = "updateValue";
+    input.dataset.voltOnInput = "updateValue";
 
     const value = signal("");
     const updateValue = vi.fn(() => {

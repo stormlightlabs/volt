@@ -6,8 +6,8 @@ describe("integration: mount", () => {
     const container = document.createElement("div");
     container.innerHTML = `
       <div>
-        <p data-x-text="count">0</p>
-        <p data-x-class="countClass">Classes</p>
+        <p data-volt-text="count">0</p>
+        <p data-volt-class="countClass">Classes</p>
       </div>
     `;
 
@@ -34,12 +34,12 @@ describe("integration: mount", () => {
   it("handles complex nested structures", () => {
     const container = document.createElement("div");
     container.innerHTML = `
-      <div data-x-text="title">Title</div>
+      <div data-volt-text="title">Title</div>
       <ul>
-        <li data-x-text="items.first">First</li>
-        <li data-x-text="items.second">Second</li>
+        <li data-volt-text="items.first">First</li>
+        <li data-volt-text="items.second">Second</li>
       </ul>
-      <footer data-x-html="footer">Footer</footer>
+      <footer data-volt-html="footer">Footer</footer>
     `;
 
     const title = signal("My App");
@@ -48,7 +48,7 @@ describe("integration: mount", () => {
 
     mount(container, { title, items, footer });
 
-    expect(container.querySelector("[data-x-text='title']")?.textContent).toBe("My App");
+    expect(container.querySelector("[data-volt-text='title']")?.textContent).toBe("My App");
     expect(container.querySelector("li:first-child")?.textContent).toBe("Item 1");
     expect(container.querySelector("li:last-child")?.textContent).toBe("Item 2");
     expect(container.querySelector("footer")?.innerHTML).toBe("<strong>© 2025</strong>");
@@ -56,16 +56,16 @@ describe("integration: mount", () => {
     title.set("Updated App");
     footer.set("<em>New Footer</em>");
 
-    expect(container.querySelector("[data-x-text='title']")?.textContent).toBe("Updated App");
+    expect(container.querySelector("[data-volt-text='title']")?.textContent).toBe("Updated App");
     expect(container.querySelector("footer")?.innerHTML).toBe("<em>New Footer</em>");
   });
 
   it("properly cleans up all bindings", () => {
     const container = document.createElement("div");
     container.innerHTML = `
-      <div data-x-text="a">A</div>
-      <div data-x-text="b">B</div>
-      <div data-x-text="c">C</div>
+      <div data-volt-text="a">A</div>
+      <div data-volt-text="b">B</div>
+      <div data-volt-text="c">C</div>
     `;
 
     const a = signal("A");
@@ -101,9 +101,9 @@ describe("integration: mount", () => {
   it("supports mixed static and reactive values", () => {
     const container = document.createElement("div");
     container.innerHTML = `
-      <h1 data-x-text="staticTitle">Title</h1>
-      <p data-x-text="dynamicContent">Content</p>
-      <span data-x-class="'always-visible'">Visible</span>
+      <h1 data-volt-text="staticTitle">Title</h1>
+      <p data-volt-text="dynamicContent">Content</p>
+      <span data-volt-class="'always-visible'">Visible</span>
     `;
 
     const staticTitle = "Welcome";

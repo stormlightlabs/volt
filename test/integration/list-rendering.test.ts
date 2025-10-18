@@ -7,17 +7,17 @@ describe("integration: list rendering", () => {
     container.innerHTML = `
       <div>
         <input id="new-todo" type="text" />
-        <button id="add-btn" data-x-on-click="addTodo">Add</button>
+        <button id="add-btn" data-volt-on-click="addTodo">Add</button>
 
         <ul id="todo-list">
-          <li data-x-for="todo in todos">
-            <input type="checkbox" data-x-on-click="toggleTodo" />
-            <span data-x-text="todo.text"></span>
-            <button data-x-on-click="deleteTodo">Delete</button>
+          <li data-volt-for="todo in todos">
+            <input type="checkbox" data-volt-on-click="toggleTodo" />
+            <span data-volt-text="todo.text"></span>
+            <button data-volt-on-click="deleteTodo">Delete</button>
           </li>
         </ul>
 
-        <div data-x-text="remaining">0</div>
+        <div data-volt-text="remaining">0</div>
       </div>
     `;
 
@@ -67,7 +67,7 @@ describe("integration: list rendering", () => {
     expect(listItems[0]?.querySelector("span")?.textContent).toBe("Learn Volt.js");
     expect(listItems[1]?.querySelector("span")?.textContent).toBe("Build an app");
 
-    const remainingDiv = container.querySelector("div[data-x-text='remaining']");
+    const remainingDiv = container.querySelector("div[data-volt-text='remaining']");
     expect(remainingDiv?.textContent).toBe("2");
 
     const checkboxes = container.querySelectorAll("input[type='checkbox']");
@@ -76,7 +76,7 @@ describe("integration: list rendering", () => {
 
     expect(remainingDiv?.textContent).toBe("1");
 
-    const deleteButtons = container.querySelectorAll("button[data-x-on-click='deleteTodo']");
+    const deleteButtons = container.querySelectorAll("button[data-volt-on-click='deleteTodo']");
     deleteButtons[1]?.dispatchEvent(new Event("click", { bubbles: true }));
 
     const updatedListItems = container.querySelectorAll("#todo-list li");
@@ -90,12 +90,12 @@ describe("integration: list rendering", () => {
       <div>
         <div id="all-items">
           <h3>All Items</h3>
-          <div data-x-for="item in allItems" data-x-text="item.name"></div>
+          <div data-volt-for="item in allItems" data-volt-text="item.name"></div>
         </div>
 
         <div id="active-items">
           <h3>Active Items</h3>
-          <div data-x-for="item in activeItems" data-x-text="item.name"></div>
+          <div data-volt-for="item in activeItems" data-volt-text="item.name"></div>
         </div>
       </div>
     `;
@@ -109,14 +109,14 @@ describe("integration: list rendering", () => {
 
     mount(container, { allItems: items, activeItems });
 
-    const allItemDivs = container.querySelectorAll("#all-items > div[data-x-for]");
-    const activeItemDivs = container.querySelectorAll("#active-items > div[data-x-for]");
+    const allItemDivs = container.querySelectorAll("#all-items > div[data-volt-for]");
+    const activeItemDivs = container.querySelectorAll("#active-items > div[data-volt-for]");
 
     expect(allItemDivs.length).toBe(0);
     expect(activeItemDivs.length).toBe(0);
 
-    const renderedAll = container.querySelectorAll("#all-items div[data-x-text]");
-    const renderedActive = container.querySelectorAll("#active-items div[data-x-text]");
+    const renderedAll = container.querySelectorAll("#all-items div[data-volt-text]");
+    const renderedActive = container.querySelectorAll("#active-items div[data-volt-text]");
 
     expect(renderedAll.length).toBe(3);
     expect(renderedActive.length).toBe(2);
@@ -125,7 +125,7 @@ describe("integration: list rendering", () => {
 
     items.set([{ name: "Item 1", active: false }, { name: "Item 2", active: true }, { name: "Item 3", active: true }]);
 
-    const updatedActive = container.querySelectorAll("#active-items div[data-x-text]");
+    const updatedActive = container.querySelectorAll("#active-items div[data-volt-text]");
     expect(updatedActive.length).toBe(2);
     expect(updatedActive[0]?.textContent).toBe("Item 2");
     expect(updatedActive[1]?.textContent).toBe("Item 3");
@@ -135,11 +135,11 @@ describe("integration: list rendering", () => {
     const container = document.createElement("div");
     container.innerHTML = `
       <div>
-        <div data-x-for="category in categories">
-          <h2 data-x-text="category.name"></h2>
+        <div data-volt-for="category in categories">
+          <h2 data-volt-text="category.name"></h2>
           <ul>
-            <li data-x-for="product in category.products">
-              <span data-x-text="product.name"></span>: $<span data-x-text="product.price"></span>
+            <li data-volt-for="product in category.products">
+              <span data-volt-text="product.name"></span>: $<span data-volt-text="product.price"></span>
             </li>
           </ul>
         </div>

@@ -1,21 +1,21 @@
+import { mount } from "@volt/core/binder";
+import { registerPlugin } from "@volt/core/plugin";
+import { signal } from "@volt/core/signal";
+import { urlPlugin } from "@volt/plugins/url";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { mount } from "../../src/core/binder";
-import { registerPlugin } from "../../src/core/plugin";
-import { signal } from "../../src/core/signal";
-import { urlPlugin } from "../../src/plugins/url";
 
 describe("url plugin", () => {
   beforeEach(() => {
     registerPlugin("url", urlPlugin);
-    window.history.replaceState({}, "", "/");
+    globalThis.history.replaceState({}, "", "/");
   });
 
   describe("read mode", () => {
     it("reads URL parameter into signal on mount", () => {
-      window.history.replaceState({}, "", "/?tab=profile");
+      globalThis.history.replaceState({}, "", "/?tab=profile");
 
       const element = document.createElement("div");
-      element.dataset.xUrl = "read:tab";
+      element.dataset.voltUrl = "read:tab";
 
       const tab = signal("");
       mount(element, { tab });
@@ -24,10 +24,10 @@ describe("url plugin", () => {
     });
 
     it("does not update URL when signal changes", async () => {
-      window.history.replaceState({}, "", "/?tab=home");
+      globalThis.history.replaceState({}, "", "/?tab=home");
 
       const element = document.createElement("div");
-      element.dataset.xUrl = "read:tab";
+      element.dataset.voltUrl = "read:tab";
 
       const tab = signal("");
       mount(element, { tab });
@@ -36,14 +36,14 @@ describe("url plugin", () => {
 
       await new Promise((resolve) => setTimeout(resolve, 200));
 
-      expect(window.location.search).toBe("?tab=home");
+      expect(globalThis.location.search).toBe("?tab=home");
     });
 
     it("handles missing URL parameter", () => {
-      window.history.replaceState({}, "", "/");
+      globalThis.history.replaceState({}, "", "/");
 
       const element = document.createElement("div");
-      element.dataset.xUrl = "read:missing";
+      element.dataset.voltUrl = "read:missing";
 
       const missing = signal("default");
       mount(element, { missing });
@@ -52,10 +52,10 @@ describe("url plugin", () => {
     });
 
     it("deserializes boolean values", () => {
-      window.history.replaceState({}, "", "/?active=true");
+      globalThis.history.replaceState({}, "", "/?active=true");
 
       const element = document.createElement("div");
-      element.dataset.xUrl = "read:active";
+      element.dataset.voltUrl = "read:active";
 
       const active = signal(false);
       mount(element, { active });
@@ -64,10 +64,10 @@ describe("url plugin", () => {
     });
 
     it("deserializes number values", () => {
-      window.history.replaceState({}, "", "/?count=42");
+      globalThis.history.replaceState({}, "", "/?count=42");
 
       const element = document.createElement("div");
-      element.dataset.xUrl = "read:count";
+      element.dataset.voltUrl = "read:count";
 
       const count = signal(0);
       mount(element, { count });
@@ -78,10 +78,10 @@ describe("url plugin", () => {
 
   describe("sync mode", () => {
     it("reads URL parameter into signal on mount", () => {
-      window.history.replaceState({}, "", "/?filter=active");
+      globalThis.history.replaceState({}, "", "/?filter=active");
 
       const element = document.createElement("div");
-      element.dataset.xUrl = "sync:filter";
+      element.dataset.voltUrl = "sync:filter";
 
       const filter = signal("");
       mount(element, { filter });
@@ -90,10 +90,10 @@ describe("url plugin", () => {
     });
 
     it("updates URL when signal changes", async () => {
-      window.history.replaceState({}, "", "/");
+      globalThis.history.replaceState({}, "", "/");
 
       const element = document.createElement("div");
-      element.dataset.xUrl = "sync:query";
+      element.dataset.voltUrl = "sync:query";
 
       const query = signal("");
       mount(element, { query });
@@ -102,14 +102,14 @@ describe("url plugin", () => {
 
       await new Promise((resolve) => setTimeout(resolve, 150));
 
-      expect(window.location.search).toContain("query=search+term");
+      expect(globalThis.location.search).toContain("query=search+term");
     });
 
     it("removes parameter from URL when signal is empty", async () => {
-      window.history.replaceState({}, "", "/?query=test");
+      globalThis.history.replaceState({}, "", "/?query=test");
 
       const element = document.createElement("div");
-      element.dataset.xUrl = "sync:query";
+      element.dataset.voltUrl = "sync:query";
 
       const query = signal("");
       mount(element, { query });
@@ -118,48 +118,48 @@ describe("url plugin", () => {
 
       await new Promise((resolve) => setTimeout(resolve, 150));
 
-      expect(window.location.search).toBe("");
+      expect(globalThis.location.search).toBe("");
     });
 
     it("handles popstate events from browser navigation", () => {
-      window.history.replaceState({}, "", "/?filter=all");
+      globalThis.history.replaceState({}, "", "/?filter=all");
 
       const element = document.createElement("div");
-      element.dataset.xUrl = "sync:filter";
+      element.dataset.voltUrl = "sync:filter";
 
       const filter = signal("");
       mount(element, { filter });
 
       expect(filter.get()).toBe("all");
 
-      window.history.replaceState({}, "", "/?filter=completed");
-      window.dispatchEvent(new PopStateEvent("popstate"));
+      globalThis.history.replaceState({}, "", "/?filter=completed");
+      globalThis.dispatchEvent(new PopStateEvent("popstate"));
 
       expect(filter.get()).toBe("completed");
     });
 
     it("sets signal to empty string when parameter removed from URL", () => {
-      window.history.replaceState({}, "", "/?filter=test");
+      globalThis.history.replaceState({}, "", "/?filter=test");
 
       const element = document.createElement("div");
-      element.dataset.xUrl = "sync:filter";
+      element.dataset.voltUrl = "sync:filter";
 
       const filter = signal("");
       mount(element, { filter });
 
       expect(filter.get()).toBe("test");
 
-      window.history.replaceState({}, "", "/");
-      window.dispatchEvent(new PopStateEvent("popstate"));
+      globalThis.history.replaceState({}, "", "/");
+      globalThis.dispatchEvent(new PopStateEvent("popstate"));
 
       expect(filter.get()).toBe("");
     });
 
     it("debounces URL updates", async () => {
-      const pushStateSpy = vi.spyOn(window.history, "pushState");
+      const pushStateSpy = vi.spyOn(globalThis.history, "pushState");
 
       const element = document.createElement("div");
-      element.dataset.xUrl = "sync:query";
+      element.dataset.voltUrl = "sync:query";
 
       const query = signal("");
       mount(element, { query });
@@ -178,10 +178,10 @@ describe("url plugin", () => {
     });
 
     it("cleans up popstate listener on unmount", () => {
-      window.history.replaceState({}, "", "/?filter=test");
+      globalThis.history.replaceState({}, "", "/?filter=test");
 
       const element = document.createElement("div");
-      element.dataset.xUrl = "sync:filter";
+      element.dataset.voltUrl = "sync:filter";
 
       const filter = signal("");
       const cleanup = mount(element, { filter });
@@ -190,8 +190,8 @@ describe("url plugin", () => {
 
       cleanup();
 
-      window.history.replaceState({}, "", "/?filter=other");
-      window.dispatchEvent(new PopStateEvent("popstate"));
+      globalThis.history.replaceState({}, "", "/?filter=other");
+      globalThis.dispatchEvent(new PopStateEvent("popstate"));
 
       expect(filter.get()).toBe("test");
     });
@@ -199,10 +199,10 @@ describe("url plugin", () => {
 
   describe("hash mode", () => {
     it("reads hash into signal on mount", () => {
-      window.location.hash = "#/about";
+      globalThis.location.hash = "#/about";
 
       const element = document.createElement("div");
-      element.dataset.xUrl = "hash:route";
+      element.dataset.voltUrl = "hash:route";
 
       const route = signal("");
       mount(element, { route });
@@ -211,55 +211,55 @@ describe("url plugin", () => {
     });
 
     it("updates hash when signal changes", () => {
-      window.location.hash = "";
+      globalThis.location.hash = "";
 
       const element = document.createElement("div");
-      element.dataset.xUrl = "hash:route";
+      element.dataset.voltUrl = "hash:route";
 
       const route = signal("");
       mount(element, { route });
 
       route.set("/contact");
 
-      expect(window.location.hash).toBe("#/contact");
+      expect(globalThis.location.hash).toBe("#/contact");
     });
 
     it("clears hash when signal is empty", () => {
-      window.location.hash = "#/page";
+      globalThis.location.hash = "#/page";
 
       const element = document.createElement("div");
-      element.dataset.xUrl = "hash:route";
+      element.dataset.voltUrl = "hash:route";
 
       const route = signal("");
       mount(element, { route });
 
       route.set("");
 
-      expect(window.location.hash).toBe("");
+      expect(globalThis.location.hash).toBe("");
     });
 
     it("handles hashchange events", () => {
-      window.location.hash = "#/home";
+      globalThis.location.hash = "#/home";
 
       const element = document.createElement("div");
-      element.dataset.xUrl = "hash:route";
+      element.dataset.voltUrl = "hash:route";
 
       const route = signal("");
       mount(element, { route });
 
       expect(route.get()).toBe("/home");
 
-      window.location.hash = "#/settings";
-      window.dispatchEvent(new Event("hashchange"));
+      globalThis.location.hash = "#/settings";
+      globalThis.dispatchEvent(new Event("hashchange"));
 
       expect(route.get()).toBe("/settings");
     });
 
     it("cleans up hashchange listener on unmount", () => {
-      window.location.hash = "#/page1";
+      globalThis.location.hash = "#/page1";
 
       const element = document.createElement("div");
-      element.dataset.xUrl = "hash:route";
+      element.dataset.voltUrl = "hash:route";
 
       const route = signal("");
       const cleanup = mount(element, { route });
@@ -268,8 +268,8 @@ describe("url plugin", () => {
 
       cleanup();
 
-      window.location.hash = "#/page2";
-      window.dispatchEvent(new Event("hashchange"));
+      globalThis.location.hash = "#/page2";
+      globalThis.dispatchEvent(new Event("hashchange"));
 
       expect(route.get()).toBe("/page1");
     });
@@ -279,13 +279,11 @@ describe("url plugin", () => {
     it("logs error for invalid binding format", () => {
       const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
       const element = document.createElement("div");
-      element.dataset.xUrl = "invalidformat";
+      element.dataset.voltUrl = "invalidformat";
 
       mount(element, {});
 
-      expect(errorSpy).toHaveBeenCalledWith(
-        expect.stringContaining("Invalid url binding"),
-      );
+      expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining("Invalid url binding"));
 
       errorSpy.mockRestore();
     });
@@ -293,13 +291,11 @@ describe("url plugin", () => {
     it("logs error for unknown url mode", () => {
       const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
       const element = document.createElement("div");
-      element.dataset.xUrl = "unknown:signal";
+      element.dataset.voltUrl = "unknown:signal";
 
       mount(element, {});
 
-      expect(errorSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Unknown url mode: "unknown"'),
-      );
+      expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining("Unknown url mode: \"unknown\""));
 
       errorSpy.mockRestore();
     });
@@ -307,13 +303,11 @@ describe("url plugin", () => {
     it("logs error when signal not found", () => {
       const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
       const element = document.createElement("div");
-      element.dataset.xUrl = "read:nonexistent";
+      element.dataset.voltUrl = "read:nonexistent";
 
       mount(element, {});
 
-      expect(errorSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Signal "nonexistent" not found'),
-      );
+      expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining("Signal \"nonexistent\" not found"));
 
       errorSpy.mockRestore();
     });

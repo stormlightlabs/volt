@@ -2,12 +2,12 @@ import { mount } from "@volt/core/binder";
 import { signal } from "@volt/core/signal";
 import { describe, expect, it } from "vitest";
 
-describe("data-x-if binding", () => {
+describe("data-volt-if binding", () => {
   it("shows element when condition is truthy", () => {
     const container = document.createElement("div");
     container.innerHTML = `
       <div>
-        <p data-x-if="show" data-x-text="message">Hidden</p>
+        <p data-volt-if="show" data-volt-text="message">Hidden</p>
       </div>
     `;
 
@@ -25,7 +25,7 @@ describe("data-x-if binding", () => {
     const container = document.createElement("div");
     container.innerHTML = `
       <div>
-        <p data-x-if="show">Should not appear</p>
+        <p data-volt-if="show">Should not appear</p>
       </div>
     `;
 
@@ -40,7 +40,7 @@ describe("data-x-if binding", () => {
     const container = document.createElement("div");
     container.innerHTML = `
       <div>
-        <span data-x-if="visible">Toggle Me</span>
+        <span data-volt-if="visible">Toggle Me</span>
       </div>
     `;
 
@@ -64,7 +64,7 @@ describe("data-x-if binding", () => {
     const container = document.createElement("div");
     container.innerHTML = `
       <div>
-        <p data-x-if="alwaysTrue">Always visible</p>
+        <p data-volt-if="alwaysTrue">Always visible</p>
       </div>
     `;
 
@@ -79,7 +79,7 @@ describe("data-x-if binding", () => {
     const container = document.createElement("div");
     container.innerHTML = `
       <div>
-        <p data-x-if="alwaysFalse">Never visible</p>
+        <p data-volt-if="alwaysFalse">Never visible</p>
       </div>
     `;
 
@@ -92,8 +92,8 @@ describe("data-x-if binding", () => {
     const container = document.createElement("div");
     container.innerHTML = `
       <div>
-        <div data-x-if="show">
-          <span data-x-text="message">Default</span>
+        <div data-volt-if="show">
+          <span data-volt-text="message">Default</span>
         </div>
       </div>
     `;
@@ -109,7 +109,7 @@ describe("data-x-if binding", () => {
     expect(container.querySelector("span")?.textContent).toBe("Second");
 
     show.set(false);
-    expect(container.querySelector("div[data-x-if]")).toBeNull();
+    expect(container.querySelector("div[data-volt-if]")).toBeNull();
 
     message.set("Third");
     show.set(true);
@@ -121,9 +121,9 @@ describe("data-x-if binding", () => {
     const container = document.createElement("div");
     container.innerHTML = `
       <div>
-        <div data-x-if="showOuter">
+        <div data-volt-if="showOuter">
           <p>Outer</p>
-          <div data-x-if="showInner">
+          <div data-volt-if="showInner">
             <p>Inner</p>
           </div>
         </div>
@@ -159,7 +159,7 @@ describe("data-x-if binding", () => {
     const container = document.createElement("div");
     container.innerHTML = `
       <div>
-        <p data-x-if="show" data-x-text="message">Hidden</p>
+        <p data-volt-if="show" data-volt-text="message">Hidden</p>
       </div>
     `;
 
@@ -185,7 +185,7 @@ describe("data-x-if binding", () => {
     const container = document.createElement("div");
     container.innerHTML = `
       <div>
-        <button data-x-if="show" data-x-on-click="handleClick">Click Me</button>
+        <button data-volt-if="show" data-volt-on-click="handleClick">Click Me</button>
       </div>
     `;
 
@@ -216,7 +216,7 @@ describe("data-x-if binding", () => {
     const container = document.createElement("div");
     container.innerHTML = `
       <div>
-        <p data-x-if="user.isActive">User is active</p>
+        <p data-volt-if="user.isActive">User is active</p>
       </div>
     `;
 
@@ -236,10 +236,10 @@ describe("data-x-if binding", () => {
     const container = document.createElement("div");
     container.innerHTML = `
       <div>
-        <p id="zero" data-x-if="zero">0</p>
-        <p id="empty" data-x-if="empty">Empty</p>
-        <p id="one" data-x-if="one">1</p>
-        <p id="string" data-x-if="string">String</p>
+        <p id="zero" data-volt-if="zero">0</p>
+        <p id="empty" data-volt-if="empty">Empty</p>
+        <p id="one" data-volt-if="one">1</p>
+        <p id="string" data-volt-if="string">String</p>
       </div>
     `;
 

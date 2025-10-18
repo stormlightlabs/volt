@@ -9,7 +9,7 @@ import type { PluginContext, Signal } from "$types/volt";
  * URL plugin handler.
  * Synchronizes signal values with URL parameters and hash.
  *
- * Syntax: data-x-url="mode:signalPath"
+ * Syntax: data-volt-url="mode:signalPath"
  * Modes:
  *   - read:signalPath - Read URL param into signal on mount (one-way)
  *   - sync:signalPath - Bidirectional sync between signal and URL param

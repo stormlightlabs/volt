@@ -3,13 +3,12 @@
  */
 
 /**
- * Walk the DOM tree and collect all elements with data-x-* attributes.
- * Returns elements in document order (parent before children).
- * Skips children of elements with data-x-for or data-x-if since those
- * will be processed when the parent element is cloned and mounted.
+ * Walk the DOM tree and collect all elements with data-volt-* attributes in document order (parent before children).
+ *
+ * Skips children of elements with data-volt-for or data-volt-if since those will be processed when the parent element is cloned and mounted.
  *
  * @param root - The root element to start walking from
- * @returns Array of elements with data-x-* attributes
+ * @returns Array of elements with data-volt-* attributes
  */
 export function walkDOM(root: Element): Element[] {
   const elements: Element[] = [];
@@ -19,8 +18,8 @@ export function walkDOM(root: Element): Element[] {
       elements.push(element);
 
       if (
-        Object.hasOwn((element as HTMLElement).dataset, "xFor")
-        || Object.hasOwn((element as HTMLElement).dataset, "xIf")
+        Object.hasOwn((element as HTMLElement).dataset, "voltFor")
+        || Object.hasOwn((element as HTMLElement).dataset, "voltIf")
       ) {
         return;
       }
@@ -37,28 +36,35 @@ export function walkDOM(root: Element): Element[] {
 }
 
 /**
- * Check if an element has any data-x-* attributes.
+ * Check if an element has any data-volt-* attributes.
  *
  * @param element - Element to check
  * @returns true if element has any Volt attributes
  */
 export function hasVoltAttribute(element: Element): boolean {
-  return [...element.attributes].some((attribute) => attribute.name.startsWith("data-x-"));
+  return [...element.attributes].some((attribute) => attribute.name.startsWith("data-volt-"));
 }
 
 /**
- * Get all data-x-* attributes from an element.
+ * Get all data-volt-* attributes from an element.
+ * Excludes charge metadata attributes (state, computed:*) that are processed separately.
  *
  * @param element - Element to get attributes from
- * @returns Map of attribute names to values (without the data-x- prefix)
+ * @returns Map of attribute names to values (without the data-volt- prefix)
  */
 export function getVoltAttributes(element: Element): Map<string, string> {
   const attributes = new Map<string, string>();
 
   for (const attribute of element.attributes) {
-    if (attribute.name.startsWith("data-x-")) {
-      // Remove "data-x-" prefix
-      attributes.set(attribute.name.slice(7), attribute.value);
+    if (attribute.name.startsWith("data-volt-")) {
+      const name = attribute.name.slice(10);
+
+      // Skip charge metadata attributes
+      if (name === "state" || name.startsWith("computed:")) {
+        continue;
+      }
+
+      attributes.set(name, attribute.value);
     }
   }
 
@@ -99,7 +105,8 @@ export function toggleClass(element: Element, className: string, add: boolean): 
 
 /**
  * Parse a class binding expression.
- * Supports both string values ("active") and object notation ({active: true}).
+ * Supports string values ("active"), object notation ({active: true}),
+ * and other primitives (true, false, numbers) which are converted to strings.
  *
  * @param value - The class value or object
  * @returns Map of class names to boolean values
@@ -119,6 +126,11 @@ export function parseClassBinding(value: unknown): Map<string, boolean> {
           classes.set(key, Boolean(value_));
         }
       }
+      break;
+    }
+    case "boolean":
+    case "number": {
+      classes.set(String(value), true);
       break;
     }
   }

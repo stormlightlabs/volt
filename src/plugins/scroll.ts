@@ -9,7 +9,7 @@ import type { PluginContext, Signal } from "$types/volt";
  * Scroll plugin handler.
  * Manages various scroll-related behaviors.
  *
- * Syntax: data-x-scroll="mode:signalPath"
+ * Syntax: data-volt-scroll="mode:signalPath"
  * Modes:
  *   - restore:signalPath - Save/restore scroll position
  *   - scrollTo:signalPath - Scroll to element when signal changes
@@ -49,9 +49,7 @@ export function scrollPlugin(context: PluginContext, value: string): void {
 }
 
 /**
- * Save and restore scroll position.
- * Saves current scroll position to signal on scroll events.
- * Restores scroll position from signal on mount.
+ * Saves current scroll position to signal on scroll events; Restores scroll position from signal on mount.
  */
 function handleScrollRestore(context: PluginContext, signalPath: string): void {
   const signal = context.findSignal(signalPath);
@@ -79,7 +77,8 @@ function handleScrollRestore(context: PluginContext, signalPath: string): void {
 
 /**
  * Scroll to element when signal value matches element's ID or selector.
- * Listens for changes to the target signal and scrolls to this element.
+ *
+ * Listens for changes to the target signal to determine position
  */
 function handleScrollTo(context: PluginContext, signalPath: string): void {
   const signal = context.findSignal(signalPath);
@@ -105,6 +104,7 @@ function handleScrollTo(context: PluginContext, signalPath: string): void {
 
 /**
  * Update signal when element enters or exits viewport.
+ *
  * Uses Intersection Observer to track visibility.
  */
 function handleScrollSpy(context: PluginContext, signalPath: string): void {
@@ -132,8 +132,7 @@ function handleScrollSpy(context: PluginContext, signalPath: string): void {
 }
 
 /**
- * Enable smooth scrolling behavior.
- * Applies smooth scroll behavior based on signal value.
+ * Enable smooth scrolling behavior and apply based on signal value.
  */
 function handleSmoothScroll(context: PluginContext, signalPath: string): void {
   const signal = context.findSignal(signalPath);
