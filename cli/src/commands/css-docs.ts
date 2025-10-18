@@ -1,8 +1,8 @@
+import { echo } from "$console/echo.js";
+import { getDocsPath, getLibSrcPath } from "$utils/paths.js";
+import { trackVersion } from "$versioning/tracker.js";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { echo } from "../console/echo.js";
-import { trackVersion } from "../versioning/tracker.js";
-import { getLibSrcPath, getDocsPath } from "../utils/paths.js";
 
 type CSSComment = { selector: string; comment: string };
 
@@ -265,8 +265,7 @@ function generateSemanticsDocs(comments: CSSComment[], variables: CSSVariable[],
       continue;
     }
 
-    lines.push(`### \`${comment.selector}\``, "");
-    lines.push(comment.comment, "");
+    lines.push(`### \`${comment.selector}\``, "", comment.comment, "");
   }
 
   return lines.join("\n");

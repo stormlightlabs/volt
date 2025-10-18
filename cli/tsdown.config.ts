@@ -6,4 +6,10 @@ export default defineConfig({
   clean: true,
   shims: true,
   banner: { js: "#!/usr/bin/env node" },
+  alias: {
+    $commands: "./src/commands",
+    $utils: "./src/utils",
+    $versioning: "./src/versioning",
+    $console: "./src/console",
+  },
 });

@@ -1,9 +1,9 @@
+import { echo } from "$console/echo.js";
+import { getDocsPath, getLibSrcPath } from "$utils/paths.js";
+import { trackVersion } from "$versioning/tracker.js";
 import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import ts from "typescript";
-import { echo } from "../console/echo.js";
-import { trackVersion } from "../versioning/tracker.js";
-import { getLibSrcPath, getDocsPath } from "../utils/paths.js";
 
 type Member = { name: string; type: string; docs?: string };
 
@@ -31,7 +31,7 @@ function extractJSDoc(node: ts.Node, sourceFile: ts.SourceFile): JSDocumentParse
     return { description: "", examples: [] };
   }
 
-  const comments = ranges.map((range) => fullText.substring(range.pos, range.end));
+  const comments = ranges.map((range) => fullText.slice(range.pos, range.end));
   const jsdocComments = comments.filter((c) => c.trim().startsWith("/**"));
 
   if (jsdocComments.length === 0) {
@@ -85,7 +85,7 @@ function extractJSDoc(node: ts.Node, sourceFile: ts.SourceFile): JSDocumentParse
 function extractFnSig(node: ts.FunctionDeclaration, sourceFile: ts.SourceFile): string {
   const start = node.getStart(sourceFile);
   const end = node.body ? node.body.getStart(sourceFile) : node.getEnd();
-  return sourceFile.text.substring(start, end).trim().replaceAll(/\s+/g, " ");
+  return sourceFile.text.slice(start, end).trim().replaceAll(/\s+/g, " ");
 }
 
 /**

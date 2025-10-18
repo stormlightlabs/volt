@@ -1,106 +1,20 @@
-import { existsSync } from "node:fs";
+import { echo } from "$console/echo.js";
+import { type BuildArtifacts, buildLibrary, copyBuildArtifacts, findBuildArtifacts } from "$utils/build.js";
+import { getExamplesPath } from "$utils/paths.js";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { minify as terserMinify } from "terser";
-import { echo } from "../console/echo.js";
-import { findMonorepoRoot, getLibPath, getExamplesPath } from "../utils/paths.js";
 
-type BuildArtifacts = { jsPath: string; cssPath: string };
-
-/**
- * Build the library using pnpm workspace commands
- */
-async function buildLibrary(): Promise<void> {
-  const { execSync } = await import("node:child_process");
-  const monorepoRoot = await findMonorepoRoot();
-
-  try {
-    execSync("pnpm --filter volt build:lib", { cwd: monorepoRoot, stdio: "inherit" });
-  } catch {
-    throw new Error("Library build failed. Make sure Vite is configured correctly.");
-  }
-}
-
-/**
- * Find the library build artifacts in dist/
- */
-async function findBuildArtifacts(): Promise<BuildArtifacts> {
-  const libPath = await getLibPath();
-  const distDir = path.join(libPath, "dist");
-  const jsPath = path.join(distDir, "volt.js");
-  const cssPath = path.join(libPath, "src", "styles", "base.css");
-
-  if (!existsSync(jsPath)) {
-    throw new Error(`Library JS not found at ${jsPath}. Build may have failed.`);
-  }
-
-  if (!existsSync(cssPath)) {
-    throw new Error(`Base CSS not found at ${cssPath}.`);
-  }
-
-  return { jsPath, cssPath };
-}
-
-async function minifyJS(code: string): Promise<string> {
-  const result = await terserMinify(code, {
-    compress: {
-      dead_code: true,
-      drop_debugger: true,
-      conditionals: true,
-      evaluate: true,
-      booleans: true,
-      loops: true,
-      unused: true,
-      hoist_funs: true,
-      keep_fargs: false,
-      hoist_vars: false,
-      if_return: true,
-      join_vars: true,
-      side_effects: true,
-    },
-    mangle: { toplevel: true },
-    format: { comments: false },
-  });
-
-  if (!result.code) {
-    throw new Error("Minification failed - no output generated");
-  }
-
-  return result.code;
-}
-
-// TODO: use terser
-function minifyCSS(code: string): string {
-  return code.replaceAll(/\/\*[\s\S]*?\*\//g, "").replaceAll(/\s+/g, " ").replaceAll(/\s*([{}:;,])\s*/g, "$1").trim();
-}
+export type BuildMode = "markup" | "programmatic";
 
 /**
  * Create minified build artifacts in examples/dist/
  */
 async function createMinifiedArtifacts(artifacts: BuildArtifacts, examplesDir: string): Promise<void> {
   const examplesDistDir = path.join(examplesDir, "dist");
-  await mkdir(examplesDistDir, { recursive: true });
-
-  const jsContent = await readFile(artifacts.jsPath, "utf8");
-  const cssContent = await readFile(artifacts.cssPath, "utf8");
-
-  echo.info("  Minifying JavaScript...");
-  const minifiedJS = await minifyJS(jsContent);
-
-  echo.info("  Minifying CSS...");
-  const minifiedCSS = minifyCSS(cssContent);
-
-  const voltJSPath = path.join(examplesDistDir, "volt.min.js");
-  const voltCSSPath = path.join(examplesDistDir, "volt.min.css");
-
-  await writeFile(voltJSPath, minifiedJS, "utf8");
-  await writeFile(voltCSSPath, minifiedCSS, "utf8");
-
-  echo.ok(`  Created: examples/dist/volt.min.js (${Math.round(minifiedJS.length / 1024)} KB)`);
-  echo.ok(`  Created: examples/dist/volt.min.css (${Math.round(minifiedCSS.length / 1024)} KB)`);
+  await copyBuildArtifacts(artifacts, { outDir: examplesDistDir, minify: true, includeCss: true });
 }
 
-function generateHTML(name: string, mode: "markup" | "programmatic", standalone: boolean): string {
+function generateHTML(name: string, mode: BuildMode, standalone: boolean): string {
   const cssPath = standalone ? "volt.min.css" : "../dist/volt.min.css";
   const jsPath = standalone ? "volt.min.js" : "../dist/volt.min.js";
 
@@ -182,9 +96,6 @@ Explain key parts of the implementation here.
 `;
 }
 
-/**
- * Generate app.js template
- */
 function generateAppJS(): string {
   return `// Import volt.js functions if needed
 // import { mount, signal, computed, effect } from '../dist/volt.min.js';
@@ -209,7 +120,7 @@ function generateAppCSS(): string {
 async function createExampleFiles(
   exampleDir: string,
   name: string,
-  mode: "markup" | "programmatic",
+  mode: BuildMode,
   standalone: boolean,
 ): Promise<void> {
   await mkdir(exampleDir, { recursive: true });
@@ -255,7 +166,7 @@ async function copyStandaloneFiles(examplesDir: string, exampleDir: string): Pro
  */
 export async function exampleCommand(
   name: string,
-  options: { mode?: "markup" | "programmatic"; standalone?: boolean } = {},
+  options: { mode?: BuildMode; standalone?: boolean } = {},
 ): Promise<void> {
   const mode = options.mode || "programmatic";
   const standalone = options.standalone || false;

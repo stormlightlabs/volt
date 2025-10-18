@@ -1,7 +1,7 @@
+import { echo } from "$console/echo.js";
+import { findMonorepoRoot, getLibSrcPath, getLibTestPath } from "$utils/paths.js";
 import { readdir, readFile, stat } from "node:fs/promises";
 import path from "node:path";
-import { echo } from "../console/echo.js";
-import { getLibSrcPath, getLibTestPath, findMonorepoRoot } from "../utils/paths.js";
 
 type FileStats = { path: string; lines: number; totalLines: number };
 type DirectoryStats = { totalLines: number; codeLines: number; files: FileStats[] };
@@ -92,10 +92,9 @@ async function collectStats(directory: string, baseDir: string): Promise<Directo
 export async function statsCommand(includeFull: boolean): Promise<void> {
   const monorepoRoot = await findMonorepoRoot();
   const srcDir = await getLibSrcPath();
+  const srcStats = await collectStats(srcDir, monorepoRoot);
 
   echo.title("\nVolt.js Code Statistics\n");
-
-  const srcStats = await collectStats(srcDir, monorepoRoot);
 
   echo.label("Source Code (src/):");
   echo.text(`  Files: ${srcStats.files.length}`);

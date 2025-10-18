@@ -14,7 +14,14 @@
     "esModuleInterop": true,
     "isolatedModules": true,
     "verbatimModuleSyntax": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "$commands/*": ["./src/commands/*"],
+      "$utils/*": ["./src/utils/*"],
+      "$versioning/*": ["./src/versioning/*"],
+      "$console/*": ["./src/console/*"]
+    }
   },
   "include": ["src"]
 }

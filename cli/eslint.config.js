@@ -23,7 +23,7 @@ export default ts.config(
                 tsconfigRootDir: import.meta.dirname,
             },
         },
-        ignores: ["eslint.config.js"],
+        ignores: ["eslint.config.js", "tsdown.config.ts"],
         rules: {
             "no-undef": "off",
             "@typescript-eslint/no-unused-vars": [

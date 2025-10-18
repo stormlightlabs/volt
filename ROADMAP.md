@@ -161,3 +161,11 @@ _NOTE_: `data-x-*` is now `data-volt-*`
     - Web
     - Tauri
     - Wails
+
+## Docs
+
+- [ ] Document `charge()` bootstrap flow and declarative state/computed attributes (`data-volt-state`, `data-volt-computed:*`).
+- [ ] Add async effect guide covering abort signals, debounce/throttle, retries, and `onError` handling.
+- [ ] Write lifecycle instrumentation docs for `registerGlobalHook`, `registerElementHook`, `getElementBindings`, and plugin `context.lifecycle` callbacks.
+- [ ] Explain `data-volt-bind:*` semantics, especially boolean attribute handling and dependency subscription behavior.
+- [ ] Refresh README and overview content to use `data-volt-*` naming and reflect the current module layout.
