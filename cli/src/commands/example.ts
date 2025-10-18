@@ -1,5 +1,5 @@
-import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { minify as terserMinify } from "terser";
 import { echo } from "../console/echo.js";
@@ -30,7 +30,7 @@ async function findProjectRoot(startDir: string): Promise<string> {
           return currentDir;
         }
       } catch {
-        // Continue searching
+        // No-Op: Continue searching
       }
     }
 
@@ -47,27 +47,36 @@ async function findProjectRoot(startDir: string): Promise<string> {
 }
 
 /**
- * Find the hashed build artifacts in dist/assets/
+ * Build the library using Vite in library mode
+ */
+async function buildLibrary(root: string): Promise<void> {
+  const { execSync } = await import("node:child_process");
+
+  try {
+    execSync("pnpm vite build --mode lib", { cwd: root, stdio: "inherit" });
+  } catch {
+    throw new Error("Library build failed. Make sure Vite is configured correctly.");
+  }
+}
+
+/**
+ * Find the library build artifacts in dist/
  */
 async function findBuildArtifacts(root: string): Promise<BuildArtifacts> {
-  const distAssetsDir = path.join(root, "dist", "assets");
+  const distDir = path.join(root, "dist");
 
-  let entries: string[];
-  try {
-    const dirents = await readdir(distAssetsDir, { withFileTypes: true });
-    entries = dirents.filter((d) => d.isFile()).map((d) => d.name);
-  } catch {
-    throw new Error("Build artifacts not found. Run 'pnpm build' first to generate dist/assets/");
+  const jsPath = path.join(distDir, "volt.js");
+  const cssPath = path.join(root, "src", "styles", "base.css");
+
+  if (!existsSync(jsPath)) {
+    throw new Error(`Library JS not found at ${jsPath}. Build may have failed.`);
   }
 
-  const jsFile = entries.find((f) => f.startsWith("index-") && f.endsWith(".js"));
-  const cssFile = entries.find((f) => f.startsWith("index-") && f.endsWith(".css"));
-
-  if (!jsFile || !cssFile) {
-    throw new Error("Build artifacts incomplete. Expected index-*.js and index-*.css in dist/assets/");
+  if (!existsSync(cssPath)) {
+    throw new Error(`Base CSS not found at ${cssPath}.`);
   }
 
-  return { jsPath: path.join(distAssetsDir, jsFile), cssPath: path.join(distAssetsDir, cssFile) };
+  return { jsPath, cssPath };
 }
 
 /**
@@ -200,17 +209,7 @@ function generateAppJS(): string {
 }
 
 function generateAppCSS(): string {
-  return `/* Add your custom styles here */
-
-/* Example:
-body {
-  font-family: system-ui, sans-serif;
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 2rem;
-}
-*/
-`;
+  return "/* Add your custom styles here */\n";
 }
 
 /**
@@ -244,6 +243,9 @@ export async function exampleCommand(name: string): Promise<void> {
   const exampleDir = path.join(examplesDir, name);
 
   echo.title(`\nCreating example: ${name}\n`);
+
+  echo.info("Building Volt.js library...");
+  await buildLibrary(root);
 
   echo.info("Finding build artifacts...");
   const artifacts = await findBuildArtifacts(root);

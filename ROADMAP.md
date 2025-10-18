@@ -2,15 +2,17 @@
 
 | Version | Milestone                                                  | Summary                                                                  |
 | ------- | ---------------------------------------------------------- | ------------------------------------------------------------------------ |
-| v0.1.0  | [Foundations](#foundations)                                | Initial project setup, tooling, and reactive signal prototype.           |
-| v0.2.0  | [Reactivity & Bindings](#reactivity--bindings)             | Core DOM bindings (`data-x-*`) and declarative updates.                  |
-| v0.3.0  | [Actions & Effects](#actions--effects)                     | Event system and derived reactivity primitives.                          |
-| v0.4.0  | [Plugins Framework](#plugins-framework)                    | Modular plugin system and first built-in plugin set.                     |
-| v0.5.0  | [Streaming & Patch Engine](#streaming--patch-engine)       | SSE/WebSocket JSON patch streaming.                                      |
-| v0.6.0  | [Persistence & Offline](#persistence--offline)             | State persistence, storage sync, and fallback behaviors.                 |
-| v0.7.0  | [Animation & Transitions](#animation--transitions)         | Declarative animation layer and browser View Transition API integration. |
-| v0.8.0  | [Inspector & Developer Tools](#inspector--developer-tools) | Built-in signal inspector, debug overlays, and dev tooling.              |
-| v0.9.0  | [Docs & Stability](#documentation--stability-pass)         | Comprehensive docs, tests, and performance review.                       |
+|         | [Foundations](#foundations)                                | Initial project setup, tooling, and reactive signal prototype.           |
+|         | [Reactivity & Bindings](#reactivity--bindings)             | Core DOM bindings (`data-x-*`) and declarative updates.                  |
+|         | [Actions & Effects](#actions--effects)                     | Event system and derived reactivity primitives.                          |
+|         | [Plugins Framework](#plugins-framework)                    | Modular plugin system and first built-in plugin set.                     |
+|         | [Streaming & Patch Engine](#streaming--patch-engine)       | SSE/WebSocket JSON patch streaming.                                      |
+|         | [Persistence & Offline](#persistence--offline)             | State persistence, storage sync, and fallback behaviors.                 |
+| v0.1.0  | [Markup Based Reactivity](#markup-based-reactivity)        | Allow users to write apps without any bundled JS                         |
+| v0.2.0  | [Animation & Transitions](#animation--transitions)         | Declarative animation layer and browser View Transition API integration. |
+| v0.3.0  | [Inspector & Developer Tools](#inspector--developer-tools) | Built-in signal inspector, debug overlays, and dev tooling.              |
+| v0.4.0  | [Docs & Stability](#documentation--stability-pass)         | Comprehensive docs, tests, and performance review.                       |
+| v0.5.0  | PWA Capabilities                                           | TODO                                                                     |
 | v1.0.0  | [Release](#stable-release)                                 | Public API freeze, plugin registry, and versioned documentation.         |
 
 ## Details
@@ -131,6 +133,19 @@
     - Versioned documentation (stormlightlabs.github.io/volt)
     - Announcement post and release notes
     - Community contribution guide & governance doc
+
+### Markup Based Reactivity
+
+**Goal:** Allow Volt apps to declare state, bindings, and behavior entirely in HTML markup
+**Outcome:** Authors can ship examples without companion JavaScript bundles
+**Deliverables:**
+    - Auto-bootstrapping loader (`volt.min.js`) that detects `data-volt` roots and hydrates one scope per root.
+    - Declarative state primitives (`data-volt-state`, `data-volt-computed:*`) aligned with `docs/reactivity-spec.md`.
+    - Binding directives for text, attributes, classes, styles, and two-way form controls (`data-volt-[bind|text|model|class:*]`).
+    - Control-flow directives (`data-volt-for`, `data-volt-if`, `data-volt-else`) with lifecycle-safe teardown.
+    - Declarative event system (`data-volt-on:*`) with helper surface for list mutations and plugin hooks.
+    - SSR compatibility helpers and sandboxed expression evaluator per the security contract.
+    - Integration tests covering TodoMVC and hydration edge cases.
 
 ## Examples
 
