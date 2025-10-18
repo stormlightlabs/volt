@@ -4,7 +4,7 @@
 | ------- | ----- | ---------------------------------------------------------- | ------------------------------------------------------------------------ |
 |         |   ✓   | [Foundations](#foundations)                                | Initial project setup, tooling, and reactive signal prototype.           |
 |         |   ✓   | [Reactivity & Bindings](#reactivity--bindings)             | Core DOM bindings (`data-x-*`) and declarative updates.                  |
-|         |       | [Actions & Effects](#actions--effects)                     | Event system and derived reactivity primitives.                          |
+|         |   ✓   | [Actions & Effects](#actions--effects)                     | Event system and derived reactivity primitives.                          |
 |         |       | [Plugins Framework](#plugins-framework)                    | Modular plugin system and first built-in plugin set.                     |
 |         |       | [Streaming & Patch Engine](#streaming--patch-engine)       | SSE/WebSocket JSON patch streaming.                                      |
 |         |       | [Persistence & Offline](#persistence--offline)             | State persistence, storage sync, and fallback behaviors.                 |
@@ -45,9 +45,9 @@ _NOTE_: `data-x-*` is now `data-volt-*`
 **Outcome:** Fully functional reactive UI layer with event bindings and computed updates.
 **Deliverables:**
     - ✓ Event binding system (`data-x-on-*`)
-    - `$el` and `$event` scoped references
+    - ✓ `$el` and `$event` scoped references
     - ✓ Derived signals (`computed`, `effect`)
-    - Async effects (e.g., fetch triggers)
+    - ✓ Async effects (e.g., fetch triggers)
 
 ### Plugins Framework
 
@@ -55,14 +55,14 @@ _NOTE_: `data-x-*` is now `data-volt-*`
 **Outcome:** Stable plugin API enabling community-driven extensions.
 **Deliverables:**
     - ✓ `registerPlugin(name, fn)` API
-    - Context and lifecycle hooks
+    - ✓ Context and lifecycle hooks
     - ✓ Built-ins:
         - ✓ `data-x-persist`
         - ✓ `data-x-scroll`
         - ✓ `data-x-url`
     - ✓ Tests & registry
-    - Example in docs/examples/plugins.md
     - ✓ Setup test coverage with generous thresholds (~50%)
+    - Example in docs/examples/plugins.md
     - End-to-end examples (counter, form, live field updates)
         - `docs/examples/reactivity.md`
             - `actions`, `effects`, `signals`
@@ -73,7 +73,7 @@ _NOTE_: `data-x-*` is now `data-volt-*`
 **Outcome:** Volt.js can receive and apply live updates from the server
 **Deliverables:**
     - JSON Patch parser and DOM applier
-    - `data-x-stream` attribute
+    - `data-volt-stream` attribute
     - Reconnection/backoff logic
     - Raise test coverage threshold to 60%
     - Integration test with mock SSE server
@@ -146,8 +146,7 @@ _NOTE_: `data-x-*` is now `data-volt-*`
     - ✓ Binding directives for text, attributes, classes, styles, and two-way form controls (`data-volt-[bind|text|model|class:*]`).
     - ✓ Control-flow directives (`data-volt-for`, `data-volt-if`, `data-volt-else`) with lifecycle-safe teardown.
     - ✓ Declarative event system (`data-volt-on:*`) with helper surface for list mutations and plugin hooks.
-    - SSR compatibility helpers and sandboxed expression evaluator per the security contract.
-    - Integration tests covering TodoMVC and hydration edge cases.
+    - SSR compatibility helpers and sandboxed expression evaluator
 
 ## Examples
 

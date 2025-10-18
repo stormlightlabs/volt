@@ -1,6 +1,6 @@
+import { mount } from "@volt/core/binder";
+import { signal } from "@volt/core/signal";
 import { describe, expect, it, vi } from "vitest";
-import { mount } from "../../src/core/binder";
-import { signal } from "../../src/core/signal";
 
 describe("event bindings", () => {
   it("binds click events", () => {
@@ -158,5 +158,106 @@ describe("event bindings", () => {
     input.dispatchEvent(new Event("input"));
 
     expect(value.get()).toBe("changed");
+  });
+
+  describe("$el edge cases", () => {
+    it("$el is available in inline expressions", () => {
+      const button = document.createElement("button");
+      button.id = "test-button";
+      button.dataset.voltOnClick = "elementId.set($el.id)";
+
+      const elementId = signal("");
+      mount(button, { elementId });
+
+      button.click();
+
+      expect(elementId.get()).toBe("test-button");
+    });
+
+    it("can access element properties via $el in expressions", () => {
+      const input = document.createElement("input");
+      input.value = "initial";
+      input.dataset.voltOnInput = "value.set($el.value)";
+
+      const value = signal("");
+      mount(input, { value });
+
+      input.value = "changed";
+      input.dispatchEvent(new Event("input"));
+
+      expect(value.get()).toBe("changed");
+    });
+
+    it("$el persists across multiple event triggers", () => {
+      const button = document.createElement("button");
+      button.id = "btn";
+      button.dataset.voltOnClick = "ids.set([...ids.get(), $el.id])";
+
+      const ids = signal([] as string[]);
+      mount(button, { ids });
+
+      button.click();
+      button.click();
+
+      expect(ids.get()).toEqual(["btn", "btn"]);
+    });
+  });
+
+  describe("$event edge cases", () => {
+    it("can access event type via $event", () => {
+      const input = document.createElement("input");
+      input.dataset.voltOnInput = "eventType.set($event.type)";
+
+      const eventType = signal("");
+      mount(input, { eventType });
+
+      input.dispatchEvent(new Event("input"));
+
+      expect(eventType.get()).toBe("input");
+    });
+
+    it("$event.preventDefault works in expressions", () => {
+      const form = document.createElement("form");
+      form.dataset.voltOnSubmit = "handleSubmit";
+
+      const handleSubmit = (event: Event) => {
+        event.preventDefault();
+      };
+
+      mount(form, { handleSubmit });
+
+      const submitEvent = new Event("submit", { cancelable: true });
+      form.dispatchEvent(submitEvent);
+
+      expect(submitEvent.defaultPrevented).toBe(true);
+    });
+
+    it("can access event properties in expressions", () => {
+      const button = document.createElement("button");
+      button.dataset.voltOnClick = "wasShiftKey.set($event.shiftKey)";
+
+      const wasShiftKey = signal(false);
+      mount(button, { wasShiftKey });
+
+      const mouseEvent = new MouseEvent("click", { shiftKey: true });
+      button.dispatchEvent(mouseEvent);
+
+      expect(wasShiftKey.get()).toBe(true);
+    });
+  });
+
+  describe("$el and $event interaction", () => {
+    it("both $el and $event are available together", () => {
+      const input = document.createElement("input");
+      input.id = "test-input";
+      input.dataset.voltOnInput = "data.set({ id: $el.id, type: $event.type })";
+
+      const data = signal({} as { id: string; type: string });
+      mount(input, { data });
+
+      input.dispatchEvent(new Event("input"));
+
+      expect(data.get()).toEqual({ id: "test-input", type: "input" });
+    });
   });
 });

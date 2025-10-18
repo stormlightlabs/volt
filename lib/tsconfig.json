@@ -6,22 +6,19 @@
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "types": ["vite/client"],
     "skipLibCheck": true,
-    /* Bundler mode */
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
     "moduleDetection": "force",
     "noEmit": true,
-    /* Linting */
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,
-    /* Path Aliases */
     "baseUrl": ".",
     "paths": { "$types/*": ["./src/types/*"], "@volt/core/*": ["./src/core/*"], "@volt/plugins/*": ["./src/plugins/*"] }
   },
-  "include": ["src", "lib/test"]
+  "include": ["src", "test"]
 }

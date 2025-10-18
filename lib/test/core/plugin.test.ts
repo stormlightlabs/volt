@@ -1,5 +1,5 @@
+import { clearPlugins, getRegisteredPlugins, hasPlugin, registerPlugin, unregisterPlugin } from "@volt/core/plugin";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { clearPlugins, getRegisteredPlugins, hasPlugin, registerPlugin, unregisterPlugin } from "../../src/core/plugin";
 
 describe("plugin system", () => {
   beforeEach(() => {
@@ -10,7 +10,6 @@ describe("plugin system", () => {
     it("registers a plugin with a given name", () => {
       const handler = vi.fn();
       registerPlugin("test", handler);
-
       expect(hasPlugin("test")).toBe(true);
     });
 
@@ -44,7 +43,6 @@ describe("plugin system", () => {
     it("returns true for registered plugins", () => {
       const handler = vi.fn();
       registerPlugin("test", handler);
-
       expect(hasPlugin("test")).toBe(true);
     });
 
@@ -74,7 +72,6 @@ describe("plugin system", () => {
 
     it("returns false when unregistering nonexistent plugin", () => {
       const result = unregisterPlugin("nonexistent");
-
       expect(result).toBe(false);
     });
   });
@@ -86,13 +83,11 @@ describe("plugin system", () => {
 
     it("returns array of registered plugin names", () => {
       const handler = vi.fn();
-
       registerPlugin("plugin1", handler);
       registerPlugin("plugin2", handler);
       registerPlugin("plugin3", handler);
 
       const plugins = getRegisteredPlugins();
-
       expect(plugins).toHaveLength(3);
       expect(plugins).toContain("plugin1");
       expect(plugins).toContain("plugin2");
@@ -120,7 +115,6 @@ describe("plugin system", () => {
       registerPlugin("plugin1", handler);
       registerPlugin("plugin2", handler);
       registerPlugin("plugin3", handler);
-
       clearPlugins();
 
       expect(getRegisteredPlugins()).toEqual([]);

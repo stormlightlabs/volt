@@ -1,5 +1,5 @@
+import { computed, effect, signal } from "@volt/core/signal";
 import { describe, expect, it, vi } from "vitest";
-import { computed, effect, signal } from "../../src/core/signal";
 
 describe("signal", () => {
   it("creates a signal with an initial value", () => {
@@ -216,7 +216,6 @@ describe("effect", () => {
     const effectFunction = vi.fn();
 
     effect(effectFunction, [count]);
-
     expect(effectFunction).toHaveBeenCalledTimes(1);
   });
 

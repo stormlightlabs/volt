@@ -5,6 +5,7 @@
 import type { BindingContext, CleanupFunction, PluginContext, Scope, Signal } from "../types/volt";
 import { getVoltAttributes, parseClassBinding, setHTML, setText, toggleClass, walkDOM } from "./dom";
 import { evaluate, extractDependencies, isSignal } from "./evaluator";
+import { executeGlobalHooks, notifyBindingCreated, notifyElementMounted, notifyElementUnmounted } from "./lifecycle";
 import { getPlugin } from "./plugin";
 
 /**
@@ -16,8 +17,11 @@ import { getPlugin } from "./plugin";
  * @returns Cleanup function to unmount
  */
 export function mount(root: Element, scope: Scope): CleanupFunction {
+  executeGlobalHooks("beforeMount", root, scope);
+
   const elements = walkDOM(root);
   const allCleanups: CleanupFunction[] = [];
+  const mountedElements: Element[] = [];
 
   for (const element of elements) {
     const attributes = getVoltAttributes(element);
@@ -26,19 +30,32 @@ export function mount(root: Element, scope: Scope): CleanupFunction {
     if (attributes.has("for")) {
       const forExpression = attributes.get("for")!;
       bindFor(context, forExpression);
+      notifyBindingCreated(element, "for");
     } else if (attributes.has("if")) {
       const ifExpression = attributes.get("if")!;
       bindIf(context, ifExpression);
+      notifyBindingCreated(element, "if");
     } else {
       for (const [name, value] of attributes) {
         bindAttribute(context, name, value);
+        notifyBindingCreated(element, name);
       }
     }
 
+    notifyElementMounted(element);
+    mountedElements.push(element);
     allCleanups.push(...context.cleanups);
   }
 
+  executeGlobalHooks("afterMount", root, scope);
+
   return () => {
+    executeGlobalHooks("beforeUnmount", root);
+
+    for (const element of mountedElements) {
+      notifyElementUnmounted(element);
+    }
+
     for (const cleanup of allCleanups) {
       try {
         cleanup();
@@ -46,6 +63,8 @@ export function mount(root: Element, scope: Scope): CleanupFunction {
         console.error("Error during unmount:", error);
       }
     }
+
+    executeGlobalHooks("afterUnmount", root);
   };
 }
 
@@ -582,6 +601,53 @@ function parseForExpression(expr: string): { itemName: string; indexName?: strin
  * Provides the plugin with access to utilities and cleanup registration.
  */
 function createPluginContext(bindingContext: BindingContext): PluginContext {
+  const mountCallbacks: Array<() => void> = [];
+  const unmountCallbacks: Array<() => void> = [];
+  const beforeBindingCallbacks: Array<() => void> = [];
+  const afterBindingCallbacks: Array<() => void> = [];
+
+  const lifecycle = {
+    onMount: (callback: () => void) => {
+      mountCallbacks.push(callback);
+      try {
+        callback();
+      } catch (error) {
+        console.error("Error in plugin onMount hook:", error);
+      }
+    },
+    onUnmount: (cb: () => void) => {
+      unmountCallbacks.push(cb);
+    },
+    beforeBinding: (cb: () => void) => {
+      beforeBindingCallbacks.push(cb);
+      try {
+        cb();
+      } catch (error) {
+        console.error("Error in plugin beforeBinding hook:", error);
+      }
+    },
+    afterBinding: (callback: () => void) => {
+      afterBindingCallbacks.push(callback);
+      queueMicrotask(() => {
+        try {
+          callback();
+        } catch (error) {
+          console.error("Error in plugin afterBinding hook:", error);
+        }
+      });
+    },
+  };
+
+  bindingContext.cleanups.push(() => {
+    for (const cb of unmountCallbacks) {
+      try {
+        cb();
+      } catch (error) {
+        console.error("Error in plugin onUnmount hook:", error);
+      }
+    }
+  });
+
   return {
     element: bindingContext.element,
     scope: bindingContext.scope,
@@ -589,6 +655,7 @@ function createPluginContext(bindingContext: BindingContext): PluginContext {
       bindingContext.cleanups.push(fn);
     },
     findSignal: (path) => findSignalInScope(bindingContext.scope, path),
-    evaluate: (expression) => evaluate(expression, bindingContext.scope),
+    evaluate: (expr) => evaluate(expr, bindingContext.scope),
+    lifecycle,
   };
 }
