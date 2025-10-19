@@ -1,7 +1,7 @@
 {
-  "name": "@volt/cli",
+  "name": "@volt/dev",
   "version": "0.1.0",
-  "description": "CLI tools for Volt.js development",
+  "description": "Local development CLI for Volt.js",
   "type": "module",
   "license": "MIT",
   "bin": { "volt": "./dist/index.js" },

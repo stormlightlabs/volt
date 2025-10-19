@@ -1,20 +1,19 @@
 import { defineConfig } from "vitepress";
 import { u } from "./utils";
 
-// https://vitepress.dev/reference/site-config
+/**
+ * @see https://vitepress.dev/reference/site-config
+ */
 export default defineConfig({
   title: "Volt.js",
   description: "A reactive, hypermedia framework.",
   appearance: "dark",
   themeConfig: {
-    nav: [
-      { text: "Home", link: "/" },
-      { text: "Overview", link: "/overview" },
-      { text: "CSS", link: "/css/volt-css" },
-      { text: "API", link: "/api" },
-    ],
+    nav: [{ text: "Home", link: "/" }, { text: "Overview", link: "/overview" }, { text: "CSS", link: "/css/volt-css" }],
     sidebar: [
       { text: "Getting Started", items: [{ text: "Overview", link: "/overview" }] },
+      { text: "Concepts", items: [{ text: "Lifecycle", link: "/lifecycle" }] },
+      { text: "Expressions", items: [{ text: "Expressions", link: "/expressions" }] },
       {
         text: "CSS",
         collapsed: false,

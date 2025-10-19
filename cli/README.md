@@ -1,4 +1,4 @@
-# Volt CLI
+# Volt Developer CLI
 
 Development tools for the Volt.js project. Uses:
 

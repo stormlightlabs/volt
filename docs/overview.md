@@ -8,118 +8,32 @@ Volt.js is a lightweight, hypermedia based reactive framework for building decla
 
 It combines HTML-driven behavior via `data-volt-*` attributes with signal-based reactivity.
 
-## Architecture
+## Features
 
-The framework consists of three layers:
+### Reactivity
 
-### Reactivity Layer
+- Signal-based state management with `signal`, `computed`, and `effect` primitives
+- Predicatable direct DOM updates without virtual DOM diffing
 
-Signals are the foundation of Volt's reactive system:
+### Hypermedia Integration
 
-```js
-import { signal, computed, effect } from 'volt';
+- Declarative HTTP requests with `data-volt-get`, `data-volt-post`, `data-volt-put`, `data-volt-patch`, and `data-volt-delete`
+- Multiple DOM swap strategies for server-rendered HTML fragments/partials
+- "Smart" retry with exponential backoff for failed requests
+- Automatic form serialization
 
-const count = signal(0);
-const doubled = computed(() => count.get() * 2, [count]);
+### Plugins
 
-effect(() => console.log('Count:', count.get()), [count]);
-```
+- Built-In
+    - State persistence across page loads using `localStorage`, `sessionStorage`, or `IndexedDB`
+    - Scroll management including position restore, scroll-to, scroll-spy, and smooth scrolling
+    - URL synchronization for query parameters and hash-based routing
+- Extensibility
+    - Custom plugin system via `registerPlugin` for domain-specific bindings
+    - Global lifecycle hooks for mount, unmount, and binding creation
+    - Automatic cleanup management
 
-- **`signal()`** creates mutable reactive state
-- **`computed()`** derives values from signals
-- **`effect()`** runs side effects when dependencies change
-
-No reactivity scheduler. Signals notify subscribers directly on change.
-
-### Binding System
-
-Bindings connect signals to DOM via `data-volt-*` attributes:
-
-```html
-<div id="app">
-  <p data-volt-text="count">0</p>
-  <button data-volt-on-click="increment">+</button>
-  <div data-volt-if="isPositive">Positive</div>
-</div>
-```
-
-```js
-mount(document.querySelector('#app'), {
-  count,
-  isPositive,
-  increment: () => count.set(count.get() + 1)
-});
-```
-
-Core bindings:
-
-- `data-volt-text` - Update text content
-- `data-volt-html` - Update HTML content
-- `data-volt-class` - Toggle CSS classes
-- `data-volt-on-*` - Attach event handlers
-- `data-volt-if` - Conditional rendering
-- `data-volt-for` - List rendering
-
-### Plugin System
-
-Extend functionality via custom `data-volt-*` bindings:
-
-```js
-import { registerPlugin } from 'volt';
-
-registerPlugin('tooltip', (context, value) => {
-  // Custom binding logic
-});
-```
-
-See [Plugin Spec](./plugin-spec.md) for details.
-
-## Key Concepts
-
-### Signals Update DOM Directly
-
-Bindings subscribe to signals and update the real DOM when values change.
-
-### HTML Drives Behavior
-
-Declare UI structure and interactivity in HTML. JavaScript provides state and handlers.
-
-### Explicit Dependencies
-
-Computed signals and effects declare dependencies explicitly:
-
-```js
-computed(() => a.get() + b.get(), [a, b])  // Both deps listed
-```
-
-### Cleanup Management
-
-`mount()` returns a cleanup function. All bindings register their cleanup to prevent memory leaks:
-
-```js
-const cleanup = mount(element, scope);
-// Later:
-cleanup();  // Unsubscribes all bindings
-```
-
-## Examples
-
-### Counter
-
-Simple counter demonstrating basic reactivity:
-
-- Location: `examples/counter/`
-- Shows: signals, computed values, conditional rendering, class bindings
-
-### TodoMVC
-
-Complete todo app with filtering and editing:
-
-- Location: `examples/todomvc/`
-- Shows: list rendering, event handling, computed filters, state mapping
-- Uses: Volt CSS (classless framework) for styling
-
-## Design Constraints
+### Design Constraints
 
 - Core runtime under 15 KB gzipped
 - Zero dependencies

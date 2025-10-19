@@ -1,4 +1,6 @@
-import { persistPlugin, scrollPlugin, urlPlugin } from "$plugins";
+import { persistPlugin } from "$plugins/persist";
+import { scrollPlugin } from "$plugins/scroll";
+import { urlPlugin } from "$plugins/url";
 import { computed, effect, mount, registerPlugin, signal } from "$volt";
 
 registerPlugin("persist", persistPlugin);

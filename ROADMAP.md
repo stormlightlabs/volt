@@ -79,8 +79,6 @@ _NOTE_: `data-x-*` is now `data-volt-*`
     - ✓ Form serialization and submission
     - ✓ Request/response headers customization
 
-## To-Do
-
 ### Markup Based Reactivity
 
 **Goal:** Allow Volt apps to declare state, bindings, and behavior entirely in HTML markup
@@ -92,7 +90,9 @@ _NOTE_: `data-x-*` is now `data-volt-*`
     - ✓ Control-flow directives (`data-volt-for`, `data-volt-if`, `data-volt-else`) with lifecycle-safe teardown.
     - ✓ Declarative event system (`data-volt-on:*`) with helper surface for list mutations and plugin hooks.
     - ✓ SSR compatibility helpers
-    - Sandboxed expression evaluator
+    - ✓ Sandboxed expression evaluator
+
+## To-Do
 
 ### Streaming & Patch Engine
 
@@ -176,11 +176,11 @@ _NOTE_: `data-x-*` is now `data-volt-*`
 **Outcome:** Volt.js enables declarative animations and view transitions alongside reactivity.
 **Deliverables:**
     - `data-volt-transition` directive with enter/leave transitions
-    - Transition modifiers (duration, delay, opacity, scale, etc.)
-    - View Transitions API integration (when available)
-    - CSS-based transition helpers
+        - Transition modifiers (duration, delay, opacity, scale, etc.)
+        - View Transitions API integration (when available)
+        - CSS-based transition helpers
     - `data-volt-animate` plugin for keyframe animations
-    - Timing utilities and easing functions
+        - Timing utilities and easing functions
     - Integration with `data-volt-if` and `data-volt-show` for automatic transitions
 
 ### Background Requests & Reactive Polling
@@ -188,13 +188,13 @@ _NOTE_: `data-x-*` is now `data-volt-*`
 **Goal:** Enable declarative background data fetching and periodic updates within the Volt.js runtime.
 **Outcome:** Volt.js elements can fetch or refresh data automatically based on time, visibility, or reactive conditions.
 **Deliverables:**
-    - `data-volt-fetch` attribute for declarative background requests
-    - Configurable polling intervals, delays, and signal-based triggers
     - `data-volt-visible` for fetching when an element enters the viewport (`IntersectionObserver`)
+    - `data-volt-fetch` attribute for declarative background requests
+        - Configurable polling intervals, delays, and signal-based triggers
+        - Automatic cancellation of requests when elements are unmounted
+        - Conditional execution tied to reactive signals
+        - Integration hooks for loading and pending states
     - Background task scheduler with priority management
-    - Automatic cancellation of requests when elements are unmounted
-    - Conditional execution tied to reactive signals
-    - Integration hooks for loading and pending states
 
 ### Navigation & History Management
 
@@ -202,14 +202,14 @@ _NOTE_: `data-x-*` is now `data-volt-*`
 **Outcome:** Volt.js provides enhanced navigation behavior with minimal overhead and full accessibility support.
 **Deliverables:**
     - `data-volt-navigate` for intercepting link and form actions
-    - Integration with the History API (`pushState`, `replaceState`, `popState`)
-    - Reactive synchronization of route and signal state
-    - Smooth page and fragment transitions coordinated with Volt’s signal system
-    - Native back/forward button support
-    - Scroll position persistence and restoration
-    - Optional preloading of linked resources on hover or idle
+        - Integration with the History API (`pushState`, `replaceState`, `popState`)
+        - Reactive synchronization of route and signal state
+        - Smooth page and fragment transitions coordinated with Volt’s signal system
+        - Native back/forward button support
+        - Scroll position persistence and restoration
+            - Preloading of linked resources on hover or idle
     - `data-volt-url` for declarative history updates
-    - Optional View Transition API integration for animated route changes
+        - View Transition API integration for animated route changes
 
 ### Inspector & Developer Tools
 

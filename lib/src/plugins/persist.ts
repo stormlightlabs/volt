@@ -106,10 +106,11 @@ const idbAdapter = {
   },
 } satisfies StorageAdapter;
 
+let dbPromise: Optional<Promise<IDBDatabase>>;
+
 /**
  * Open or create the IndexedDB database
  */
-let dbPromise: Optional<Promise<IDBDatabase>>;
 function openDB(): Promise<IDBDatabase> {
   if (dbPromise) return dbPromise;
 

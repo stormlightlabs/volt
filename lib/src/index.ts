@@ -20,7 +20,9 @@ export {
 export { clearPlugins, getRegisteredPlugins, hasPlugin, registerPlugin, unregisterPlugin } from "$core/plugin";
 export { computed, effect, signal } from "$core/signal";
 export { deserializeScope, hydrate, isHydrated, isServerRendered, serializeScope } from "$core/ssr";
-export { persistPlugin, registerStorageAdapter, scrollPlugin, urlPlugin } from "$plugins";
+export { persistPlugin, registerStorageAdapter } from "$plugins/persist";
+export { scrollPlugin } from "$plugins/scroll";
+export { urlPlugin } from "$plugins/url";
 export type {
   AsyncEffectFunction,
   AsyncEffectOptions,

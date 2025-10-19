@@ -1,10 +1,74 @@
 /**
  * Safe expression evaluation with operators support
  *
- * Implements a recursive descent parser for expressions without using eval()
+ * Implements a recursive descent parser for expressions without using eval().
+ * Includes sandboxing to prevent prototype pollution and sandbox escape attacks.
  */
 
 import type { Dep, Scope } from "$types/volt";
+
+/**
+ * Blocked properties to prevent prototype pollution and sandbox escape
+ */
+const DANGEROUS_PROPERTIES = new Set(["__proto__", "prototype", "constructor"]);
+
+const SAFE_GLOBALS = new Set([
+  "Array",
+  "Object",
+  "String",
+  "Number",
+  "Boolean",
+  "Date",
+  "Math",
+  "JSON",
+  "RegExp",
+  "Map",
+  "Set",
+  "Promise",
+]);
+
+const DANGEROUS_GLOBALS = new Set([
+  "Function",
+  "eval",
+  "globalThis",
+  "window",
+  "global",
+  "process",
+  "require",
+  "import",
+  "module",
+  "exports",
+]);
+
+/**
+ * Validates that a property name is safe to access
+ */
+function isSafeProp(key: unknown): boolean {
+  if (typeof key !== "string" && typeof key !== "number") {
+    return true;
+  }
+
+  const keyStr = String(key);
+  return !DANGEROUS_PROPERTIES.has(keyStr);
+}
+
+/**
+ * Validates that accessing a property on an object is safe
+ */
+function isSafeAccess(object: unknown, key: unknown): boolean {
+  if (!isSafeProp(key)) {
+    return false;
+  }
+
+  if (typeof object === "function") {
+    const keyStr = String(key);
+    if (keyStr === "constructor" && object.name && !SAFE_GLOBALS.has(object.name)) {
+      return false;
+    }
+  }
+
+  return true;
+}
 
 type TokenType =
   | "NUMBER"
@@ -42,14 +106,8 @@ type TokenType =
   | "OR_OR"
   | "EOF";
 
-/**
- * Token representing a lexical unit
- */
 type Token = { type: TokenType; value: unknown; start: number; end: number };
 
-/**
- * Tokenize an expression string into a stream of tokens
- */
 function tokenize(expr: string): Token[] {
   const tokens: Token[] = [];
   let pos = 0;
@@ -458,6 +516,10 @@ class Parser {
         this.consume("RPAREN", "Expected ')' after arguments");
 
         if (typeof object === "function") {
+          const func = object as { name?: string };
+          if (func.name === "Function" || func.name === "eval") {
+            throw new Error("Cannot call dangerous function");
+          }
           object = (object as (...args: unknown[]) => unknown)(...args);
         } else {
           throw new TypeError("Attempting to call a non-function value");
@@ -491,6 +553,10 @@ class Parser {
   private callMethod(object: unknown, methodName: string, args: unknown[]): unknown {
     if (object === null || object === undefined) {
       throw new Error(`Cannot call method '${methodName}' on ${object}`);
+    }
+
+    if (!isSafeAccess(object, methodName)) {
+      throw new Error(`Unsafe method call: ${methodName}`);
     }
 
     const method = (object as Record<string, unknown>)[methodName];
@@ -577,6 +643,11 @@ class Parser {
       if (this.match("DOT_DOT_DOT")) {
         const spreadValue = this.parseExpr();
         if (typeof spreadValue === "object" && spreadValue !== null && !Array.isArray(spreadValue)) {
+          for (const key of Object.keys(spreadValue)) {
+            if (!isSafeProp(key)) {
+              throw new Error(`Unsafe property in spread: ${key}`);
+            }
+          }
           Object.assign(object, spreadValue);
         } else {
           throw new Error("Spread operator can only be used with objects in object literals");
@@ -590,6 +661,10 @@ class Parser {
           key = this.previous().value as string;
         } else {
           throw new Error("Expected property key in object literal");
+        }
+
+        if (!isSafeProp(key)) {
+          throw new Error(`Unsafe property key in object literal: ${key}`);
         }
 
         this.consume("COLON", "Expected ':' after property key");
@@ -727,6 +802,10 @@ class Parser {
       return undefined;
     }
 
+    if (!isSafeAccess(object, key)) {
+      throw new Error(`Unsafe property access: ${String(key)}`);
+    }
+
     if (isSignal(object) && (key === "get" || key === "set" || key === "subscribe")) {
       return (object as Record<string, unknown>)[key as string];
     }
@@ -745,6 +824,14 @@ class Parser {
   }
 
   private resolvePropPath(path: string): unknown {
+    if (!isSafeProp(path)) {
+      throw new Error(`Unsafe property access: ${path}`);
+    }
+
+    if (DANGEROUS_GLOBALS.has(path)) {
+      throw new Error(`Access to dangerous global: ${path}`);
+    }
+
     if (!(path in this.scope)) {
       return undefined;
     }
