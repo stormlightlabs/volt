@@ -15,6 +15,7 @@
     "isolatedModules": true,
     "verbatimModuleSyntax": true,
     "skipLibCheck": true,
+    "rootDir": ".",
     "baseUrl": ".",
     "paths": {
       "$commands/*": ["./src/commands/*"],
@@ -23,5 +24,5 @@
       "$console/*": ["./src/console/*"]
     }
   },
-  "include": ["src", "tests"]
+  "include": ["src", "tests", "eslint.config.js", "vitest.config.ts", "tsdown.config.ts"]
 }

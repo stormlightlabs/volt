@@ -1,6 +1,9 @@
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { defineConfig } from "vite";
 import { type ViteUserConfig } from "vitest/config";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const test: ViteUserConfig["test"] = {
   environment: "jsdom",

@@ -17,6 +17,7 @@
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,
+    "rootDir": ".",
     "baseUrl": ".",
     "paths": {
       "$types/*": ["./src/types/*"],
@@ -26,5 +27,5 @@
       "$volt": ["./src/index.ts"]
     }
   },
-  "include": ["src", "test"]
+  "include": ["src", "test", "eslint.config.js", "vite.config.ts"]
 }

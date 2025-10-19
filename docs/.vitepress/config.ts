@@ -11,9 +11,18 @@ export default defineConfig({
   themeConfig: {
     nav: [{ text: "Home", link: "/" }, { text: "Overview", link: "/overview" }, { text: "CSS", link: "/css/volt-css" }],
     sidebar: [
-      { text: "Getting Started", items: [{ text: "Overview", link: "/overview" }] },
-      { text: "Concepts", items: [{ text: "Lifecycle", link: "/lifecycle" }] },
-      { text: "Expressions", items: [{ text: "Expressions", link: "/expressions" }] },
+      {
+        text: "Getting Started",
+        items: [{ text: "Overview", link: "/overview" }, { text: "Installation", link: "/installation" }],
+      },
+      {
+        text: "Core Concepts",
+        items: [{ text: "State Management", link: "/state" }, { text: "Bindings", link: "/bindings" }, {
+          text: "Expressions",
+          link: "/expressions",
+        }, { text: "SSR & Lifecycle", link: "/lifecycle" }],
+      },
+      { text: "Tutorials", items: [{ text: "Counter", link: "/usage/counter" }] },
       {
         text: "CSS",
         collapsed: false,
