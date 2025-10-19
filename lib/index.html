@@ -4,62 +4,11 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Volt.js Demo</title>
+    <title>Volt.js Demo - Reactive Framework & Volt CSS Showcase</title>
     <link rel="stylesheet" href="/src/styles/base.css" />
-    <style>
-      /* Demo-specific utility classes */
-      .active {
-        color: var(--color-accent);
-        font-weight: bold;
-      }
-      .highlight {
-        background: var(--color-mark);
-        padding: 0.25rem 0.5rem;
-        border-radius: var(--radius-sm);
-      }
-    </style>
   </head>
   <body>
-    <div id="app">
-      <header>
-        <h1 data-volt-text="message">Loading...</h1>
-        <p>A reactive framework demo powered by Volt.js</p>
-      </header>
-
-      <article>
-        <section>
-          <h2>Event Bindings & Computed Values</h2>
-          <p>
-            Count: <strong data-volt-text="count">0</strong><br />
-            Doubled: <strong data-volt-text="doubled">0</strong>
-          </p>
-          <button data-volt-on-click="increment">Increment</button>
-          <button data-volt-on-click="decrement">Decrement</button>
-          <button data-volt-on-click="reset">Reset</button>
-          <button data-volt-on-click="updateMessage">Update Message</button>
-        </section>
-
-        <section>
-          <h2>Form Input</h2>
-          <input type="text" data-volt-on-input="handleInput" placeholder="Type something..." />
-          <p>You typed: <strong data-volt-text="inputValue">nothing yet</strong></p>
-        </section>
-
-        <section>
-          <h2>Class Bindings</h2>
-          <p data-volt-class="classes">This text has dynamic classes applied.</p>
-          <p>
-            Active: <span data-volt-text="isActive">false</span>
-          </p>
-          <button data-volt-on-click="toggleActive">Toggle Active</button>
-        </section>
-
-        <section>
-          <h2>HTML Binding</h2>
-          <div data-volt-html="'<em>This is rendered as HTML</em>'">Fallback content</div>
-        </section>
-      </article>
-    </div>
+    <div id="app"></div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
