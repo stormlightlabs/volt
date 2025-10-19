@@ -15,9 +15,8 @@
 | v0.1.0  |   ✓   | [Markup Based Reactivity](#markup-based-reactivity)        | Allow users to write apps without any bundled JS                         |
 | v0.2.0  |       | [Animation & Transitions](#animation--transitions)         | Declarative animation layer and browser View Transition API integration. |
 | v0.3.0  |       | [Inspector & Developer Tools](#inspector--developer-tools) | Built-in signal inspector, debug overlays, and dev tooling.              |
-| v0.4.0  |       | [Docs & Stability](#documentation--stability-pass)         | Comprehensive docs, tests, and performance review.                       |
-| v0.5.0  |       | PWA Capabilities                                           | TODO                                                                     |
-| v1.0.0  |       | [Release](#stable-release)                                 | Public API freeze, plugin registry, and versioned documentation.         |
+| v0.4.0  |       | PWA Capabilities                                           | TODO                                                                     |
+| v1.0.0  |       | [Release](#stable-release)                                 | Public API freeze, plugin registry, comprehensive docs & tests.          |
 
 ## Completed
 
@@ -117,61 +116,30 @@ _NOTE_: `data-x-*` is now `data-volt-*`
 
 ## To-Do
 
-### Streaming & Patch Engine
-
-**Goal:** Enable real-time updates via SSE/WebSocket streaming with intelligent DOM patching.
-**Outcome:** Volt.js can receive and apply live updates from the server
-**Deliverables:**
-    - Server-Sent Events (SSE) integration
-    - `data-volt-stream` attribute for SSE endpoints
-    - Signal patching from backend (`data-signals-*` merge system)
-    - Backend action system with `$$action()` syntax (TBD on final syntax decision)
-    - JSON Patch parser and DOM morphing engine
-    - WebSocket as alternative to SSE
-    - `data-volt-ignore-morph` for selective patch exclusion
-
-### Persistence & Offline
-
-**Goal:** Introduce persistent storage and offline-first behaviors.
-**Outcome:** Resilient state persistence and offline replay built into Volt.js.
-**Deliverables:**
-    - ✓ Persistent signals (localStorage, sessionStorage, indexedDb)
-    - ✓ Storage plugin (`data-volt-persist`)
-    - Storage modifiers on signals:
-        - `.local` modifier for localStorage persistence
-        - `.session` modifier for sessionStorage persistence
-        - `.ifmissing` modifier for conditional initialization
-    - Offline queue for deferred stream events and HTTP requests
-    - Sync strategy API (merge, overwrite, patch) for conflict resolution
-    - Service Worker integration for offline-first apps
-    - Background sync for deferred requests
-    - Cache invalidation strategies
-    - Cross-tab synchronization via `BroadcastChannel`
-
 ### Reactive Attributes & Event Modifiers
 
 **Goal:** Extend Volt.js with expressive attribute patterns and event options for fine-grained control.
 **Outcome:** Volt.js supports rich declarative behaviors and event semantics built entirely on standard DOM APIs.
 **Deliverables:**
-    - `data-volt-show` — toggles element visibility via CSS rather than DOM removal (complements `data-volt-if`)
-    - `data-volt-style` — binds inline styles to reactive expressions
-    - `data-volt-skip` — marks elements or subtrees to exclude from Volt’s reactive parsing
-    - `data-volt-cloak` — hides content until the Volt runtime initializes
+    - `data-volt-show` - toggles element visibility via CSS rather than DOM removal (complements `data-volt-if`)
+    - `data-volt-style` - binds inline styles to reactive expressions
+    - `data-volt-skip` - marks elements or subtrees to exclude from Volt’s reactive parsing
+    - `data-volt-cloak` - hides content until the Volt runtime initializes
     - Event options for `data-volt-on-*` attributes:
-        - `.prevent` — calls `preventDefault()` on the event
-        - `.stop` — stops propagation
-        - `.self` — triggers only when the event target is the bound element
-        - `.window` — attaches the listener to `window`
-        - `.document` — attaches the listener to `document`
-        - `.once` — runs the handler a single time
-        - `.debounce` — defers handler execution (optional milliseconds)
-        - `.throttle` — limits handler frequency (optional milliseconds)
-        - `.passive` — adds a passive event listener for scroll/touch performance
+        - `.prevent` - calls `preventDefault()` on the event
+        - `.stop` - stops propagation
+        - `.self` - triggers only when the event target is the bound element
+        - `.window` - attaches the listener to `window`
+        - `.document` - attaches the listener to `document`
+        - `.once` - runs the handler a single time
+        - `.debounce` - defers handler execution (optional milliseconds)
+        - `.throttle` - limits handler frequency (optional milliseconds)
+        - `.passive` - adds a passive event listener for scroll/touch performance
     - Input options for `data-volt-bind` and `data-volt-model`:
-        - `.number` — coerces values to numbers
-        - `.trim` — removes surrounding whitespace
-        - `.lazy` — syncs only on `change` instead of `input`
-        - `.debounce` — delays updates to reduce jitter
+        - `.number` - coerces values to numbers
+        - `.trim` - removes surrounding whitespace
+        - `.lazy` - syncs only on `change` instead of `input`
+        - `.debounce` - delays updates to reduce jitter
 
 ### Global State
 
@@ -205,6 +173,37 @@ _NOTE_: `data-x-*` is now `data-volt-*`
     - `data-volt-animate` plugin for keyframe animations
         - Timing utilities and easing functions
     - Integration with `data-volt-if` and `data-volt-show` for automatic transitions
+
+### Streaming & Patch Engine
+
+**Goal:** Enable real-time updates via SSE/WebSocket streaming with intelligent DOM patching.
+**Outcome:** Volt.js can receive and apply live updates from the server
+**Deliverables:**
+    - Server-Sent Events (SSE) integration
+    - `data-volt-stream` attribute for SSE endpoints
+    - Signal patching from backend (`data-signals-*` merge system)
+    - Backend action system with `$$action()` syntax (TBD on final syntax decision)
+    - JSON Patch parser and DOM morphing engine
+    - WebSocket as alternative to SSE
+    - `data-volt-ignore-morph` for selective patch exclusion
+
+### Persistence & Offline
+
+**Goal:** Introduce persistent storage and offline-first behaviors.
+**Outcome:** Resilient state persistence and offline replay built into Volt.js.
+**Deliverables:**
+    - ✓ Persistent signals (localStorage, sessionStorage, indexedDb)
+    - ✓ Storage plugin (`data-volt-persist`)
+    - Storage modifiers on signals:
+        - `.local` modifier for localStorage persistence
+        - `.session` modifier for sessionStorage persistence
+        - `.ifmissing` modifier for conditional initialization
+    - Offline queue for deferred stream events and HTTP requests
+    - Sync strategy API (merge, overwrite, patch) for conflict resolution
+    - Service Worker integration for offline-first apps
+    - Background sync for deferred requests
+    - Cache invalidation strategies
+    - Cross-tab synchronization via `BroadcastChannel`
 
 ### Background Requests & Reactive Polling
 
@@ -242,29 +241,19 @@ _NOTE_: `data-x-*` is now `data-volt-*`
     - Developer overlay for inspecting signals, subscriptions, and effects
     - Dev logging toggle (`Volt.debug = true`)
     - Browser console integration (`window.$volt.inspect()`)
-    - Signal dependency graph visualization
+    - Signal dependency graph visualization (graph data structure implemented in [proxy](#proxy-based-reactivity-enhancements) milestone)
     - Performance profiling tools
     - Request/response debugging (HTTP actions, SSE streams)
     - Time-travel debugging for signal history
     - Browser DevTools extension
 
-### Documentation & Stability Pass
-
-**Goal:** Prepare for stable release by finalizing docs, polish, and performance.
-**Outcome:** Volt.js is stable, documented, performant, and ready for production.
-**Deliverables:**
-    - ✓ Documentation site (VitePress)
-    - Full API reference with examples
-    - Performance benchmarks (vs htmx, Alpine)
-    - Browser matrix tests (Chromium, Gecko, WebKit)
-    - Accessibility audits (ARIA)
-    - Freeze API surface for 1.0
-
 ### Stable Release
 
-**Goal:** Ship the first stable version of Volt.js
-**Outcome:** Volt.js 1.0 is released as a mature, fully documented, type-safe, reactive web framework
+**Goal:** Prepare & ship the stable release
+**Outcome:** Volt.js 1.0 is stable, documented, performant, and ready for production.
 **Deliverables:**
+    - ✓ Documentation site (VitePress)
+    - Full API reference with examples -> refactor generator in `@volt/dev` package
     - Finalized plugin registry and CLI (`volt plugins list/init`)
     - Versioned documentation (stormlightlabs.github.io/volt)
     - Announcement post and release notes

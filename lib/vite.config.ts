@@ -28,6 +28,7 @@ export default defineConfig(({ mode }) => ({
       "$volt": path.resolve(__dirname, "./src/index.ts"),
       "$core": path.resolve(__dirname, "./src/core"),
       "$plugins": path.resolve(__dirname, "./src/plugins"),
+      "$debug": path.resolve(__dirname, "./src/debug"),
     },
   },
   build: mode === "lib"
