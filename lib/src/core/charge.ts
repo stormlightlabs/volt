@@ -7,7 +7,7 @@
 import type { ChargedRoot, ChargeResult, Scope } from "$types/volt";
 import { mount } from "./binder";
 import { evaluate } from "./evaluator";
-import { getComputedAttributes } from "./shared";
+import { getComputedAttributes, isNil } from "./shared";
 import { computed, signal } from "./signal";
 
 /**
@@ -70,7 +70,7 @@ function createScopeFromElement(el: Element): Scope {
     try {
       const stateData = JSON.parse(stateAttr);
 
-      if (typeof stateData !== "object" || stateData === null || Array.isArray(stateData)) {
+      if (typeof stateData !== "object" || isNil(stateData) || Array.isArray(stateData)) {
         console.error(`data-volt-state must be a JSON object, got ${typeof stateData}:`, el);
       } else {
         for (const [key, value] of Object.entries(stateData)) {

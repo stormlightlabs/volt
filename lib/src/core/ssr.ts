@@ -13,7 +13,7 @@ import { getComputedAttributes, isSignal } from "./shared";
 import { computed, signal } from "./signal";
 
 /**
- * Serialize a scope object to JSON for embedding in server-rendered HTML
+ * Serialize a {@link Scope} object to JSON for embedding in server-rendered HTML
  *
  * Converts all signals in the scope to their plain values.
  * Computed signals are serialized as their current values.
@@ -161,7 +161,7 @@ function createHydrationScope(el: Element): Scope {
       try {
         const stateData = JSON.parse(stateAttr);
 
-        if (typeof stateData !== "object" || stateData === null || Array.isArray(stateData)) {
+        if (typeof stateData !== "object" || isSignal(stateData) || Array.isArray(stateData)) {
           console.error(`data-volt-state must be a JSON object, got ${typeof stateData}:`, el);
         } else {
           for (const [key, value] of Object.entries(stateData)) {

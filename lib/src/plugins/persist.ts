@@ -4,13 +4,11 @@
  * Supports localStorage, sessionStorage, IndexedDB, and custom adapters
  */
 
+import { isNil } from "$core/shared";
 import type { Optional } from "$types/helpers";
 import type { PluginContext, Signal, StorageAdapter } from "$types/volt";
 
-/**
- * Registry of custom storage adapters
- */
-const storageAdapters = new Map<string, StorageAdapter>();
+const storageAdapterRegistry = new Map<string, StorageAdapter>();
 
 /**
  * Register a custom storage adapter.
@@ -19,13 +17,13 @@ const storageAdapters = new Map<string, StorageAdapter>();
  * @param adapter - Storage adapter implementation
  */
 export function registerStorageAdapter(name: string, adapter: StorageAdapter): void {
-  storageAdapters.set(name, adapter);
+  storageAdapterRegistry.set(name, adapter);
 }
 
 const localStorageAdapter = {
   get(key: string) {
     const value = localStorage.getItem(key);
-    if (value === null) return void 0;
+    if (isNil(value)) return void 0;
     try {
       return JSON.parse(value);
     } catch {
@@ -43,7 +41,7 @@ const localStorageAdapter = {
 const sessionStorageAdapter = {
   get(key: string) {
     const value = sessionStorage.getItem(key);
-    if (value === null) return void 0;
+    if (isNil(value)) return void 0;
     try {
       return JSON.parse(value);
     } catch {
@@ -148,7 +146,7 @@ function getStorageAdapter(type: string): Optional<StorageAdapter> {
       return idbAdapter;
     }
     default: {
-      return storageAdapters.get(type);
+      return storageAdapterRegistry.get(type);
     }
   }
 }

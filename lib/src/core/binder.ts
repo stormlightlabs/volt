@@ -9,7 +9,7 @@ import { evaluate, extractDeps } from "./evaluator";
 import { bindDelete, bindGet, bindPatch, bindPost, bindPut } from "./http";
 import { execGlobalHooks, notifyBindingCreated, notifyElementMounted, notifyElementUnmounted } from "./lifecycle";
 import { getPlugin } from "./plugin";
-import { findScopedSignal } from "./shared";
+import { findScopedSignal, isNil } from "./shared";
 
 /**
  * Mount Volt.js on a root element and its descendants and binds all data-volt-* attributes to the provided scope.
@@ -21,31 +21,48 @@ import { findScopedSignal } from "./shared";
 export function mount(root: Element, scope: Scope): CleanupFunction {
   execGlobalHooks("beforeMount", root, scope);
 
-  const elements = walkDOM(root);
+  const allElements = walkDOM(root);
+
+  const elements = allElements.filter((element) => {
+    let current: Element | null = element;
+    while (current) {
+      if (Object.hasOwn((current as HTMLElement).dataset, "voltSkip")) {
+        return false;
+      }
+      if (current === root) break;
+      current = current.parentElement;
+    }
+    return true;
+  });
+
   const allCleanups: CleanupFunction[] = [];
   const mountedElements: Element[] = [];
 
-  for (const element of elements) {
-    const attributes = getVoltAttrs(element);
-    const context: BindingContext = { element, scope, cleanups: [] };
+  for (const el of elements) {
+    if (Object.hasOwn((el as HTMLElement).dataset, "voltCloak")) {
+      delete (el as HTMLElement).dataset.voltCloak;
+    }
+
+    const attributes = getVoltAttrs(el);
+    const context: BindingContext = { element: el, scope, cleanups: [] };
 
     if (attributes.has("for")) {
       const forExpression = attributes.get("for")!;
       bindFor(context, forExpression);
-      notifyBindingCreated(element, "for");
+      notifyBindingCreated(el, "for");
     } else if (attributes.has("if")) {
       const ifExpression = attributes.get("if")!;
       bindIf(context, ifExpression);
-      notifyBindingCreated(element, "if");
+      notifyBindingCreated(el, "if");
     } else {
       for (const [name, value] of attributes) {
         bindAttribute(context, name, value);
-        notifyBindingCreated(element, name);
+        notifyBindingCreated(el, name);
       }
     }
 
-    notifyElementMounted(element);
-    mountedElements.push(element);
+    notifyElementMounted(el);
+    mountedElements.push(el);
     allCleanups.push(...context.cleanups);
   }
 
@@ -98,6 +115,14 @@ function bindAttribute(ctx: BindingContext, name: string, value: string): void {
     }
     case "class": {
       bindClass(ctx, value);
+      break;
+    }
+    case "show": {
+      bindShow(ctx, value);
+      break;
+    }
+    case "style": {
+      bindStyle(ctx, value);
       break;
     }
     case "model": {
@@ -204,6 +229,72 @@ function bindClass(ctx: BindingContext, expr: string): void {
     }
 
     prevClasses = classes;
+  };
+
+  update();
+
+  const deps = extractDeps(expr, ctx.scope);
+  for (const dep of deps) {
+    const unsubscribe = dep.subscribe(update);
+    ctx.cleanups.push(unsubscribe);
+  }
+}
+
+/**
+ * Bind data-volt-show to toggle element visibility via CSS display property.
+ * Unlike data-volt-if, this keeps the element in the DOM and toggles display: none.
+ */
+function bindShow(ctx: BindingContext, expr: string): void {
+  const el = ctx.element as HTMLElement;
+  const originalInlineDisplay = el.style.display;
+
+  const update = () => {
+    const value = evaluate(expr, ctx.scope);
+    const shouldShow = Boolean(value);
+
+    if (shouldShow) {
+      el.style.display = originalInlineDisplay;
+    } else {
+      el.style.display = "none";
+    }
+  };
+
+  update();
+
+  const deps = extractDeps(expr, ctx.scope);
+  for (const dep of deps) {
+    const unsubscribe = dep.subscribe(update);
+    ctx.cleanups.push(unsubscribe);
+  }
+}
+
+/**
+ * Bind data-volt-style to reactively apply inline styles.
+ * Supports object notation {color: 'red', fontSize: '16px'} or string notation 'color: red; font-size: 16px'.
+ */
+function bindStyle(ctx: BindingContext, expr: string): void {
+  const element = ctx.element as HTMLElement;
+
+  const update = () => {
+    const value = evaluate(expr, ctx.scope);
+
+    if (typeof value === "object" && value !== null) {
+      for (const [key, val] of Object.entries(value)) {
+        const cssKey = key.replaceAll(/[A-Z]/g, (m) => `-${m.toLowerCase()}`);
+
+        if (isNil(val)) {
+          element.style.removeProperty(cssKey);
+        } else {
+          try {
+            element.style.setProperty(cssKey, String(val));
+          } catch (error) {
+            console.warn(`[Volt] Failed to set style property "${cssKey}":`, error);
+          }
+        }
+      }
+    } else if (typeof value === "string") {
+      element.style.cssText = value;
+    }
   };
 
   update();
@@ -357,7 +448,7 @@ function bindAttr(ctx: BindingContext, attrName: string, expr: string): void {
         ctx.element.removeAttribute(attrName);
       }
     } else {
-      if (value === null || value === undefined || value === false) {
+      if (isNil(value) || value === false) {
         ctx.element.removeAttribute(attrName);
       } else {
         ctx.element.setAttribute(attrName, String(value));

@@ -26,90 +26,43 @@ _NOTE_: `data-x-*` is now `data-volt-*`
 
 **Goal:** Establish project structure, tooling, and base reactivity primitives.
 **Outcome:** A bootable TypeScript project with working reactivity primitives and test coverage.
-**Deliverables:**
-    - ✓ Project scaffolding
-    - ✓ `signal()` implementation with subscribe/set/get
-    - ✓ Initial tests (signals, reactivity basics)
+**Summary:** A TypeScript project scaffold with implemented signal() (subscribe/set/get) and foundational reactivity tests establishes the base system.
 
 ### Reactivity & Bindings
 
 **Goal:** Connect signals to DOM via declarative `data-x-*` bindings.
 **Outcome:** Reactive text/attribute binding with signals → DOM synchronization.
-**Deliverables:**
-    - ✓ `data-x-text`, `data-x-html`, `data-x-class` binding parser
-    - ✓ Expression evaluator (safe, minimal subset)
-    - ✓ DOM mutation batching & cleanup
-    - ✓ Internal test harness for bindings
-    - ✓ DOM Testing Library integration tests
+**Summary:** Reactive DOM bindings (`data-x-text`, `data-x-html`, `data-x-class`) with a safe expression evaluator, mutation batching, and DOM testing ensure synchronized updates between signals and UI.
 
 ### Actions & Effects
 
 **Goal:** Add event-driven behavior and derived reactivity.
 **Outcome:** Fully functional reactive UI layer with event bindings and computed updates.
-**Deliverables:**
-    - ✓ Event binding system (`data-volt-on-*`)
-    - ✓ `$el` and `$event` scoped references
-    - ✓ Derived signals (`computed`, `effect`)
-    - ✓ Async effects (e.g., fetch triggers)
+**Summary:** An event binding system with `$el`, `$event`, and derived signals (computed, effect, async effects) delivers a complete reactive event-driven UI layer.
 
 ### Plugins Framework
 
 **Goal:** Build a modular plugin architecture with dynamic registration.
 **Outcome:** Stable plugin API enabling community-driven extensions.
-**Deliverables:**
-    - ✓ `registerPlugin(name, fn)` API
-    - ✓ Context and lifecycle hooks
-    - ✓ Built-ins:
-        - ✓ `data-volt-persist`
-        - ✓ `data-volt-scroll`
-        - ✓ `data-volt-url`
-    - ✓ Registry
+**Summary:** A modular plugin API with lifecycle hooks and built-in extensions (persist, scroll, url) enables dynamic feature registration and community contributions.
 
 ### Backend Integration & HTTP Actions
 
 **Goal:** Provide backend integration with declarative HTTP requests and responses.
 **Outcome:** Volt.js can make backend requests and update the DOM
-**Deliverables:**
-    - ✓ HTTP action system (`data-volt-get`, `data-volt-post`, `data-volt-put`, `data-volt-patch`, `data-volt-delete`)
-    - ✓ Request configuration (`data-volt-trigger`, `data-volt-target`, `data-volt-swap`)
-    - ✓ Swap strategies (innerHTML, outerHTML, beforebegin, afterbegin, beforeend, afterend, delete, none)
-    - ✓ Loading states and indicators (`data-volt-indicator`)
-    - ✓ Error handling and retry logic
-    - ✓ Form serialization and submission
-    - ✓ Request/response headers customization
+**Summary:** Declarative HTTP directives (data-volt-get|post|put|patch|delete) with swap strategies, loading indicators, error handling, and form serialization integrate Volt.js seamlessly with backend APIs.
 
 ### Markup Based Reactivity
 
 **Goal:** Allow Volt apps to declare state, bindings, and behavior entirely in HTML markup
 **Outcome:** Authors can ship examples without companion JavaScript bundles
-**Deliverables:**
-    - ✓ Auto-bootstrapping loader (`volt.min.js`) that detects `data-volt` roots and hydrates one scope per root.
-    - ✓ Declarative state primitives (`data-volt-state`, `data-volt-computed:*`) aligned with `docs/reactivity-spec.md`.
-    - ✓ Binding directives for text, attributes, classes, styles, and two-way form controls (`data-volt-[bind|text|model|class:*]`).
-    - ✓ Control-flow directives (`data-volt-for`, `data-volt-if`, `data-volt-else`) with lifecycle-safe teardown.
-    - ✓ Declarative event system (`data-volt-on:*`) with helper surface for list mutations and plugin hooks.
-    - ✓ SSR compatibility helpers
-    - ✓ Sandboxed expression evaluator
+**Summary:** Declarative HTML state, binding, control-flow, and event directives with SSR support and a sandboxed evaluator enable Volt apps to run without separate JavaScript bundles.
 
 ### Proxy-Based Reactivity Enhancements
 
 **Goal:** Use JavaScript Proxies to improve reactivity ergonomics and automatic dependency tracking.
 **Outcome:** More intuitive API with automatic dependency tracking and optional deep reactivity for objects/arrays.
-**Deliverables:**
-    - ✓ Automatic dependency tracking for `computed()`
-        - ✓ Eliminate manual dependency arrays via proxy-based tracking
-        - ✓ Auto-detect signal access during computation
-        - ✓ Track nested property access for fine-grained updates
-    - ✓ `reactive()` primitive for deep object reactivity (optional, alongside `signal()`)
-        - ✓ Nested property changes trigger updates automatically
-        - ✓ Proxy-wrapped objects with transparent reactivity
-    - ✓ Array reactivity improvements
-        - ✓ Reactive array methods (push, pop, shift, unshift, splice, etc.)
-        - ✓ Automatic updates on array mutations
-        - ✓ Efficient tracking of index-based changes
-    - ✓ Lazy signal initialization
-        - ✓ Create signals on-demand when properties are accessed
-    - ✓ Expose debugging utilities
+**Summary:** Proxy-driven automatic dependency tracking, deep reactive() objects, reactive arrays, lazy signal creation, and debugging utilities improve reactivity ergonomics and performance.
 **Notes:**
     - Separate reactive() function for objects/arrays to gives users choice
     - Keep .get()/.set() - explicitness is valuable for understanding reactivity (include in docs)
@@ -121,10 +74,10 @@ _NOTE_: `data-x-*` is now `data-volt-*`
 **Goal:** Extend Volt.js with expressive attribute patterns and event options for fine-grained control.
 **Outcome:** Volt.js supports rich declarative behaviors and event semantics built entirely on standard DOM APIs.
 **Deliverables:**
-    - `data-volt-show` - toggles element visibility via CSS rather than DOM removal (complements `data-volt-if`)
-    - `data-volt-style` - binds inline styles to reactive expressions
-    - `data-volt-skip` - marks elements or subtrees to exclude from Volt’s reactive parsing
-    - `data-volt-cloak` - hides content until the Volt runtime initializes
+    - ✓ `data-volt-show` - toggles element visibility via CSS rather than DOM removal (complements `data-volt-if`)
+    - ✓ `data-volt-style` - binds inline styles to reactive expressions
+    - ✓ `data-volt-skip` - marks elements or subtrees to exclude from Volt’s reactive parsing
+    - ✓ `data-volt-cloak` - hides content until the Volt runtime initializes
     - Event options for `data-volt-on-*` attributes:
         - `.prevent` - calls `preventDefault()` on the event
         - `.stop` - stops propagation
@@ -146,31 +99,31 @@ _NOTE_: `data-x-*` is now `data-volt-*`
 **Goal:** Implement store/context pattern
 **Outcome:** Volt.js provides intuitive global state management
 **Deliverables:**
-    - `$refs` - Scoped element references via data-volt-ref="name". Provides an object mapping ref names to DOM nodes.
-        - Example: `data-volt-on-click="$refs.username.focus()"`
-    - `$next()` - Defers execution to the next microtask tick after DOM updates.
-        - Example: `data-volt-on-click="$count++; $next(() => console.log('updated'))"`
-    - `$watch(expr, fn)` - Imperatively observes a reactive signal or expression within the current scope.
-        - Example: `data-volt-init="$watch('count', v => console.log(v))"`
-    - `$emit(event, detail?)` - Dispatches a native CustomEvent from the current element.
-        - Example: `data-volt-on-click="$emit('user:save', { id })"`
+    - `$origin` - Reference to the root element of the active reactive scope.
+    - `$scope` - Reference to the current reactive scope object (signals + context).
+    - `$pulse()` - Defers execution to the next microtask tick after DOM updates.
+        - Example: `data-volt-on-click="$count++; $pulse(() => console.log('updated'))"`
     - `$store` - Accesses global reactive state registered with Volt’s global store.
         - Example: `data-volt-text="$store.theme"`
     - `$uid(name?)` - Generates a unique, deterministic ID string within the current scope.
         - Example: `data-volt-id="$uid('field')"`
-    - `$root` - Reference to the root element of the active reactive scope.
-    - `$scope` - Reference to the current reactive scope object (signals + context).
+    - `$probe(expr, fn)` - Imperatively observes a reactive signal or expression within the current scope.
+        - Example: `data-volt-init="$probe('count', v => console.log(v))"`
+    - `$pins` - Scoped element references via `data-volt-pin="name"`. Provides an object mapping ref/pin names to DOM nodes.
+        - Example: `data-volt-on-click="$pins.username.focus()"`
+    - `$arc(event, detail?)` - Dispatches a native CustomEvent from the current element.
+        - Example: `data-volt-on-click="$arc('user:save', { id })"`
 
 ### Animation & Transitions
 
 **Goal:** Add animation primitives for smooth UI transitions with Alpine/Datastar parity.
 **Outcome:** Volt.js enables declarative animations and view transitions alongside reactivity.
 **Deliverables:**
-    - `data-volt-transition` directive with enter/leave transitions
+    - `data-volt-surge` directive with enter/leave transitions
         - Transition modifiers (duration, delay, opacity, scale, etc.)
         - View Transitions API integration (when available)
         - CSS-based transition helpers
-    - `data-volt-animate` plugin for keyframe animations
+    - `data-volt-shift` plugin for keyframe animations
         - Timing utilities and easing functions
     - Integration with `data-volt-if` and `data-volt-show` for automatic transitions
 
@@ -180,9 +133,9 @@ _NOTE_: `data-x-*` is now `data-volt-*`
 **Outcome:** Volt.js can receive and apply live updates from the server
 **Deliverables:**
     - Server-Sent Events (SSE) integration
-    - `data-volt-stream` attribute for SSE endpoints
+    - `data-volt-flow` attribute for SSE endpoints
     - Signal patching from backend (`data-signals-*` merge system)
-    - Backend action system with `$$action()` syntax (TBD on final syntax decision)
+    - Backend action system with `$$spark()` syntax
     - JSON Patch parser and DOM morphing engine
     - WebSocket as alternative to SSE
     - `data-volt-ignore-morph` for selective patch exclusion

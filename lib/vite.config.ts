@@ -29,6 +29,7 @@ export default defineConfig(({ mode }) => ({
       "$core": path.resolve(__dirname, "./src/core"),
       "$plugins": path.resolve(__dirname, "./src/plugins"),
       "$debug": path.resolve(__dirname, "./src/debug"),
+      "$vebug": path.resolve(__dirname, "./src/debug.ts"),
     },
   },
   build: mode === "lib"

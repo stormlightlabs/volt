@@ -3,6 +3,7 @@
  * Supports one-way read, bidirectional sync, and hash-based routing
  */
 
+import { isNil } from "$core/shared";
 import type { Optional } from "$types/helpers";
 import type { PluginContext, Signal } from "$types/volt";
 
@@ -27,11 +28,11 @@ export function urlPlugin(ctx: PluginContext, value: string): void {
 
   switch (mode) {
     case "read": {
-      handleUrlRead(ctx, signalPath);
+      handleReadURL(ctx, signalPath);
       break;
     }
     case "sync": {
-      handleUrlSync(ctx, signalPath);
+      handleSyncURL(ctx, signalPath);
       break;
     }
     case "hash": {
@@ -48,7 +49,7 @@ export function urlPlugin(ctx: PluginContext, value: string): void {
  * Read URL parameter into signal on mount (one-way).
  * Signal changes do not update URL.
  */
-function handleUrlRead(ctx: PluginContext, signalPath: string): void {
+function handleReadURL(ctx: PluginContext, signalPath: string): void {
   const signal = ctx.findSignal(signalPath);
   if (!signal) {
     console.error(`Signal "${signalPath}" not found for url read`);
@@ -67,7 +68,7 @@ function handleUrlRead(ctx: PluginContext, signalPath: string): void {
  * Bidirectional sync between signal and URL parameter.
  * Changes to either the signal or URL update the other.
  */
-function handleUrlSync(ctx: PluginContext, signalPath: string): void {
+function handleSyncURL(ctx: PluginContext, signalPath: string): void {
   const signal = ctx.findSignal(signalPath);
   if (!signal) {
     console.error(`Signal "${signalPath}" not found for url sync`);
@@ -94,7 +95,7 @@ function handleUrlSync(ctx: PluginContext, signalPath: string): void {
       const params = new URLSearchParams(globalThis.location.search);
       const serialized = serializeValue(value);
 
-      if (serialized === null || serialized === "") {
+      if (isNil(serialized) || serialized === "") {
         params.delete(signalPath);
       } else {
         params.set(signalPath, serialized);
@@ -112,7 +113,7 @@ function handleUrlSync(ctx: PluginContext, signalPath: string): void {
     const params = new URLSearchParams(globalThis.location.search);
     const paramValue = params.get(signalPath);
 
-    if (paramValue === null) {
+    if (isNil(paramValue)) {
       (signal as Signal<unknown>).set("");
     } else {
       (signal as Signal<unknown>).set(deserializeValue(paramValue));
@@ -182,7 +183,7 @@ function handleHashRouting(ctx: PluginContext, signalPath: string): void {
  * Handles strings, numbers, booleans, and No Value (null/undefined).
  */
 function serializeValue(value: unknown): string {
-  if (value === null || value === undefined) {
+  if (isNil(value)) {
     return "";
   }
   if (typeof value === "string") {

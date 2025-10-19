@@ -6,7 +6,7 @@
  */
 
 import type { Dep, Scope } from "$types/volt";
-import { findScopedSignal, isSignal } from "./shared";
+import { findScopedSignal, isNil, isSignal } from "./shared";
 
 const DANGEROUS_PROPERTIES = new Set(["__proto__", "prototype", "constructor"]);
 
@@ -547,7 +547,7 @@ class Parser {
   }
 
   private callMethod(object: unknown, methodName: string, args: unknown[]): unknown {
-    if (object === null || object === undefined) {
+    if (isNil(object)) {
       throw new Error(`Cannot call method '${methodName}' on ${object}`);
     }
 
@@ -794,7 +794,7 @@ class Parser {
   }
 
   private getMember(object: unknown, key: unknown): unknown {
-    if (object === null || object === undefined) {
+    if (isNil(object)) {
       return undefined;
     }
 

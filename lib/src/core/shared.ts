@@ -1,8 +1,15 @@
-import type { Optional } from "$types/helpers";
+import type { None, Optional } from "$types/helpers";
 import type { Dep, Scope, Signal } from "$types/volt";
 
 export function kebabToCamel(str: string): string {
   return str.replaceAll(/-([a-z])/g, (_, letter) => letter.toUpperCase());
+}
+
+/**
+ * Check if a value is null or undefined ({@link None}).
+ */
+export function isNil(value: unknown): value is None {
+  return value === null || value === undefined;
 }
 
 export function isSignal(value: unknown): value is Dep {
@@ -20,7 +27,7 @@ export function findScopedSignal(scope: Scope, path: string): Optional<Signal<un
   let current: unknown = scope;
 
   for (const part of parts) {
-    if (current === null || current === undefined) {
+    if (isNil(current)) {
       return undefined;
     }
 
@@ -57,7 +64,7 @@ export function getComputedAttributes(el: Element): Map<string, string> {
 }
 
 /**
- * Sleep for a specified duration
+ * Sleep for a specified duration in ms
  */
 export function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
