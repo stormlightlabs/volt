@@ -1,4 +1,4 @@
 packages:
   - 'lib'
-  - 'cli'
+  - 'dev'
   - 'docs'

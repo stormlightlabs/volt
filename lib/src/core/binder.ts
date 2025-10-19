@@ -4,29 +4,29 @@
 
 import type { Optional } from "$types/helpers";
 import type { BindingContext, CleanupFunction, PluginContext, Scope, Signal } from "$types/volt";
-import { getVoltAttributes, parseClassBinding, setHTML, setText, toggleClass, walkDOM } from "./dom";
-import { evaluate, extractDependencies, isSignal } from "./evaluator";
+import { getVoltAttrs, parseClassBinding, setHTML, setText, toggleClass, walkDOM } from "./dom";
+import { evaluate, extractDeps } from "./evaluator";
 import { bindDelete, bindGet, bindPatch, bindPost, bindPut } from "./http";
-import { executeGlobalHooks, notifyBindingCreated, notifyElementMounted, notifyElementUnmounted } from "./lifecycle";
+import { execGlobalHooks, notifyBindingCreated, notifyElementMounted, notifyElementUnmounted } from "./lifecycle";
 import { getPlugin } from "./plugin";
+import { findScopedSignal } from "./shared";
 
 /**
  * Mount Volt.js on a root element and its descendants and binds all data-volt-* attributes to the provided scope.
- * Returns a cleanup function to unmount and dispose all bindings.
  *
  * @param root - Root element to mount on
  * @param scope - Scope object containing signals and data
- * @returns Cleanup function to unmount
+ * @returns Cleanup function to unmount and dispose all bindings.
  */
 export function mount(root: Element, scope: Scope): CleanupFunction {
-  executeGlobalHooks("beforeMount", root, scope);
+  execGlobalHooks("beforeMount", root, scope);
 
   const elements = walkDOM(root);
   const allCleanups: CleanupFunction[] = [];
   const mountedElements: Element[] = [];
 
   for (const element of elements) {
-    const attributes = getVoltAttributes(element);
+    const attributes = getVoltAttrs(element);
     const context: BindingContext = { element, scope, cleanups: [] };
 
     if (attributes.has("for")) {
@@ -49,10 +49,10 @@ export function mount(root: Element, scope: Scope): CleanupFunction {
     allCleanups.push(...context.cleanups);
   }
 
-  executeGlobalHooks("afterMount", root, scope);
+  execGlobalHooks("afterMount", root, scope);
 
   return () => {
-    executeGlobalHooks("beforeUnmount", root);
+    execGlobalHooks("beforeUnmount", root);
 
     for (const element of mountedElements) {
       notifyElementUnmounted(element);
@@ -66,76 +66,72 @@ export function mount(root: Element, scope: Scope): CleanupFunction {
       }
     }
 
-    executeGlobalHooks("afterUnmount", root);
+    execGlobalHooks("afterUnmount", root);
   };
 }
 
 /**
  * Bind a single data-volt-* attribute to an element.
  * Routes to the appropriate binding handler.
- *
- * @param context - Binding context
- * @param name - Attribute name (without data-volt- prefix)
- * @param value - Attribute value (expression)
  */
-function bindAttribute(context: BindingContext, name: string, value: string): void {
+function bindAttribute(ctx: BindingContext, name: string, value: string): void {
   if (name.startsWith("on-")) {
     const eventName = name.slice(3);
-    bindEvent(context, eventName, value);
+    bindEvent(ctx, eventName, value);
     return;
   }
 
   if (name.startsWith("bind:")) {
     const attrName = name.slice(5);
-    bindAttr(context, attrName, value);
+    bindAttr(ctx, attrName, value);
     return;
   }
 
   switch (name) {
     case "text": {
-      bindText(context, value);
+      bindText(ctx, value);
       break;
     }
     case "html": {
-      bindHTML(context, value);
+      bindHTML(ctx, value);
       break;
     }
     case "class": {
-      bindClass(context, value);
+      bindClass(ctx, value);
       break;
     }
     case "model": {
-      bindModel(context, value);
+      bindModel(ctx, value);
       break;
     }
     case "for": {
-      bindFor(context, value);
+      bindFor(ctx, value);
       break;
     }
     case "get": {
-      bindGet(context, value);
+      bindGet(ctx, value);
       break;
     }
     case "post": {
-      bindPost(context, value);
+      bindPost(ctx, value);
       break;
     }
     case "put": {
-      bindPut(context, value);
+      bindPut(ctx, value);
       break;
     }
     case "patch": {
-      bindPatch(context, value);
+      bindPatch(ctx, value);
       break;
     }
     case "delete": {
-      bindDelete(context, value);
+      bindDelete(ctx, value);
       break;
     }
     default: {
       const plugin = getPlugin(name);
       if (plugin) {
-        const pluginContext = createPluginContext(context);
+        const pluginContext = createPluginCtx(ctx);
         try {
           plugin(pluginContext, value);
         } catch (error) {
@@ -151,96 +147,84 @@ function bindAttribute(context: BindingContext, name: string, value: string): vo
 /**
  * Bind data-volt-text to update element's text content.
  * Subscribes to signals in the expression and updates on change.
- *
- * @param context - Binding context
- * @param expression - Expression to evaluate
  */
-function bindText(context: BindingContext, expression: string): void {
+function bindText(ctx: BindingContext, expr: string): void {
   const update = () => {
-    const value = evaluate(expression, context.scope);
-    setText(context.element, value);
+    const value = evaluate(expr, ctx.scope);
+    setText(ctx.element, value);
   };
 
   update();
 
-  const signal = findSignalInScope(context.scope, expression);
-  if (signal) {
-    const unsubscribe = signal.subscribe(update);
-    context.cleanups.push(unsubscribe);
+  const deps = extractDeps(expr, ctx.scope);
+  for (const dep of deps) {
+    const unsubscribe = dep.subscribe(update);
+    ctx.cleanups.push(unsubscribe);
   }
 }
 
 /**
  * Bind data-volt-html to update element's HTML content.
- *
  * Subscribes to signals in the expression and updates on change.
  */
-function bindHTML(context: BindingContext, expression: string): void {
+function bindHTML(ctx: BindingContext, expr: string): void {
   const update = () => {
-    const value = evaluate(expression, context.scope);
-    setHTML(context.element, String(value ?? ""));
+    const value = evaluate(expr, ctx.scope);
+    setHTML(ctx.element, String(value ?? ""));
   };
 
   update();
 
-  const signal = findSignalInScope(context.scope, expression);
-  if (signal) {
-    const unsubscribe = signal.subscribe(update);
-    context.cleanups.push(unsubscribe);
+  const dependencies = extractDeps(expr, ctx.scope);
+  for (const dependency of dependencies) {
+    const unsubscribe = dependency.subscribe(update);
+    ctx.cleanups.push(unsubscribe);
   }
 }
 
 /**
- * Bind data-volt-class to toggle CSS classes.
- * Supports both string and object notation.
+ * Bind data-volt-class to toggle CSS classes. Supports both string and object notation.
  * Subscribes to signals in the expression and updates on change.
- *
- * @param context - Binding context
- * @param expression - Expression to evaluate
  */
-function bindClass(context: BindingContext, expression: string): void {
-  let previousClasses = new Map<string, boolean>();
+function bindClass(ctx: BindingContext, expr: string): void {
+  let prevClasses = new Map<string, boolean>();
 
   const update = () => {
-    const value = evaluate(expression, context.scope);
+    const value = evaluate(expr, ctx.scope);
     const classes = parseClassBinding(value);
 
-    for (const [className] of previousClasses) {
+    for (const [className] of prevClasses) {
       if (!classes.has(className)) {
-        toggleClass(context.element, className, false);
+        toggleClass(ctx.element, className, false);
       }
     }
 
     for (const [className, shouldAdd] of classes) {
-      toggleClass(context.element, className, shouldAdd);
+      toggleClass(ctx.element, className, shouldAdd);
     }
 
-    previousClasses = classes;
+    prevClasses = classes;
   };
 
   update();
 
-  const signal = findSignalInScope(context.scope, expression);
-  if (signal) {
-    const unsubscribe = signal.subscribe(update);
-    context.cleanups.push(unsubscribe);
+  const deps = extractDeps(expr, ctx.scope);
+  for (const dep of deps) {
+    const unsubscribe = dep.subscribe(update);
+    ctx.cleanups.push(unsubscribe);
   }
 }
 
 /**
  * Bind data-volt-on-* to attach event listeners.
  * Provides $el and $event in the scope for the event handler.
- *
- * @param context - Binding context
- * @param eventName - Event name (e.g., "click", "input")
- * @param expression - Expression to evaluate when event fires
  */
-function bindEvent(context: BindingContext, eventName: string, expression: string): void {
+function bindEvent(ctx: BindingContext, eventName: string, expr: string): void {
   const handler = (event: Event) => {
-    const eventScope: Scope = { ...context.scope, $el: context.element, $event: event };
+    const eventScope: Scope = { ...ctx.scope, $el: ctx.element, $event: event };
 
     try {
-      const result = evaluate(expression, eventScope);
+      const result = evaluate(expr, eventScope);
       if (typeof result === "function") {
         result(event);
       }
@@ -249,22 +233,19 @@ function bindEvent(context: BindingContext, eventName: string, expression: strin
     }
   };
 
-  context.element.addEventListener(eventName, handler);
+  ctx.element.addEventListener(eventName, handler);
 
-  context.cleanups.push(() => {
-    context.element.removeEventListener(eventName, handler);
+  ctx.cleanups.push(() => {
+    ctx.element.removeEventListener(eventName, handler);
   });
 }
 
 /**
  * Bind data-volt-model for two-way data binding on form elements.
  * Syncs the signal value with the input value bidirectionally.
- *
- * @param context - Binding context
- * @param signalPath - Path to the signal in scope
  */
 function bindModel(context: BindingContext, signalPath: string): void {
-  const signal = findSignalInScope(context.scope, signalPath);
+  const signal = findScopedSignal(context.scope, signalPath);
   if (!signal) {
     console.error(`Signal "${signalPath}" not found for data-volt-model`);
     return;
@@ -294,63 +275,54 @@ function bindModel(context: BindingContext, signalPath: string): void {
   });
 }
 
-/**
- * Set element value based on type
- */
 function setElementValue(
-  element: HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement,
+  el: HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement,
   value: unknown,
   type: string | null,
 ): void {
-  if (element instanceof HTMLInputElement) {
+  if (el instanceof HTMLInputElement) {
     switch (type) {
       case "checkbox": {
-        element.checked = Boolean(value);
+        el.checked = Boolean(value);
 
         break;
       }
       case "radio": {
-        element.checked = element.value === String(value);
+        el.checked = el.value === String(value);
         break;
       }
       case "number": {
-        element.value = String(value ?? "");
+        el.value = String(value ?? "");
         break;
       }
       default: {
-        element.value = String(value ?? "");
+        el.value = String(value ?? "");
       }
     }
-  } else if (element instanceof HTMLSelectElement) {
-    element.value = String(value ?? "");
-  } else if (element instanceof HTMLTextAreaElement) {
-    element.value = String(value ?? "");
+  } else if (el instanceof HTMLSelectElement) {
+    el.value = String(value ?? "");
+  } else if (el instanceof HTMLTextAreaElement) {
+    el.value = String(value ?? "");
   }
 }
 
-/**
- * Get element value based on type
- */
-function getElementValue(
-  element: HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement,
-  type: string | null,
-): unknown {
-  if (element instanceof HTMLInputElement) {
+function getElementValue(el: HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement, type: string | null): unknown {
+  if (el instanceof HTMLInputElement) {
     if (type === "checkbox") {
-      return element.checked;
+      return el.checked;
     }
     if (type === "number") {
-      return element.valueAsNumber;
+      return el.valueAsNumber;
     }
-    return element.value;
+    return el.value;
   }
 
-  if (element instanceof HTMLSelectElement) {
-    return element.value;
+  if (el instanceof HTMLSelectElement) {
+    return el.value;
   }
 
-  if (element instanceof HTMLTextAreaElement) {
-    return element.value;
+  if (el instanceof HTMLTextAreaElement) {
+    return el.value;
   }
 
   return "";
@@ -358,12 +330,11 @@ function getElementValue(
 
 /**
  * Bind data-volt-bind:attr for generic attribute binding.
- *
  * Updates any HTML attribute reactively based on expression value.
  */
-function bindAttr(context: BindingContext, attrName: string, expression: string): void {
+function bindAttr(ctx: BindingContext, attrName: string, expr: string): void {
   const update = () => {
-    const value = evaluate(expression, context.scope);
+    const value = evaluate(expr, ctx.scope);
 
     const booleanAttrs = new Set([
       "disabled",
@@ -381,71 +352,41 @@ function bindAttr(context: BindingContext, attrName: string, expression: string)
 
     if (booleanAttrs.has(attrName)) {
       if (value) {
-        context.element.setAttribute(attrName, "");
+        ctx.element.setAttribute(attrName, "");
       } else {
-        context.element.removeAttribute(attrName);
+        ctx.element.removeAttribute(attrName);
       }
     } else {
       if (value === null || value === undefined || value === false) {
-        context.element.removeAttribute(attrName);
+        ctx.element.removeAttribute(attrName);
       } else {
-        context.element.setAttribute(attrName, String(value));
+        ctx.element.setAttribute(attrName, String(value));
       }
     }
   };
 
   update();
 
-  const dependencies = extractDependencies(expression, context.scope);
-  for (const dependency of dependencies) {
-    const unsubscribe = dependency.subscribe(update);
-    context.cleanups.push(unsubscribe);
+  const deps = extractDeps(expr, ctx.scope);
+  for (const dep of deps) {
+    const unsubscribe = dep.subscribe(update);
+    ctx.cleanups.push(unsubscribe);
   }
-}
-
-/**
- * Find a signal in the scope by resolving a simple property path.
- */
-function findSignalInScope(scope: Scope, path: string): Optional<Signal<unknown>> {
-  const trimmed = path.trim();
-  const parts = trimmed.split(".");
-  let current: unknown = scope;
-
-  for (const part of parts) {
-    if (current === null || current === undefined) {
-      return undefined;
-    }
-
-    if (typeof current === "object" && part in (current as Record<string, unknown>)) {
-      current = (current as Record<string, unknown>)[part];
-    } else {
-      return undefined;
-    }
-  }
-
-  if (isSignal(current)) {
-    return current as Signal<unknown>;
-  }
-
-  return undefined;
 }
 
 /**
  * Bind data-volt-for to render a list of items.
  * Subscribes to array signal and re-renders when array changes.
- *
- * @param context - Binding context
- * @param expression - Expression like "item in items" or "(item, index) in items"
  */
-function bindFor(context: BindingContext, expression: string): void {
-  const parsed = parseForExpression(expression);
+function bindFor(ctx: BindingContext, expr: string): void {
+  const parsed = parseForExpr(expr);
   if (!parsed) {
-    console.error(`Invalid data-volt-for expression: "${expression}"`);
+    console.error(`Invalid data-volt-for expression: "${expr}"`);
     return;
   }
 
   const { itemName, indexName, arrayPath } = parsed;
-  const template = context.element as HTMLElement;
+  const template = ctx.element as HTMLElement;
   const parent = template.parentElement;
 
   if (!parent) {
@@ -453,7 +394,7 @@ function bindFor(context: BindingContext, expression: string): void {
     return;
   }
 
-  const placeholder = document.createComment(`for: ${expression}`);
+  const placeholder = document.createComment(`for: ${expr}`);
   template.before(placeholder);
   template.remove();
 
@@ -471,7 +412,7 @@ function bindFor(context: BindingContext, expression: string): void {
     }
     renderedElements.length = 0;
 
-    const arrayValue = evaluate(arrayPath, context.scope);
+    const arrayValue = evaluate(arrayPath, ctx.scope);
     if (!Array.isArray(arrayValue)) {
       return;
     }
@@ -480,7 +421,7 @@ function bindFor(context: BindingContext, expression: string): void {
       const clone = template.cloneNode(true) as Element;
       delete (clone as HTMLElement).dataset.voltFor;
 
-      const itemScope: Scope = { ...context.scope, [itemName]: item };
+      const itemScope: Scope = { ...ctx.scope, [itemName]: item };
       if (indexName) {
         itemScope[indexName] = index;
       }
@@ -495,13 +436,13 @@ function bindFor(context: BindingContext, expression: string): void {
 
   render();
 
-  const signal = findSignalInScope(context.scope, arrayPath);
-  if (signal) {
-    const unsubscribe = signal.subscribe(render);
-    context.cleanups.push(unsubscribe);
+  const deps = extractDeps(arrayPath, ctx.scope);
+  for (const dep of deps) {
+    const unsubscribe = dep.subscribe(render);
+    ctx.cleanups.push(unsubscribe);
   }
 
-  context.cleanups.push(() => {
+  ctx.cleanups.push(() => {
     for (const cleanup of renderedCleanups) {
       cleanup();
     }
@@ -509,12 +450,8 @@ function bindFor(context: BindingContext, expression: string): void {
 }
 
 /**
- * Bind data-volt-if to conditionally render an element.
- * Supports data-volt-else on the next sibling element.
+ * Bind data-volt-if to conditionally render an element. Supports data-volt-else on the next sibling element.
  * Subscribes to condition signal and shows/hides elements when condition changes.
- *
- * @param ctx - Binding context
- * @param expr - Expression to evaluate as condition
  */
 function bindIf(ctx: BindingContext, expr: string): void {
   const ifTemplate = ctx.element as HTMLElement;
@@ -583,9 +520,9 @@ function bindIf(ctx: BindingContext, expr: string): void {
 
   render();
 
-  const signal = findSignalInScope(ctx.scope, expr);
-  if (signal) {
-    const unsubscribe = signal.subscribe(render);
+  const deps = extractDeps(expr, ctx.scope);
+  for (const dep of deps) {
+    const unsubscribe = dep.subscribe(render);
     ctx.cleanups.push(unsubscribe);
   }
 
@@ -598,10 +535,9 @@ function bindIf(ctx: BindingContext, expr: string): void {
 
 /**
  * Parse a data-volt-for expression
- *
  * Supports: "item in items" or "(item, index) in items"
  */
-function parseForExpression(expr: string): Optional<{ itemName: string; indexName?: string; arrayPath: string }> {
+function parseForExpr(expr: string): Optional<{ itemName: string; indexName?: string; arrayPath: string }> {
   const trimmed = expr.trim();
 
   const withIndex = /^\((\w+)\s*,\s*(\w+)\)\s+in\s+(.+)$/.exec(trimmed);
@@ -619,20 +555,19 @@ function parseForExpression(expr: string): Optional<{ itemName: string; indexNam
 
 /**
  * Create a plugin context from a binding context.
- *
  * Provides the plugin with access to utilities and cleanup registration.
  */
-function createPluginContext(bindingContext: BindingContext): PluginContext {
+function createPluginCtx(ctx: BindingContext): PluginContext {
   const mountCallbacks: Array<() => void> = [];
   const unmountCallbacks: Array<() => void> = [];
   const beforeBindingCallbacks: Array<() => void> = [];
   const afterBindingCallbacks: Array<() => void> = [];
 
   const lifecycle = {
-    onMount: (callback: () => void) => {
-      mountCallbacks.push(callback);
+    onMount: (cb: () => void) => {
+      mountCallbacks.push(cb);
       try {
-        callback();
+        cb();
       } catch (error) {
         console.error("Error in plugin onMount hook:", error);
       }
@@ -648,11 +583,11 @@ function createPluginContext(bindingContext: BindingContext): PluginContext {
         console.error("Error in plugin beforeBinding hook:", error);
       }
     },
-    afterBinding: (callback: () => void) => {
-      afterBindingCallbacks.push(callback);
+    afterBinding: (cb: () => void) => {
+      afterBindingCallbacks.push(cb);
       queueMicrotask(() => {
         try {
-          callback();
+          cb();
         } catch (error) {
           console.error("Error in plugin afterBinding hook:", error);
         }
@@ -660,7 +595,7 @@ function createPluginContext(bindingContext: BindingContext): PluginContext {
     },
   };
 
-  bindingContext.cleanups.push(() => {
+  ctx.cleanups.push(() => {
     for (const cb of unmountCallbacks) {
       try {
         cb();
@@ -671,13 +606,13 @@ function createPluginContext(bindingContext: BindingContext): PluginContext {
   });
 
   return {
-    element: bindingContext.element,
-    scope: bindingContext.scope,
+    element: ctx.element,
+    scope: ctx.scope,
     addCleanup: (fn) => {
-      bindingContext.cleanups.push(fn);
+      ctx.cleanups.push(fn);
     },
-    findSignal: (path) => findSignalInScope(bindingContext.scope, path),
-    evaluate: (expr) => evaluate(expr, bindingContext.scope),
+    findSignal: (path) => findScopedSignal(ctx.scope, path),
+    evaluate: (expr) => evaluate(expr, ctx.scope),
     lifecycle,
   };
 }

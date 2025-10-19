@@ -1,4 +1,5 @@
 import { mount } from "$core/binder";
+import { extractDeps } from "$core/evaluator";
 import { signal } from "$core/signal";
 import { describe, expect, it } from "vitest";
 
@@ -249,5 +250,41 @@ describe("data-volt-if binding", () => {
     expect(container.querySelector("#empty")).toBeNull();
     expect(container.querySelector("#one")).toBeTruthy();
     expect(container.querySelector("#string")).toBeTruthy();
+  });
+
+  it("reacts to complex expressions with multiple signal dependencies", () => {
+    const container = document.createElement("div");
+    container.innerHTML = `
+      <div>
+        <p data-volt-if="value.length > 0 && !isValid">Error message</p>
+      </div>
+    `;
+
+    const value = signal("");
+    const isValid = signal(true);
+    const scope = { value, isValid };
+    const deps = extractDeps("value.length > 0 && !isValid", scope);
+    expect(deps.length).toBe(2);
+    expect(deps).toContain(value);
+    expect(deps).toContain(isValid);
+
+    mount(container, scope);
+    expect(container.querySelector("p")).toBeNull();
+
+    value.set("test");
+    expect(container.querySelector("p")).toBeNull();
+
+    isValid.set(false);
+    expect(container.querySelector("p")).toBeTruthy();
+    expect(container.querySelector("p")?.textContent).toBe("Error message");
+
+    value.set("");
+    expect(container.querySelector("p")).toBeNull();
+
+    value.set("test");
+    expect(container.querySelector("p")).toBeTruthy();
+
+    isValid.set(true);
+    expect(container.querySelector("p")).toBeNull();
   });
 });

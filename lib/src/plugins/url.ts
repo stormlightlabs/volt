@@ -16,7 +16,7 @@ import type { PluginContext, Signal } from "$types/volt";
  *   - sync:signalPath - Bidirectional sync between signal and URL param
  *   - hash:signalPath - Sync with hash portion for routing
  */
-export function urlPlugin(context: PluginContext, value: string): void {
+export function urlPlugin(ctx: PluginContext, value: string): void {
   const parts = value.split(":");
   if (parts.length !== 2) {
     console.error(`Invalid url binding: "${value}". Expected format: "mode:signalPath"`);
@@ -27,15 +27,15 @@ export function urlPlugin(context: PluginContext, value: string): void {
 
   switch (mode) {
     case "read": {
-      handleUrlRead(context, signalPath);
+      handleUrlRead(ctx, signalPath);
       break;
     }
     case "sync": {
-      handleUrlSync(context, signalPath);
+      handleUrlSync(ctx, signalPath);
       break;
     }
     case "hash": {
-      handleHashRouting(context, signalPath);
+      handleHashRouting(ctx, signalPath);
       break;
     }
     default: {
@@ -48,8 +48,8 @@ export function urlPlugin(context: PluginContext, value: string): void {
  * Read URL parameter into signal on mount (one-way).
  * Signal changes do not update URL.
  */
-function handleUrlRead(context: PluginContext, signalPath: string): void {
-  const signal = context.findSignal(signalPath);
+function handleUrlRead(ctx: PluginContext, signalPath: string): void {
+  const signal = ctx.findSignal(signalPath);
   if (!signal) {
     console.error(`Signal "${signalPath}" not found for url read`);
     return;
@@ -67,8 +67,8 @@ function handleUrlRead(context: PluginContext, signalPath: string): void {
  * Bidirectional sync between signal and URL parameter.
  * Changes to either the signal or URL update the other.
  */
-function handleUrlSync(context: PluginContext, signalPath: string): void {
-  const signal = context.findSignal(signalPath);
+function handleUrlSync(ctx: PluginContext, signalPath: string): void {
+  const signal = ctx.findSignal(signalPath);
   if (!signal) {
     console.error(`Signal "${signalPath}" not found for url sync`);
     return;
@@ -123,7 +123,7 @@ function handleUrlSync(context: PluginContext, signalPath: string): void {
   const unsubscribe = signal.subscribe(updateUrl);
   globalThis.addEventListener("popstate", handlePopState);
 
-  context.addCleanup(() => {
+  ctx.addCleanup(() => {
     unsubscribe();
     globalThis.removeEventListener("popstate", handlePopState);
     if (updateTimeout) {
@@ -136,8 +136,8 @@ function handleUrlSync(context: PluginContext, signalPath: string): void {
  * Sync signal with hash portion of URL for client-side routing.
  * Bidirectional sync between signal and window.location.hash.
  */
-function handleHashRouting(context: PluginContext, signalPath: string): void {
-  const signal = context.findSignal(signalPath);
+function handleHashRouting(ctx: PluginContext, signalPath: string): void {
+  const signal = ctx.findSignal(signalPath);
   if (!signal) {
     console.error(`Signal "${signalPath}" not found for hash routing`);
     return;
@@ -171,7 +171,7 @@ function handleHashRouting(context: PluginContext, signalPath: string): void {
   const unsubscribe = signal.subscribe(updateHash);
   globalThis.addEventListener("hashchange", handleHashChange);
 
-  context.addCleanup(() => {
+  ctx.addCleanup(() => {
     unsubscribe();
     globalThis.removeEventListener("hashchange", handleHashChange);
   });
@@ -179,7 +179,6 @@ function handleHashRouting(context: PluginContext, signalPath: string): void {
 
 /**
  * Serialize a value for URL parameter storage.
- *
  * Handles strings, numbers, booleans, and No Value (null/undefined).
  */
 function serializeValue(value: unknown): string {

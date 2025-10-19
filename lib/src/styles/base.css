@@ -15,52 +15,55 @@
 
 /**
  * Root-level CSS variables define the design system.
+ *
  * Light theme is default, dark theme overrides via media query.
  */
 :root {
   /* Typography Scale - Modular scale based on 1.25 ratio */
   --font-size-base: 18px;
-  --font-size-sm: 0.889rem;    /* 16px */
-  --font-size-lg: 1.125rem;    /* 20.25px */
-  --font-size-xl: 1.266rem;    /* 22.8px */
-  --font-size-2xl: 1.424rem;   /* 25.6px */
-  --font-size-3xl: 1.802rem;   /* 32.4px */
-  --font-size-4xl: 2.027rem;   /* 36.5px */
-  --font-size-5xl: 2.566rem;   /* 46.2px */
+  --font-size-sm: 0.889rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.266rem;
+  --font-size-2xl: 1.424rem;
+  --font-size-3xl: 1.802rem;
+  --font-size-4xl: 2.027rem;
+  --font-size-5xl: 2.566rem;
 
   --font-sans: "Inter", sans-serif;
   --font-serif: "Libre Baskerville", serif;
   --font-mono: "Google Sans Code", monospace;
 
   /* Spacing Scale - Based on 0.5rem increments */
-  --space-xs: 0.25rem;   /* 4px */
-  --space-sm: 0.5rem;    /* 8px */
-  --space-md: 1rem;      /* 16px */
-  --space-lg: 1.5rem;    /* 24px */
-  --space-xl: 2rem;      /* 32px */
-  --space-2xl: 3rem;     /* 48px */
-  --space-3xl: 4rem;     /* 64px */
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+  --space-2xl: 3rem;
+  --space-3xl: 4rem;
 
-  /* Line Heights */
   --line-height-tight: 1.25;
   --line-height-base: 1.6;
   --line-height-relaxed: 1.8;
 
-  /* Layout Dimensions */
-  --content-width: 70ch;        /* Optimal line length for reading */
-  --sidenote-width: 18rem;      /* Width of margin notes */
-  --sidenote-gap: 2rem;         /* Space between content and sidenotes */
+  --content-width: 79ch;
+  /* Width of margin notes */
+  --sidenote-width: 18rem;
+  /* Space between content and sidenotes */
+  --sidenote-gap: 2rem;
 
-  /* Light Theme Colors - Duotone palette for clarity */
   --color-bg: #fefefe;
-  --color-bg-alt: #f5f5f5;      /* For code blocks, tables */
+  /* For code blocks, tables */
+  --color-bg-alt: #f5f5f5;
   --color-text: #1a1a1a;
   --color-text-muted: #666666;
-  --color-accent: #0066cc;      /* Links, primary actions */
+  /* Links, primary actions */
+  --color-accent: #0066cc;
   --color-accent-hover: #0052a3;
   --color-border: #d4d4d4;
   --color-code-bg: #f8f8f8;
-  --color-mark: #fff3cd;        /* Highlighted text */
+  /* Highlighted text */
+  --color-mark: #fff3cd;
   --color-success: #22863a;
   --color-warning: #bf8700;
   --color-error: #cb2431;
@@ -70,6 +73,7 @@
   --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
 
   /* Border Radius */
+  --radius-xs: 1px;
   --radius-sm: 3px;
   --radius-md: 6px;
   --radius-lg: 8px;
@@ -104,9 +108,6 @@
   }
 }
 
-/**
- * CSS reset
- */
 *, *::before, *::after {
   box-sizing: border-box;
 }
@@ -147,8 +148,8 @@ body {
 
 /**
  * Headings hierarchy
- * Uses modular scale for harmonious sizing
- * Tighter line-height for larger text improves readability
+ * - Uses modular scale for harmonious sizing
+ * - Tighter line-height for larger text improves readability
  */
 h1, h2, h3, h4, h5, h6 {
   font-weight: 700;
@@ -156,16 +157,12 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--color-text);
   margin-top: var(--space-2xl);
   margin-bottom: var(--space-md);
-  letter-spacing: -0.02em;  /* Slight negative tracking for display text */
+  letter-spacing: -0.02em;
 }
 
-/**
- * Individual heading sizes
- * h1-h3 use slightly larger weights for emphasis
- */
 h1 {
   font-size: var(--font-size-5xl);
-  margin-top: 0;  /* No top margin on first heading */
+  margin-top: 0;
 }
 
 h2 {
@@ -193,6 +190,7 @@ h6 {
 
 /**
  * Paragraph spacing
+ *
  * Generous spacing between paragraphs aids scanning
  */
 p {
@@ -232,9 +230,6 @@ a:focus-visible {
   border-radius: var(--radius-sm);
 }
 
-/**
- * Emphasis and strong elements
- */
 em {
   font-style: italic;
 }
@@ -243,9 +238,6 @@ strong {
   font-weight: 700;
 }
 
-/**
- * Marked/highlighted text
- */
 mark {
   background-color: var(--color-mark);
   padding: 0.1em 0.2em;
@@ -381,10 +373,6 @@ dd {
   }
 }
 
-/* ==========================================================================
-   Blockquotes & Citations
-   ========================================================================== */
-
 /**
  * Blockquote styling
  * Left border for visual distinction, italic for emphasis
@@ -414,8 +402,8 @@ cite {
 }
 
 blockquote cite::before {
-  /* TODO: fix */
-  content: " ";
+  /* em dash */
+  content: "— ";
 }
 
 /**
@@ -427,6 +415,7 @@ code {
   font-family: var(--font-mono);
   font-size: 0.9em;
   padding: 0.15em 0.4em;
+  color: var(--color-text);
   background-color: var(--color-code-bg);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
@@ -447,17 +436,11 @@ kbd {
   box-shadow: 0 1px 0 var(--color-border), 0 0 0 2px var(--color-bg) inset;
 }
 
-/**
- * Sample output
- */
 samp {
   font-family: var(--font-mono);
   font-size: 0.9em;
 }
 
-/**
- * Variable
- */
 var {
   font-family: var(--font-mono);
   font-style: normal;
@@ -472,6 +455,7 @@ var {
 pre {
   margin: var(--space-xl) 0;
   padding: var(--space-lg);
+  color: var(--color-text);
   background-color: var(--color-code-bg);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
@@ -482,17 +466,13 @@ pre {
 
 pre code {
   padding: 0;
+  color: inherit;
   background: none;
   border: none;
   font-size: 0.875rem;
 }
 
 
-/**
- * Section dividers
- *
- * Centered decorative element
- */
 hr {
   margin: var(--space-3xl) auto;
   border: none;
@@ -500,9 +480,6 @@ hr {
   max-width: 50%;
 }
 
-/**
- * Table container for horizontal scrolling on small screens
- */
 table {
   width: 100%;
   max-width: var(--content-width);
@@ -512,11 +489,6 @@ table {
   display: block;
 }
 
-/**
- * Table header styling
- *
- * Bold text with bottom border
- */
 thead {
   background-color: var(--color-bg-alt);
   border-bottom: 2px solid var(--color-border);
@@ -529,40 +501,25 @@ th {
   color: var(--color-text);
 }
 
-/**
- * Table cells
- */
 td {
   padding: var(--space-sm) var(--space-md);
   border-bottom: 1px solid var(--color-border);
 }
 
-/**
- * Zebra striping for easier row scanning
- */
 tbody tr:nth-child(even) {
   background-color: var(--color-bg-alt);
 }
 
-/**
- * Hover state for interactive tables
- */
 tbody tr:hover {
   background-color: var(--color-border);
   transition: background-color var(--transition-fast);
 }
 
-/**
- * Form container spacing
- */
 form {
   margin: var(--space-xl) 0;
   max-width: var(--content-width);
 }
 
-/**
- * Fieldset grouping
- */
 fieldset {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
@@ -576,11 +533,6 @@ legend {
   color: var(--color-text);
 }
 
-/**
- * Labels
- *
- * Block display for better touch targets
- */
 label {
   display: block;
   margin-bottom: var(--space-xs);
@@ -588,9 +540,6 @@ label {
   color: var(--color-text);
 }
 
-/**
- * Required field indicator
- */
 label:has(+ input[required])::after,
 label:has(+ textarea[required])::after,
 label:has(+ select[required])::after {
@@ -598,9 +547,6 @@ label:has(+ select[required])::after {
   color: var(--color-error);
 }
 
-/**
- * Text inputs and textareas
- */
 input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]),
 select,
 textarea {
@@ -617,11 +563,6 @@ textarea {
   margin-bottom: var(--space-md);
 }
 
-/**
- * Focus states for inputs
- *
- * Clear visual feedback for keyboard navigation
- */
 input:focus,
 select:focus,
 textarea:focus {
@@ -630,9 +571,6 @@ textarea:focus {
   box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
 }
 
-/**
- * Disabled state
- */
 input:disabled,
 select:disabled,
 textarea:disabled {
@@ -641,26 +579,17 @@ textarea:disabled {
   background-color: var(--color-bg-alt);
 }
 
-/**
- * Textarea specific
- */
 textarea {
   resize: vertical;
   min-height: 8rem;
 }
 
-/**
- * Checkboxes and radio buttons
- */
 input[type="checkbox"],
 input[type="radio"] {
   margin-right: var(--space-xs);
   accent-color: var(--color-accent);
 }
 
-/**
- * File input
- */
 input[type="file"] {
   padding: var(--space-sm);
   border: 1px dashed var(--color-border);
@@ -669,18 +598,12 @@ input[type="file"] {
   margin-bottom: var(--space-md);
 }
 
-/**
- * Range input
- */
 input[type="range"] {
   width: 100%;
   margin: var(--space-md) 0;
   accent-color: var(--color-accent);
 }
 
-/**
- * Progress and meter
- */
 progress, meter {
   width: 100%;
   height: 1.5rem;
@@ -689,10 +612,6 @@ progress, meter {
   overflow: hidden;
 }
 
-/**
- * Button styling
- * Primary action style with hover and active states
- */
 button,
 input[type="submit"],
 input[type="button"],
@@ -726,9 +645,6 @@ input[type="button"]:active {
   transform: translateY(1px);
 }
 
-/**
- * Reset button - Subdued styling
- */
 input[type="reset"] {
   background-color: var(--color-bg-alt);
   color: var(--color-text);
@@ -739,9 +655,6 @@ input[type="reset"]:hover {
   background-color: var(--color-border);
 }
 
-/**
- * Disabled buttons
- */
 button:disabled,
 input[type="submit"]:disabled,
 input[type="button"]:disabled {
@@ -750,9 +663,6 @@ input[type="button"]:disabled {
   transform: none;
 }
 
-/**
- * Focus state for buttons
- */
 button:focus-visible,
 input[type="submit"]:focus-visible,
 input[type="button"]:focus-visible {
@@ -761,9 +671,7 @@ input[type="button"]:focus-visible {
 }
 
 /**
- * Images
- *
- * Responsive by default, maintains aspect ratio
+ * Images are responsive by default, maintains aspect ratio
  */
 img {
   max-width: 100%;
@@ -789,9 +697,6 @@ figcaption {
   text-align: center;
 }
 
-/**
- * Video and audio
- */
 video, audio {
   max-width: 100%;
   margin: var(--space-xl) 0;
@@ -809,18 +714,10 @@ iframe {
   margin: var(--space-xl) 0;
 }
 
-/**
- * Article and Section
- * Spacing between major content blocks
- */
 article, section {
   margin-bottom: var(--space-3xl);
 }
 
-/**
- * Aside
- * Complementary content, styled distinctly
- */
 aside {
   padding: var(--space-lg);
   margin: var(--space-xl) 0;
@@ -830,9 +727,6 @@ aside {
   max-width: var(--content-width);
 }
 
-/**
- * Header and Footer
- */
 header {
   margin-bottom: var(--space-2xl);
   padding-bottom: var(--space-xl);
@@ -896,6 +790,7 @@ details[open] summary {
 
 /**
  * Screen reader only
+ *
  * Hides content visually but keeps it accessible to assistive technology
  */
 .sr-only {
@@ -910,9 +805,6 @@ details[open] summary {
   border-width: 0;
 }
 
-/**
- * Print-specific optimizations
- */
 @media print {
   body {
     font-size: 12pt;
@@ -952,9 +844,6 @@ details[open] summary {
   }
 }
 
-/**
- * Tablet and below - Reduce spacing
- */
 @media (max-width: 768px) {
   :root {
     --font-size-base: 16px;
@@ -981,9 +870,6 @@ details[open] summary {
   }
 }
 
-/**
- * Mobile - Further reduced spacing and sizing
- */
 @media (max-width: 480px) {
   :root {
     --font-size-base: 15px;

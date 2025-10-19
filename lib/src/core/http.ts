@@ -17,6 +17,7 @@ import type {
   SwapStrategy,
 } from "$types/volt";
 import { evaluate } from "./evaluator";
+import { sleep } from "./shared";
 
 /**
  * Make an HTTP request and return the parsed response
@@ -61,18 +62,15 @@ export async function request(conf: RequestConfig): Promise<HttpResponse> {
   }
 }
 
-/**
- * Capture state that should be preserved during DOM swap
- *
- * @param root - Root element to capture state from
- * @returns Captured state object
- */
 type CapturedState = {
   focusPath: number[] | null;
   scrollPositions: Map<number[], { top: number; left: number }>;
   inputValues: Map<number[], string | boolean>;
 };
 
+/**
+ * Capture state that should be preserved during DOM swap
+ */
 function captureState(root: Element): CapturedState {
   const state: CapturedState = { focusPath: null, scrollPositions: new Map(), inputValues: new Map() };
 
@@ -109,17 +107,11 @@ function captureState(root: Element): CapturedState {
 }
 
 /**
- * Get the path to an element from a root element
- *
- * Returns an array of child indices representing the path from root to element.
- *
- * @param element - Target element
- * @param root - Root element
- * @returns Array of indices, or empty array if element not found
+ * Get the path to an element from a root element as an array of child indices representing the path from root to element.
  */
-function getElementPath(element: Element, root: Element): number[] {
+function getElementPath(el: Element, root: Element): number[] {
   const path: number[] = [];
-  let current: Element | null = element;
+  let current: Element | null = el;
 
   while (current && current !== root) {
     const parent: Element | null = current.parentElement;
@@ -137,10 +129,6 @@ function getElementPath(element: Element, root: Element): number[] {
 
 /**
  * Get element by path from root
- *
- * @param path - Array of child indices
- * @param root - Root element
- * @returns Element at path, or null if not found
  */
 function getElementByPath(path: number[], root: Element): Element | null {
   let current: Element = root;
@@ -156,9 +144,6 @@ function getElementByPath(path: number[], root: Element): Element | null {
 
 /**
  * Restore preserved state after DOM swap
- *
- * @param root - Root element to restore state to
- * @param state - Previously captured state
  */
 function restoreState(root: Element, state: CapturedState): void {
   if (state.focusPath) {
@@ -345,16 +330,9 @@ export function parseHttpConfig(el: Element, scope: Scope): ParsedHttpConfig {
 
 /**
  * Get the default trigger event for an element
- *
- * - Forms: submit
- * - Buttons/links: click
- * - Everything else: click
- *
- * @param element - Element to get default trigger for
- * @returns Default event name
  */
-function getDefaultTrigger(element: Element): string {
-  if (element instanceof HTMLFormElement) {
+function getDefaultTrigger(el: Element): string {
+  if (el instanceof HTMLFormElement) {
     return "submit";
   }
   return "click";
@@ -366,17 +344,17 @@ function getDefaultTrigger(element: Element): string {
  * Sets data-volt-loading="true" attribute to indicate ongoing request.
  * Shows indicator if data-volt-indicator is set.
  *
- * @param element - Element to mark as loading
+ * @param el - Element to mark as loading
  * @param indicator - Optional indicator selector
  */
-export function setLoadingState(element: Element, indicator?: string): void {
-  element.setAttribute("data-volt-loading", "true");
+export function setLoadingState(el: Element, indicator?: string): void {
+  el.setAttribute("data-volt-loading", "true");
 
   if (indicator) {
     showIndicator(indicator);
   }
 
-  element.dispatchEvent(new CustomEvent("volt:loading", { detail: { element }, bubbles: true, cancelable: false }));
+  el.dispatchEvent(new CustomEvent("volt:loading", { detail: { element: el }, bubbles: true, cancelable: false }));
 }
 
 /**
@@ -385,19 +363,19 @@ export function setLoadingState(element: Element, indicator?: string): void {
  * Sets data-volt-error attribute with error message.
  * Hides indicator if data-volt-indicator is set.
  *
- * @param element - Element to mark as errored
- * @param message - Error message
+ * @param el - Element to mark as errored
+ * @param msg - Error message
  * @param indicator - Optional indicator selector
  */
-export function setErrorState(element: Element, message: string, indicator?: string): void {
-  element.setAttribute("data-volt-error", message);
+export function setErrorState(el: Element, msg: string, indicator?: string): void {
+  el.setAttribute("data-volt-error", msg);
 
   if (indicator) {
     hideIndicator(indicator);
   }
 
-  element.dispatchEvent(
-    new CustomEvent("volt:error", { detail: { element, message }, bubbles: true, cancelable: false }),
+  el.dispatchEvent(
+    new CustomEvent("volt:error", { detail: { element: el, message: msg }, bubbles: true, cancelable: false }),
   );
 }
 
@@ -407,29 +385,23 @@ export function setErrorState(element: Element, message: string, indicator?: str
  * Removes data-volt-loading, data-volt-error, and data-volt-retry-attempt attributes.
  * Hides indicator if data-volt-indicator is set.
  *
- * @param element - Element to clear states from
+ * @param el - Element to clear states from
  * @param indicator - Optional indicator selector
  */
-export function clearStates(element: Element, indicator?: string): void {
-  element.removeAttribute("data-volt-loading");
-  element.removeAttribute("data-volt-error");
-  element.removeAttribute("data-volt-retry-attempt");
+export function clearStates(el: Element, indicator?: string): void {
+  el.removeAttribute("data-volt-loading");
+  el.removeAttribute("data-volt-error");
+  el.removeAttribute("data-volt-retry-attempt");
 
   if (indicator) {
     hideIndicator(indicator);
   }
 
-  element.dispatchEvent(new CustomEvent("volt:success", { detail: { element }, bubbles: true, cancelable: false }));
+  el.dispatchEvent(new CustomEvent("volt:success", { detail: { element: el }, bubbles: true, cancelable: false }));
 }
 
-/**
- * Visibility strategy for showing/hiding indicator elements
- */
 type IndicatorStrategy = "display" | "class";
 
-/**
- * Cache for storing indicator visibility strategies
- */
 const indicatorStrategies = new WeakMap<Element, IndicatorStrategy>();
 
 /**
@@ -438,65 +410,58 @@ const indicatorStrategies = new WeakMap<Element, IndicatorStrategy>();
  * - If element has display: none (inline or computed), use display toggling
  * - If element has a class containing "hidden", use class toggling
  * - Otherwise, default to class toggling
- *
- * @param element - Indicator element
- * @returns Visibility strategy to use
  */
-function detectIndicatorStrategy(element: Element): IndicatorStrategy {
-  if (indicatorStrategies.has(element)) {
-    return indicatorStrategies.get(element)!;
+function detectIndicatorStrategy(el: Element): IndicatorStrategy {
+  if (indicatorStrategies.has(el)) {
+    return indicatorStrategies.get(el)!;
   }
 
-  const htmlElement = element as HTMLElement;
+  const htmlElement = el as HTMLElement;
   const inlineDisplay = htmlElement.style.display;
   const computedDisplay = window.getComputedStyle(htmlElement).display;
 
   if (inlineDisplay === "none" || computedDisplay === "none") {
-    indicatorStrategies.set(element, "display");
+    indicatorStrategies.set(el, "display");
     return "display";
   }
 
-  const hasHiddenClass = Array.from(element.classList).some((cls) => cls.toLowerCase().includes("hidden"));
+  const hasHiddenClass = Array.from(el.classList).some((cls) => cls.toLowerCase().includes("hidden"));
   if (hasHiddenClass) {
-    indicatorStrategies.set(element, "class");
+    indicatorStrategies.set(el, "class");
     return "class";
   }
 
-  indicatorStrategies.set(element, "class");
+  indicatorStrategies.set(el, "class");
   return "class";
 }
 
 /**
  * Show an indicator element using the appropriate visibility strategy
- *
- * @param element - Indicator element to show
  */
-function showIndicatorElement(element: Element): void {
-  const strategy = detectIndicatorStrategy(element);
-  const htmlElement = element as HTMLElement;
+function showIndicatorElement(el: Element): void {
+  const strategy = detectIndicatorStrategy(el);
+  const htmlElement = el as HTMLElement;
 
   if (strategy === "display") {
     htmlElement.style.display = "";
   } else {
-    const hiddenClass = Array.from(element.classList).find((cls) => cls.toLowerCase().includes("hidden")) || "hidden";
-    element.classList.remove(hiddenClass);
+    const hiddenClass = Array.from(el.classList).find((cls) => cls.toLowerCase().includes("hidden")) || "hidden";
+    el.classList.remove(hiddenClass);
   }
 }
 
 /**
  * Hide an indicator element using the appropriate visibility strategy
- *
- * @param element - Indicator element to hide
  */
-function hideIndicatorElement(element: Element): void {
-  const strategy = detectIndicatorStrategy(element);
-  const htmlElement = element as HTMLElement;
+function hideIndicatorElement(el: Element): void {
+  const strategy = detectIndicatorStrategy(el);
+  const htmlElement = el as HTMLElement;
 
   if (strategy === "display") {
     htmlElement.style.display = "none";
   } else {
-    const hiddenClass = Array.from(element.classList).find((cls) => cls.toLowerCase().includes("hidden")) || "hidden";
-    element.classList.add(hiddenClass);
+    const hiddenClass = Array.from(el.classList).find((cls) => cls.toLowerCase().includes("hidden")) || "hidden";
+    el.classList.add(hiddenClass);
   }
 }
 
@@ -549,18 +514,7 @@ function resolveTarget(targetConf: string | Element, defaultEl: Element): Option
   return target;
 }
 
-/**
- * Error type classification for retry logic
- */
-type ErrorType = "network" | "server" | "client" | "other";
-
-/**
- * Classify an error for retry decision
- *
- * @param error - Error or HTTP status code
- * @returns Error type classification
- */
-function classifyError(error: unknown): ErrorType {
+function classifyError(error: unknown): "network" | "server" | "client" | "other" {
   if (error instanceof Error && error.message.includes("HTTP")) {
     const match = error.message.match(/HTTP (\d+):/);
     if (match) {
@@ -584,9 +538,6 @@ function classifyError(error: unknown): ErrorType {
  * - 5xx server errors: Always retry
  * - 4xx client errors: Never retry
  * - Other errors: Never retry
- *
- * @param error - Error to check
- * @returns True if error should be retried
  */
 function shouldRetry(error: unknown): boolean {
   const errorType = classifyError(error);
@@ -599,11 +550,6 @@ function shouldRetry(error: unknown): boolean {
  * - Network errors: No delay (immediate retry)
  * - Server errors: Exponential backoff (initialDelay × 2^attempt)
  * - Other errors: No retry
- *
- * @param error - Error that occurred
- * @param attempt - Current attempt number (0-indexed)
- * @param initialDelay - Initial delay in milliseconds
- * @returns Delay in milliseconds before next retry
  */
 function calculateRetryDelay(error: unknown, attempt: number, initialDelay: number): number {
   const errorType = classifyError(error);
@@ -617,15 +563,6 @@ function calculateRetryDelay(error: unknown, attempt: number, initialDelay: numb
   }
 
   return 0;
-}
-
-/**
- * Sleep for a specified duration
- *
- * @param ms - Milliseconds to sleep
- */
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 /**
@@ -704,35 +641,30 @@ async function performRequest(
   console.error("HTTP request failed:", lastError);
 }
 
-export function bindGet(context: BindingContext, url: string): void {
-  bindHttpMethod(context, "GET", url);
+export function bindGet(ctx: BindingContext, url: string): void {
+  bindHttpMethod(ctx, "GET", url);
 }
 
-export function bindPost(context: BindingContext, url: string): void {
-  bindHttpMethod(context, "POST", url);
+export function bindPost(ctx: BindingContext, url: string): void {
+  bindHttpMethod(ctx, "POST", url);
 }
 
-export function bindPut(context: BindingContext, url: string): void {
-  bindHttpMethod(context, "PUT", url);
+export function bindPut(ctx: BindingContext, url: string): void {
+  bindHttpMethod(ctx, "PUT", url);
 }
 
-export function bindPatch(context: BindingContext, url: string): void {
-  bindHttpMethod(context, "PATCH", url);
+export function bindPatch(ctx: BindingContext, url: string): void {
+  bindHttpMethod(ctx, "PATCH", url);
 }
 
-export function bindDelete(context: BindingContext, url: string): void {
-  bindHttpMethod(context, "DELETE", url);
+export function bindDelete(ctx: BindingContext, url: string): void {
+  bindHttpMethod(ctx, "DELETE", url);
 }
 
 /**
  * Generic HTTP method binding handler
  *
- * Attaches an event listener that triggers an HTTP request when fired.
- * Automatically serializes forms for POST/PUT/PATCH methods.
- *
- * @param ctx - Plugin context
- * @param method - HTTP method
- * @param url - URL expression to evaluate
+ * Attaches an event listener that triggers an HTTP request when fired & automatically serializes forms for POST/PUT/PATCH methods.
  */
 function bindHttpMethod(ctx: BindingContext | PluginContext, method: HttpMethod, url: string): void {
   const config = parseHttpConfig(ctx.element, ctx.scope);

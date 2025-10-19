@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "workspaces": ["lib", "dev", "docs"],
   "scripts": {
     "dev": "pnpm --filter volt dev",
     "build": "pnpm -r build",

@@ -109,7 +109,7 @@ const idbAdapter = {
 let dbPromise: Optional<Promise<IDBDatabase>>;
 
 /**
- * Open or create the IndexedDB database
+ * Open or create the IndexedDB database ({@link IDBDatabase})
  */
 function openDB(): Promise<IDBDatabase> {
   if (dbPromise) return dbPromise;
@@ -136,9 +136,6 @@ function openDB(): Promise<IDBDatabase> {
   return dbPromise;
 }
 
-/**
- * Get storage adapter by name
- */
 function getStorageAdapter(type: string): Optional<StorageAdapter> {
   switch (type) {
     case "local": {
@@ -167,7 +164,7 @@ function getStorageAdapter(type: string): Optional<StorageAdapter> {
  *   - data-volt-persist="userData:indexeddb"
  *   - data-volt-persist="settings:customAdapter"
  */
-export function persistPlugin(context: PluginContext, value: string): void {
+export function persistPlugin(ctx: PluginContext, value: string): void {
   const parts = value.split(":");
   if (parts.length !== 2) {
     console.error(`Invalid persist binding: "${value}". Expected format: "signalPath:storageType"`);
@@ -175,7 +172,7 @@ export function persistPlugin(context: PluginContext, value: string): void {
   }
 
   const [signalPath, storageType] = parts;
-  const signal = context.findSignal(signalPath.trim());
+  const signal = ctx.findSignal(signalPath.trim());
 
   if (!signal) {
     console.error(`Signal "${signalPath}" not found in scope for persist binding`);
@@ -220,5 +217,5 @@ export function persistPlugin(context: PluginContext, value: string): void {
     }
   });
 
-  context.addCleanup(unsubscribe);
+  ctx.addCleanup(unsubscribe);
 }

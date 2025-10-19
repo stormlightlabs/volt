@@ -6,8 +6,7 @@
 import type { PluginContext, Signal } from "$types/volt";
 
 /**
- * Scroll plugin handler.
- * Manages various scroll-related behaviors.
+ * Scroll plugin handler to manage various scroll-related behaviors.
  *
  * Syntax: data-volt-scroll="mode:signalPath"
  * Modes:
@@ -16,7 +15,7 @@ import type { PluginContext, Signal } from "$types/volt";
  *   - spy:signalPath - Update signal when element is visible
  *   - smooth:signalPath - Enable smooth scrolling behavior
  */
-export function scrollPlugin(context: PluginContext, value: string): void {
+export function scrollPlugin(ctx: PluginContext, value: string): void {
   const parts = value.split(":");
   if (parts.length !== 2) {
     console.error(`Invalid scroll binding: "${value}". Expected format: "mode:signalPath"`);
@@ -27,19 +26,19 @@ export function scrollPlugin(context: PluginContext, value: string): void {
 
   switch (mode) {
     case "restore": {
-      handleScrollRestore(context, signalPath);
+      handleScrollRestore(ctx, signalPath);
       break;
     }
     case "scrollTo": {
-      handleScrollTo(context, signalPath);
+      handleScrollTo(ctx, signalPath);
       break;
     }
     case "spy": {
-      handleScrollSpy(context, signalPath);
+      handleScrollSpy(ctx, signalPath);
       break;
     }
     case "smooth": {
-      handleSmoothScroll(context, signalPath);
+      handleSmoothScroll(ctx, signalPath);
       break;
     }
     default: {
@@ -51,14 +50,14 @@ export function scrollPlugin(context: PluginContext, value: string): void {
 /**
  * Saves current scroll position to signal on scroll events; Restores scroll position from signal on mount.
  */
-function handleScrollRestore(context: PluginContext, signalPath: string): void {
-  const signal = context.findSignal(signalPath);
+function handleScrollRestore(ctx: PluginContext, signalPath: string): void {
+  const signal = ctx.findSignal(signalPath);
   if (!signal) {
     console.error(`Signal "${signalPath}" not found for scroll restore`);
     return;
   }
 
-  const element = context.element as HTMLElement;
+  const element = ctx.element as HTMLElement;
   const savedPosition = signal.get();
   if (typeof savedPosition === "number") {
     element.scrollTop = savedPosition;
@@ -70,24 +69,23 @@ function handleScrollRestore(context: PluginContext, signalPath: string): void {
 
   element.addEventListener("scroll", savePosition, { passive: true });
 
-  context.addCleanup(() => {
+  ctx.addCleanup(() => {
     element.removeEventListener("scroll", savePosition);
   });
 }
 
 /**
  * Scroll to element when signal value matches element's ID or selector.
- *
  * Listens for changes to the target signal to determine position
  */
-function handleScrollTo(context: PluginContext, signalPath: string): void {
-  const signal = context.findSignal(signalPath);
+function handleScrollTo(ctx: PluginContext, signalPath: string): void {
+  const signal = ctx.findSignal(signalPath);
   if (!signal) {
     console.error(`Signal "${signalPath}" not found for scrollTo`);
     return;
   }
 
-  const element = context.element as HTMLElement;
+  const element = ctx.element as HTMLElement;
   const elementId = element.id;
 
   const checkAndScroll = (target: unknown) => {
@@ -99,22 +97,21 @@ function handleScrollTo(context: PluginContext, signalPath: string): void {
   checkAndScroll(signal.get());
 
   const unsubscribe = signal.subscribe(checkAndScroll);
-  context.addCleanup(unsubscribe);
+  ctx.addCleanup(unsubscribe);
 }
 
 /**
  * Update signal when element enters or exits viewport.
- *
- * Uses Intersection Observer to track visibility.
+ * Uses {@link IntersectionObserver} to track visibility.
  */
-function handleScrollSpy(context: PluginContext, signalPath: string): void {
-  const signal = context.findSignal(signalPath);
+function handleScrollSpy(ctx: PluginContext, signalPath: string): void {
+  const signal = ctx.findSignal(signalPath);
   if (!signal) {
     console.error(`Signal "${signalPath}" not found for scroll spy`);
     return;
   }
 
-  const element = context.element as HTMLElement;
+  const element = ctx.element as HTMLElement;
 
   const observer = new IntersectionObserver((entries) => {
     for (const entry of entries) {
@@ -126,7 +123,7 @@ function handleScrollSpy(context: PluginContext, signalPath: string): void {
 
   observer.observe(element);
 
-  context.addCleanup(() => {
+  ctx.addCleanup(() => {
     observer.disconnect();
   });
 }
@@ -134,14 +131,14 @@ function handleScrollSpy(context: PluginContext, signalPath: string): void {
 /**
  * Enable smooth scrolling behavior and apply based on signal value.
  */
-function handleSmoothScroll(context: PluginContext, signalPath: string): void {
-  const signal = context.findSignal(signalPath);
+function handleSmoothScroll(ctx: PluginContext, signalPath: string): void {
+  const signal = ctx.findSignal(signalPath);
   if (!signal) {
     console.error(`Signal "${signalPath}" not found for smooth scroll`);
     return;
   }
 
-  const element = context.element as HTMLElement;
+  const element = ctx.element as HTMLElement;
 
   const applyBehavior = (value: unknown) => {
     if (value === true || value === "smooth") {
@@ -155,7 +152,7 @@ function handleSmoothScroll(context: PluginContext, signalPath: string): void {
 
   const unsubscribe = signal.subscribe(applyBehavior);
 
-  context.addCleanup(() => {
+  ctx.addCleanup(() => {
     unsubscribe();
     element.style.scrollBehavior = "";
   });

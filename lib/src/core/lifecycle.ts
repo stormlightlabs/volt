@@ -3,7 +3,7 @@
  * Provides beforeMount, afterMount, beforeUnmount, and afterUnmount hooks
  */
 
-import type { GlobalHookName, MountHookCallback, Scope, UnmountHookCallback } from "$types/volt";
+import type { ElementLifecycleState, GlobalHookName, MountHookCallback, Scope, UnmountHookCallback } from "$types/volt";
 
 /**
  * Global lifecycle hooks registry
@@ -106,7 +106,7 @@ export function getGlobalHooks(name: GlobalHookName): Array<MountHookCallback | 
  * @param root - The root element being mounted/unmounted
  * @param scope - The scope object (only for mount hooks)
  */
-export function executeGlobalHooks(hookName: GlobalHookName, root: Element, scope?: Scope): void {
+export function execGlobalHooks(hookName: GlobalHookName, root: Element, scope?: Scope): void {
   const hooks = lifecycleHooks.get(hookName);
   if (!hooks || hooks.size === 0) {
     return;
@@ -126,16 +126,6 @@ export function executeGlobalHooks(hookName: GlobalHookName, root: Element, scop
     }
   }
 }
-
-/**
- * Element-level lifecycle tracking for per-element hooks
- */
-type ElementLifecycleState = {
-  isMounted: boolean;
-  bindings: Set<string>;
-  onMount: Set<() => void>;
-  onUnmount: Set<() => void>;
-};
 
 const elementLifecycleStates = new WeakMap<Element, ElementLifecycleState>();
 
@@ -176,10 +166,10 @@ export function registerElementHook(element: Element, hookType: "mount" | "unmou
  * Notify that an element has been mounted.
  * Executes all registered onMount callbacks for the element.
  *
- * @param element - The mounted element
+ * @param el - The mounted element
  */
-export function notifyElementMounted(element: Element): void {
-  const state = getElementLifecycleState(element);
+export function notifyElementMounted(el: Element): void {
+  const state = getElementLifecycleState(el);
 
   if (state.isMounted) {
     return;
@@ -200,10 +190,10 @@ export function notifyElementMounted(element: Element): void {
  * Notify that an element is being unmounted.
  * Executes all registered onUnmount callbacks for the element.
  *
- * @param element - The element being unmounted
+ * @param el - The element being unmounted
  */
-export function notifyElementUnmounted(element: Element): void {
-  const state = getElementLifecycleState(element);
+export function notifyElementUnmounted(el: Element): void {
+  const state = getElementLifecycleState(el);
 
   if (!state.isMounted) {
     return;
@@ -219,7 +209,7 @@ export function notifyElementUnmounted(element: Element): void {
     }
   }
 
-  elementLifecycleStates.delete(element);
+  elementLifecycleStates.delete(el);
 }
 
 /**

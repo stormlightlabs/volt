@@ -281,3 +281,13 @@ export type HydrateOptions = { rootSelector?: string; skipHydrated?: boolean };
 export type SerializedScope = Record<string, unknown>;
 
 export type HydrateResult = ChargeResult;
+
+/**
+ * Element-level lifecycle tracking for per-element hooks
+ */
+export type ElementLifecycleState = {
+  isMounted: boolean;
+  bindings: Set<string>;
+  onMount: Set<() => void>;
+  onUnmount: Set<() => void>;
+};

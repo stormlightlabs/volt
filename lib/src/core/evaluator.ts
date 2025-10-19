@@ -6,10 +6,8 @@
  */
 
 import type { Dep, Scope } from "$types/volt";
+import { findScopedSignal, isSignal } from "./shared";
 
-/**
- * Blocked properties to prevent prototype pollution and sandbox escape
- */
 const DANGEROUS_PROPERTIES = new Set(["__proto__", "prototype", "constructor"]);
 
 const SAFE_GLOBALS = new Set([
@@ -40,9 +38,6 @@ const DANGEROUS_GLOBALS = new Set([
   "exports",
 ]);
 
-/**
- * Validates that a property name is safe to access
- */
 function isSafeProp(key: unknown): boolean {
   if (typeof key !== "string" && typeof key !== "number") {
     return true;
@@ -52,9 +47,6 @@ function isSafeProp(key: unknown): boolean {
   return !DANGEROUS_PROPERTIES.has(keyStr);
 }
 
-/**
- * Validates that accessing a property on an object is safe
- */
 function isSafeAccess(object: unknown, key: unknown): boolean {
   if (!isSafeProp(key)) {
     return false;
@@ -503,7 +495,11 @@ class Parser {
           this.advance();
           const args = this.parseArgumentList();
           this.consume("RPAREN", "Expected ')' after arguments");
-          object = this.callMethod(object, prop.value as string, args);
+          const propName = prop.value as string;
+          const isSignalMethod = isSignal(object)
+            && (propName === "get" || propName === "set" || propName === "subscribe");
+          const unwrappedObject = !isSignalMethod && isSignal(object) ? object.get() : object;
+          object = this.callMethod(unwrappedObject, propName, args);
         } else {
           object = propValue;
         }
@@ -877,15 +873,6 @@ class Parser {
   }
 }
 
-export function isSignal(value: unknown): value is Dep {
-  return (typeof value === "object"
-    && value !== null
-    && "get" in value
-    && "subscribe" in value
-    && typeof value.get === "function"
-    && typeof (value as { subscribe: unknown }).subscribe === "function");
-}
-
 /**
  * Evaluate an expression against a scope object.
  *
@@ -907,37 +894,47 @@ export function evaluate(expr: string, scope: Scope): unknown {
 }
 
 /**
- * Extract all signal dependencies from an expression by finding identifiers
- * that correspond to signals in the scope.
+ * Extract all signal dependencies from an expression by finding identifiers that correspond to signals in the scope.
+ *
+ * This function handles both simple property paths (e.g., "todo.title") and complex expressions (e.g., "email.length > 0 && emailValid").
  *
  * @param expr - The expression to analyze
  * @param scope - The scope containing potential signal dependencies
  * @returns Array of signals found in the expression
  */
-export function extractDependencies(expr: string, scope: Scope): Array<Dep> {
-  const dependencies: Array<Dep> = [];
-  const identifierRegex = /\b([a-zA-Z_$][\w$]*)\b/g;
-  const matches = expr.matchAll(identifierRegex);
+export function extractDeps(expr: string, scope: Scope): Array<Dep> {
+  const deps: Array<Dep> = [];
   const seen = new Set<string>();
 
+  const identifierRegex = /\b([a-zA-Z_$][\w$]*(?:\.[a-zA-Z_$][\w$]*)*)\b/g;
+  const matches = expr.matchAll(identifierRegex);
+
   for (const match of matches) {
-    const identifier = match[1];
+    const path = match[1];
 
-    if (["true", "false", "null", "undefined"].includes(identifier)) {
+    if (["true", "false", "null", "undefined"].includes(path)) {
       continue;
     }
 
-    if (seen.has(identifier)) {
+    if (seen.has(path)) {
       continue;
     }
 
-    seen.add(identifier);
+    seen.add(path);
 
-    const value = scope[identifier];
-    if (isSignal(value)) {
-      dependencies.push(value);
+    const signal = findScopedSignal(scope, path);
+    if (signal) {
+      deps.push(signal);
+      continue;
+    }
+
+    const parts = path.split(".");
+    const topLevel = parts[0];
+    const value = scope[topLevel];
+    if (isSignal(value) && !deps.includes(value)) {
+      deps.push(value);
     }
   }
 
-  return dependencies;
+  return deps;
 }

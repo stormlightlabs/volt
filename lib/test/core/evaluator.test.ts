@@ -348,6 +348,20 @@ describe("evaluator", () => {
       expect(evaluate("count.get()", scope)).toBe(5);
     });
 
+    it("calls methods on signal values", () => {
+      const email = signal("test@example.com");
+      const text = signal("hello world");
+      const items = signal([1, 2, 3, 4]);
+      const scope = { email, text, items };
+
+      expect(evaluate("email.includes('@')", scope)).toBe(true);
+      expect(evaluate("email.includes('xyz')", scope)).toBe(false);
+      expect(evaluate("text.toUpperCase()", scope)).toBe("HELLO WORLD");
+      expect(evaluate("text.substring(0, 5)", scope)).toBe("hello");
+      expect(evaluate("items.indexOf(3)", scope)).toBe(2);
+      expect(evaluate("items.slice(1, 3)", scope)).toEqual([2, 3]);
+    });
+
     it("calls methods with multiple arguments", () => {
       const scope = { text: "one,two,three" };
       expect(evaluate("text.split(',')", scope)).toEqual(["one", "two", "three"]);

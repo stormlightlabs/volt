@@ -6,7 +6,8 @@
 
 import type { ChargedRoot, ChargeResult, Scope } from "$types/volt";
 import { mount } from "./binder";
-import { evaluate, extractDependencies } from "./evaluator";
+import { evaluate, extractDeps } from "./evaluator";
+import { getComputedAttributes } from "./shared";
 import { computed, signal } from "./signal";
 
 /**
@@ -60,20 +61,17 @@ export function charge(rootSelector = "[data-volt]"): ChargeResult {
 
 /**
  * Create a reactive scope from element's data-volt-state and data-volt-computed attributes
- *
- * @param element - The root element
- * @returns Reactive scope object with signals
  */
-function createScopeFromElement(element: Element): Scope {
+function createScopeFromElement(el: Element): Scope {
   const scope: Scope = {};
 
-  const stateAttr = (element as HTMLElement).dataset.voltState;
+  const stateAttr = (el as HTMLElement).dataset.voltState;
   if (stateAttr) {
     try {
       const stateData = JSON.parse(stateAttr);
 
       if (typeof stateData !== "object" || stateData === null || Array.isArray(stateData)) {
-        console.error(`data-volt-state must be a JSON object, got ${typeof stateData}:`, element);
+        console.error(`data-volt-state must be a JSON object, got ${typeof stateData}:`, el);
       } else {
         for (const [key, value] of Object.entries(stateData)) {
           scope[key] = signal(value);
@@ -81,14 +79,14 @@ function createScopeFromElement(element: Element): Scope {
       }
     } catch (error) {
       console.error("Failed to parse data-volt-state JSON:", stateAttr, error);
-      console.error("Element:", element);
+      console.error("Element:", el);
     }
   }
 
-  const computedAttrs = getComputedAttributes(element);
+  const computedAttrs = getComputedAttributes(el);
   for (const [name, expression] of computedAttrs) {
     try {
-      const dependencies = extractDependencies(expression, scope);
+      const dependencies = extractDeps(expression, scope);
 
       scope[name] = computed(() => evaluate(expression, scope), dependencies);
     } catch (error) {
@@ -97,27 +95,4 @@ function createScopeFromElement(element: Element): Scope {
   }
 
   return scope;
-}
-
-/**
- * Get all data-volt-computed:name attributes from an element.
- *
- * Converts kebab-case names to camelCase to match JS conventions.
- */
-function getComputedAttributes(element: Element): Map<string, string> {
-  const computed = new Map<string, string>();
-
-  for (const attr of element.attributes) {
-    if (attr.name.startsWith("data-volt-computed:")) {
-      const name = attr.name.slice("data-volt-computed:".length);
-      const camelName = kebabToCamel(name);
-      computed.set(camelName, attr.value);
-    }
-  }
-
-  return computed;
-}
-
-function kebabToCamel(str: string): string {
-  return str.replaceAll(/-([a-z])/g, (_, letter) => letter.toUpperCase());
 }

@@ -121,6 +121,32 @@ describe("binder", () => {
       expect(element.classList.contains("baz")).toBe(true);
     });
 
+    it("binds data-volt-class with multiple signal dependencies", () => {
+      const element = document.createElement("div");
+      element.dataset.voltClass = "{active: isActive, disabled: isDisabled}";
+
+      const isActive = signal(true);
+      const isDisabled = signal(false);
+      const scope = { isActive, isDisabled };
+      mount(element, scope);
+
+      expect(element.classList.contains("active")).toBe(true);
+      expect(element.classList.contains("disabled")).toBe(false);
+
+      isActive.set(false);
+      expect(element.classList.contains("active")).toBe(false);
+      expect(element.classList.contains("disabled")).toBe(false);
+
+      isDisabled.set(true);
+      expect(element.classList.contains("active")).toBe(false);
+      expect(element.classList.contains("disabled")).toBe(true);
+
+      isActive.set(true);
+      isDisabled.set(false);
+      expect(element.classList.contains("active")).toBe(true);
+      expect(element.classList.contains("disabled")).toBe(false);
+    });
+
     it("binds nested elements", () => {
       const parent = document.createElement("div");
       const child1 = document.createElement("span");

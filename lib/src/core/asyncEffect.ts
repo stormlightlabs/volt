@@ -9,9 +9,9 @@ import type { AsyncEffectFunction, AsyncEffectOptions, ComputedSignal, Signal } 
  * Creates an async side effect that runs when dependencies change.
  * Supports abort signals, race protection, debouncing, throttling, and error handling.
  *
- * @param effectFunction - Async function to run as a side effect
- * @param dependencies - Array of signals this effect depends on
- * @param options - Configuration options for async behavior
+ * @param effectFn - Async function to run as a side effect
+ * @param deps - Array of signals this effect depends on
+ * @param opts - Configuration options for async behavior
  * @returns Cleanup function to stop the effect
  *
  * @example
@@ -46,11 +46,11 @@ import type { AsyncEffectFunction, AsyncEffectOptions, ComputedSignal, Signal } 
  * });
  */
 export function asyncEffect(
-  effectFunction: AsyncEffectFunction,
-  dependencies: Array<Signal<unknown> | ComputedSignal<unknown>>,
-  options: AsyncEffectOptions = {},
+  effectFn: AsyncEffectFunction,
+  deps: Array<Signal<unknown> | ComputedSignal<unknown>>,
+  opts: AsyncEffectOptions = {},
 ): () => void {
-  const { abortable = false, debounce, throttle, onError, retries = 0, retryDelay = 0 } = options;
+  const { abortable = false, debounce, throttle, onError, retries = 0, retryDelay = 0 } = opts;
 
   let cleanup: (() => void) | void;
   let abortController: Optional<AbortController>;
@@ -83,7 +83,7 @@ export function asyncEffect(
     }
 
     try {
-      const result = await effectFunction(abortController?.signal);
+      const result = await effectFn(abortController?.signal);
 
       if (currentExecutionId !== executionId) {
         return;
@@ -128,9 +128,6 @@ export function asyncEffect(
     }
   };
 
-  /**
-   * Schedule effect execution with debounce/throttle logic
-   */
   const scheduleExecution = () => {
     const currentExecutionId = ++executionId;
 
@@ -173,8 +170,8 @@ export function asyncEffect(
 
   scheduleExecution();
 
-  const unsubscribers = dependencies.map((dependency) =>
-    dependency.subscribe(() => {
+  const unsubscribers = deps.map((dep) =>
+    dep.subscribe(() => {
       scheduleExecution();
     })
   );

@@ -14,7 +14,7 @@ export function walkDOM(root: Element): Element[] {
   const elements: Element[] = [];
 
   function walk(element: Element): void {
-    if (hasVoltAttribute(element)) {
+    if (hasVoltAttr(element)) {
       elements.push(element);
 
       if (
@@ -38,24 +38,24 @@ export function walkDOM(root: Element): Element[] {
 /**
  * Check if an element has any data-volt-* attributes.
  *
- * @param element - Element to check
+ * @param el - Element to check
  * @returns true if element has any Volt attributes
  */
-export function hasVoltAttribute(element: Element): boolean {
-  return [...element.attributes].some((attribute) => attribute.name.startsWith("data-volt-"));
+export function hasVoltAttr(el: Element): boolean {
+  return [...el.attributes].some((attribute) => attribute.name.startsWith("data-volt-"));
 }
 
 /**
  * Get all data-volt-* attributes from an element.
  * Excludes charge metadata attributes (state, computed:*) that are processed separately.
  *
- * @param element - Element to get attributes from
+ * @param el - Element to get attributes from
  * @returns Map of attribute names to values (without the data-volt- prefix)
  */
-export function getVoltAttributes(element: Element): Map<string, string> {
+export function getVoltAttrs(el: Element): Map<string, string> {
   const attributes = new Map<string, string>();
 
-  for (const attribute of element.attributes) {
+  for (const attribute of el.attributes) {
     if (attribute.name.startsWith("data-volt-")) {
       const name = attribute.name.slice(10);
 
@@ -74,33 +74,33 @@ export function getVoltAttributes(element: Element): Map<string, string> {
 /**
  * Set the text content of an element safely.
  *
- * @param element - Element to update
+ * @param el - Element to update
  * @param value - Text value to set
  */
-export function setText(element: Element, value: unknown): void {
-  element.textContent = String(value ?? "");
+export function setText(el: Element, value: unknown): void {
+  el.textContent = String(value ?? "");
 }
 
 /**
  * Set the HTML content of an element safely.
  * Note: This trusts the input HTML and should only be used with sanitized content.
  *
- * @param element - Element to update
+ * @param el - Element to update
  * @param value - HTML string to set
  */
-export function setHTML(element: Element, value: string): void {
-  element.innerHTML = value;
+export function setHTML(el: Element, value: string): void {
+  el.innerHTML = value;
 }
 
 /**
  * Add or remove a CSS class from an element.
  *
- * @param element - Element to update
- * @param className - Class name to toggle
+ * @param el - Element to update
+ * @param cls - Class name to toggle
  * @param add - Whether to add (true) or remove (false) the class
  */
-export function toggleClass(element: Element, className: string, add: boolean): void {
-  element.classList.toggle(className, add);
+export function toggleClass(el: Element, cls: string, add: boolean): void {
+  el.classList.toggle(cls, add);
 }
 
 /**
