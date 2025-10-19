@@ -18,6 +18,7 @@ export {
   unregisterGlobalHook,
 } from "$core/lifecycle";
 export { clearPlugins, getRegisteredPlugins, hasPlugin, registerPlugin, unregisterPlugin } from "$core/plugin";
+export { isReactive, reactive, toRaw } from "$core/reactive";
 export { computed, effect, signal } from "$core/signal";
 export { deserializeScope, hydrate, isHydrated, isServerRendered, serializeScope } from "$core/ssr";
 export { persistPlugin, registerStorageAdapter } from "$plugins/persist";
@@ -32,10 +33,13 @@ export type {
   GlobalHookName,
   HydrateOptions,
   HydrateResult,
+  IsReactive,
   ParsedHttpConfig,
   PluginContext,
   PluginHandler,
+  ReactiveArray,
   RetryConfig,
   SerializedScope,
   Signal,
+  UnwrapReactive,
 } from "$types/volt";

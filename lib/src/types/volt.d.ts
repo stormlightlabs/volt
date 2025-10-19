@@ -96,6 +96,22 @@ export interface ComputedSignal<T> {
 }
 
 /**
+ * Utility type to unwrap reactive proxies and get the original type.
+ * Since reactive() returns a transparent proxy, this is mostly for documentation.
+ */
+export type UnwrapReactive<T> = T extends object ? T : never;
+
+/**
+ * Utility type for reactive arrays with enhanced type safety.
+ */
+export type ReactiveArray<T> = T[];
+
+/**
+ * Utility type to check if a value is reactive (has the __v_isReactive marker).
+ */
+export type IsReactive<T> = T extends { __v_isReactive: true } ? true : false;
+
+/**
  * Storage adapter interface for custom persistence backends
  */
 export interface StorageAdapter {
@@ -291,3 +307,21 @@ export type ElementLifecycleState = {
   onMount: Set<() => void>;
   onUnmount: Set<() => void>;
 };
+
+export type AnySignal = Signal<unknown> | ComputedSignal<unknown>;
+
+export type GraphNode = {
+  signal: AnySignal;
+  id: string;
+  name?: string;
+  type: SignalType;
+  value: unknown;
+  dependencies: string[];
+  dependents: string[];
+};
+
+export type DepGraph = { nodes: GraphNode[]; edges: Array<{ from: string; to: string }> };
+
+export type SignalType = "signal" | "computed" | "reactive";
+
+export type SignalMetadata = { id: string; type: SignalType; name?: string; createdAt: number; stackTrace?: string };

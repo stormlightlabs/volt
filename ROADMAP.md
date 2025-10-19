@@ -92,30 +92,30 @@ _NOTE_: `data-x-*` is now `data-volt-*`
     - ✓ SSR compatibility helpers
     - ✓ Sandboxed expression evaluator
 
-## To-Do
-
 ### Proxy-Based Reactivity Enhancements
 
-**Goal:** Leverage JavaScript Proxies to improve reactivity ergonomics and automatic dependency tracking.
+**Goal:** Use JavaScript Proxies to improve reactivity ergonomics and automatic dependency tracking.
 **Outcome:** More intuitive API with automatic dependency tracking and optional deep reactivity for objects/arrays.
 **Deliverables:**
     - ✓ Automatic dependency tracking for `computed()`
         - ✓ Eliminate manual dependency arrays via proxy-based tracking
         - ✓ Auto-detect signal access during computation
         - ✓ Track nested property access for fine-grained updates
-    - `reactive()` primitive for deep object reactivity (optional, alongside `signal()`)
-        - Nested property changes trigger updates automatically
-        - Proxy-wrapped objects with transparent reactivity
-    - Array reactivity improvements
-        - Reactive array methods (push, pop, shift, unshift, splice, etc.)
-        - Automatic updates on array mutations
-        - Efficient tracking of index-based changes
-    - Lazy signal initialization
-        - Create signals on-demand when properties are accessed
-    - Expose debugging utilities
+    - ✓ `reactive()` primitive for deep object reactivity (optional, alongside `signal()`)
+        - ✓ Nested property changes trigger updates automatically
+        - ✓ Proxy-wrapped objects with transparent reactivity
+    - ✓ Array reactivity improvements
+        - ✓ Reactive array methods (push, pop, shift, unshift, splice, etc.)
+        - ✓ Automatic updates on array mutations
+        - ✓ Efficient tracking of index-based changes
+    - ✓ Lazy signal initialization
+        - ✓ Create signals on-demand when properties are accessed
+    - ✓ Expose debugging utilities
 **Notes:**
     - Separate reactive() function for objects/arrays to gives users choice
     - Keep .get()/.set() - explicitness is valuable for understanding reactivity (include in docs)
+
+## To-Do
 
 ### Streaming & Patch Engine
 
