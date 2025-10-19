@@ -15,11 +15,11 @@ const scrollPos = signal(0);
 const section1Visible = signal(false);
 const section2Visible = signal(false);
 
-const doubled = computed(() => count.get() * 2, [count]);
+const doubled = computed(() => count.get() * 2);
 
 effect(() => {
   console.log("Count changed:", count.get());
-}, [count]);
+});
 
 const scope = {
   count,

@@ -30,6 +30,7 @@ export default defineConfig({
       },
       { text: "Specs", collapsed: true, items: u.scanDir("spec", "/spec") },
       { text: "API Reference", collapsed: true, items: u.scanDir("api", "/api") },
+      { text: "Internals", collapsed: false, items: u.scanDir("internals", "/internals") },
     ],
     socialLinks: [{ icon: "github", link: "https://github.com/stormlightlabs/volt" }],
   },

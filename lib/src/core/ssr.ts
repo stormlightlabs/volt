@@ -8,7 +8,7 @@
 import type { Nullable } from "$types/helpers";
 import type { HydrateOptions, HydrateResult, Scope, SerializedScope } from "$types/volt";
 import { mount } from "./binder";
-import { evaluate, extractDeps } from "./evaluator";
+import { evaluate } from "./evaluator";
 import { getComputedAttributes, isSignal } from "./shared";
 import { computed, signal } from "./signal";
 
@@ -25,7 +25,7 @@ import { computed, signal } from "./signal";
  * ```ts
  * const scope = {
  *   count: signal(0),
- *   double: computed(() => scope.count.get() * 2, [scope.count])
+ *   double: computed(() => scope.count.get() * 2)
  * };
  * const json = serializeScope(scope);
  * // Returns: '{"count":0,"double":0}'
@@ -77,7 +77,7 @@ export function deserializeScope(data: SerializedScope): Scope {
  * @returns True if element is marked as hydrated
  */
 export function isHydrated(el: Element): boolean {
-  return el.hasAttribute("data-volt-hydrated");
+  return Object.hasOwn((el as HTMLElement).dataset, "voltHydrated");
 }
 
 /**
@@ -86,7 +86,7 @@ export function isHydrated(el: Element): boolean {
  * @param el - Element to mark
  */
 function markHydrated(el: Element): void {
-  el.setAttribute("data-volt-hydrated", "true");
+  (el as HTMLElement).dataset.voltHydrated = "true";
 }
 
 /**
@@ -178,8 +178,7 @@ function createHydrationScope(el: Element): Scope {
   const computedAttrs = getComputedAttributes(el);
   for (const [name, expression] of computedAttrs) {
     try {
-      const dependencies = extractDeps(expression, scope);
-      scope[name] = computed(() => evaluate(expression, scope), dependencies);
+      scope[name] = computed(() => evaluate(expression, scope));
     } catch (error) {
       console.error(`Failed to create computed "${name}" with expression "${expression}":`, error);
     }

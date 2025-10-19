@@ -99,10 +99,10 @@ _NOTE_: `data-x-*` is now `data-volt-*`
 **Goal:** Leverage JavaScript Proxies to improve reactivity ergonomics and automatic dependency tracking.
 **Outcome:** More intuitive API with automatic dependency tracking and optional deep reactivity for objects/arrays.
 **Deliverables:**
-    - Automatic dependency tracking for `computed()`
-        - Eliminate manual dependency arrays via proxy-based tracking
-        - Auto-detect signal access during computation
-        - Track nested property access for fine-grained updates
+    - ✓ Automatic dependency tracking for `computed()`
+        - ✓ Eliminate manual dependency arrays via proxy-based tracking
+        - ✓ Auto-detect signal access during computation
+        - ✓ Track nested property access for fine-grained updates
     - `reactive()` primitive for deep object reactivity (optional, alongside `signal()`)
         - Nested property changes trigger updates automatically
         - Proxy-wrapped objects with transparent reactivity

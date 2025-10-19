@@ -6,7 +6,7 @@
 
 import type { ChargedRoot, ChargeResult, Scope } from "$types/volt";
 import { mount } from "./binder";
-import { evaluate, extractDeps } from "./evaluator";
+import { evaluate } from "./evaluator";
 import { getComputedAttributes } from "./shared";
 import { computed, signal } from "./signal";
 
@@ -86,9 +86,7 @@ function createScopeFromElement(el: Element): Scope {
   const computedAttrs = getComputedAttributes(el);
   for (const [name, expression] of computedAttrs) {
     try {
-      const dependencies = extractDeps(expression, scope);
-
-      scope[name] = computed(() => evaluate(expression, scope), dependencies);
+      scope[name] = computed(() => evaluate(expression, scope));
     } catch (error) {
       console.error(`Failed to create computed "${name}" with expression "${expression}":`, error);
     }

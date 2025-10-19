@@ -32,7 +32,7 @@ describe("integration: list rendering", () => {
 
     const remaining = computed(() => {
       return todos.get().filter((t) => !t.completed).length;
-    }, [todos]);
+    });
 
     const addTodo = () => {
       const input = container.querySelector("#new-todo") as HTMLInputElement;
@@ -105,7 +105,7 @@ describe("integration: list rendering", () => {
       active: true,
     }]);
 
-    const activeItems = computed(() => items.get().filter((item) => item.active), [items]);
+    const activeItems = computed(() => items.get().filter((item) => item.active));
 
     mount(container, { allItems: items, activeItems });
 

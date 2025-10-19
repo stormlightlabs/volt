@@ -126,14 +126,14 @@ describe("signal", () => {
 describe("computed", () => {
   it("computes initial value", () => {
     const count = signal(5);
-    const doubled = computed(() => count.get() * 2, [count]);
+    const doubled = computed(() => count.get() * 2);
 
     expect(doubled.get()).toBe(10);
   });
 
   it("recomputes when dependency changes", () => {
     const count = signal(5);
-    const doubled = computed(() => count.get() * 2, [count]);
+    const doubled = computed(() => count.get() * 2);
 
     expect(doubled.get()).toBe(10);
 
@@ -146,7 +146,7 @@ describe("computed", () => {
 
   it("notifies subscribers when value changes", () => {
     const count = signal(5);
-    const doubled = computed(() => count.get() * 2, [count]);
+    const doubled = computed(() => count.get() * 2);
     const subscriber = vi.fn();
 
     doubled.subscribe(subscriber);
@@ -158,7 +158,7 @@ describe("computed", () => {
 
   it("does not notify when computed value is the same", () => {
     const count = signal(5);
-    const isPositive = computed(() => count.get() > 0, [count]);
+    const isPositive = computed(() => count.get() > 0);
     const subscriber = vi.fn();
 
     isPositive.subscribe(subscriber);
@@ -174,7 +174,7 @@ describe("computed", () => {
   it("supports multiple dependencies", () => {
     const a = signal(2);
     const b = signal(3);
-    const sum = computed(() => a.get() + b.get(), [a, b]);
+    const sum = computed(() => a.get() + b.get());
 
     expect(sum.get()).toBe(5);
 
@@ -187,8 +187,8 @@ describe("computed", () => {
 
   it("can depend on other computed signals", () => {
     const count = signal(2);
-    const doubled = computed(() => count.get() * 2, [count]);
-    const quadrupled = computed(() => doubled.get() * 2, [doubled]);
+    const doubled = computed(() => count.get() * 2);
+    const quadrupled = computed(() => doubled.get() * 2);
 
     expect(quadrupled.get()).toBe(8);
 
@@ -199,7 +199,7 @@ describe("computed", () => {
 
   it("allows unsubscribing", () => {
     const count = signal(5);
-    const doubled = computed(() => count.get() * 2, [count]);
+    const doubled = computed(() => count.get() * 2);
     const subscriber = vi.fn();
 
     const unsubscribe = doubled.subscribe(subscriber);
@@ -211,19 +211,13 @@ describe("computed", () => {
 });
 
 describe("effect", () => {
-  it("runs immediately on creation", () => {
-    const count = signal(0);
-    const effectFunction = vi.fn();
-
-    effect(effectFunction, [count]);
-    expect(effectFunction).toHaveBeenCalledTimes(1);
-  });
-
   it("runs when dependency changes", () => {
     const count = signal(0);
-    const effectFunction = vi.fn();
+    const effectFunction = vi.fn(() => {
+      count.get();
+    });
 
-    effect(effectFunction, [count]);
+    effect(effectFunction);
 
     count.set(1);
     count.set(2);
@@ -233,9 +227,11 @@ describe("effect", () => {
 
   it("can be cleaned up", () => {
     const count = signal(0);
-    const effectFunction = vi.fn();
+    const effectFunction = vi.fn(() => {
+      count.get();
+    });
 
-    const cleanup = effect(effectFunction, [count]);
+    const cleanup = effect(effectFunction);
 
     expect(effectFunction).toHaveBeenCalledTimes(1);
 
@@ -248,9 +244,12 @@ describe("effect", () => {
   it("runs cleanup function from previous effect", () => {
     const count = signal(0);
     const innerCleanup = vi.fn();
-    const effectFunction = vi.fn(() => innerCleanup);
+    const effectFunction = vi.fn(() => {
+      count.get();
+      return innerCleanup;
+    });
 
-    effect(effectFunction, [count]);
+    effect(effectFunction);
 
     expect(innerCleanup).not.toHaveBeenCalled();
 
@@ -264,9 +263,12 @@ describe("effect", () => {
   it("runs final cleanup when effect is disposed", () => {
     const count = signal(0);
     const innerCleanup = vi.fn();
-    const effectFunction = vi.fn(() => innerCleanup);
+    const effectFunction = vi.fn(() => {
+      count.get();
+      return innerCleanup;
+    });
 
-    const cleanup = effect(effectFunction, [count]);
+    const cleanup = effect(effectFunction);
 
     count.set(1);
     expect(innerCleanup).toHaveBeenCalledTimes(1);
@@ -278,9 +280,12 @@ describe("effect", () => {
   it("supports multiple dependencies", () => {
     const a = signal(1);
     const b = signal(2);
-    const effectFunction = vi.fn();
+    const effectFunction = vi.fn(() => {
+      a.get();
+      b.get();
+    });
 
-    effect(effectFunction, [a, b]);
+    effect(effectFunction);
 
     expect(effectFunction).toHaveBeenCalledTimes(1);
 
@@ -293,10 +298,12 @@ describe("effect", () => {
 
   it("can depend on computed signals", () => {
     const count = signal(2);
-    const doubled = computed(() => count.get() * 2, [count]);
-    const effectFunction = vi.fn();
+    const doubled = computed(() => count.get() * 2);
+    const effectFunction = vi.fn(() => {
+      doubled.get();
+    });
 
-    effect(effectFunction, [doubled]);
+    effect(effectFunction);
 
     expect(effectFunction).toHaveBeenCalledTimes(1);
 
