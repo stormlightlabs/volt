@@ -1,4 +1,4 @@
-import { computed, mount, signal } from "@volt";
+import { computed, mount, signal } from "$volt";
 import { describe, expect, it } from "vitest";
 
 describe("integration: list rendering", () => {

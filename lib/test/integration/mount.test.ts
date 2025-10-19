@@ -1,4 +1,4 @@
-import { mount, signal } from "@volt";
+import { mount, signal } from "$volt";
 import { describe, expect, it } from "vitest";
 
 describe("integration: mount", () => {

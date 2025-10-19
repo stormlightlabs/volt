@@ -1,5 +1,4 @@
-import type { PluginContext } from "$types/volt";
-import { mount } from "@volt/core/binder";
+import { mount } from "$core/binder";
 import {
   clearAllGlobalHooks,
   clearGlobalHooks,
@@ -10,9 +9,10 @@ import {
   registerElementHook,
   registerGlobalHook,
   unregisterGlobalHook,
-} from "@volt/core/lifecycle";
-import { registerPlugin } from "@volt/core/plugin";
-import { signal } from "@volt/core/signal";
+} from "$core/lifecycle";
+import { registerPlugin } from "$core/plugin";
+import { signal } from "$core/signal";
+import type { PluginContext } from "$types/volt";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 describe("lifecycle hooks", () => {

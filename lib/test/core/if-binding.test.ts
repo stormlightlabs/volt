@@ -1,5 +1,5 @@
-import { mount } from "@volt/core/binder";
-import { signal } from "@volt/core/signal";
+import { mount } from "$core/binder";
+import { signal } from "$core/signal";
 import { describe, expect, it } from "vitest";
 
 describe("data-volt-if binding", () => {

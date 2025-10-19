@@ -171,19 +171,12 @@ export interface AsyncEffectOptions {
  */
 export type AsyncEffectFunction = (signal?: AbortSignal) => Promise<void | (() => void)>;
 
-/**
- * Lifecycle hook callback types
- */
 export type LifecycleHookCallback = () => void;
 export type MountHookCallback = (root: Element, scope: Scope) => void;
 export type UnmountHookCallback = (root: Element) => void;
 export type ElementMountHookCallback = (element: Element, scope: Scope) => void;
 export type ElementUnmountHookCallback = (element: Element) => void;
 export type BindingHookCallback = (element: Element, bindingName: string) => void;
-
-/**
- * Lifecycle hook names
- */
 export type GlobalHookName = "beforeMount" | "afterMount" | "beforeUnmount" | "afterUnmount";
 
 /**
@@ -210,3 +203,81 @@ export interface PluginLifecycle {
    */
   afterBinding: (callback: LifecycleHookCallback) => void;
 }
+
+export type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
+
+/**
+ * Strategies for swapping response content into the DOM
+ *
+ *  - innerHTML: Replace the target's inner HTML (default)
+ *  - outerHTML: Replace the target element entirely
+ *  - beforebegin: Insert before the target element
+ *  - afterbegin: Insert at the start of the target's content
+ *  - beforeend: Insert at the end of the target's content
+ *  - afterend: Insert after the target element
+ *  - delete: Remove the target element
+ *  - none: No DOM update (for side effects only)
+ */
+export type SwapStrategy =
+  | "innerHTML"
+  | "outerHTML"
+  | "beforebegin"
+  | "afterbegin"
+  | "beforeend"
+  | "afterend"
+  | "delete"
+  | "none";
+
+export type RequestConfig = {
+  method: HttpMethod;
+  url: string;
+  headers?: Record<string, string>;
+  body?: string | FormData;
+  target?: string | Element;
+  swap?: SwapStrategy;
+};
+
+export type HttpResponse = {
+  status: number;
+  statusText: string;
+  headers: Headers;
+  html?: string;
+  json?: unknown;
+  ok: boolean;
+};
+
+/**
+ * Configuration parsed from element attributes
+ */
+export type ParsedHttpConfig = {
+  trigger: string;
+  target: string | Element;
+  swap: SwapStrategy;
+  headers: Record<string, string>;
+  retry?: RetryConfig;
+  indicator?: string;
+};
+
+/**
+ * Retry configuration for HTTP requests
+ */
+export type RetryConfig = {
+  /**
+   * Maximum number of retry attempts
+   */
+  maxAttempts: number;
+
+  /**
+   * Initial delay in milliseconds before first retry
+   */
+  initialDelay: number;
+};
+
+export type HydrateOptions = { rootSelector?: string; skipHydrated?: boolean };
+
+/**
+ * Serialized scope data structure for SSR
+ */
+export type SerializedScope = Record<string, unknown>;
+
+export type HydrateResult = ChargeResult;

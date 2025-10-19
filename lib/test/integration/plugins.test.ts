@@ -1,6 +1,6 @@
-import { mount } from "@volt/core/binder";
-import { clearPlugins, registerPlugin } from "@volt/core/plugin";
-import { signal } from "@volt/core/signal";
+import { mount } from "$core/binder";
+import { clearPlugins, registerPlugin } from "$core/plugin";
+import { signal } from "$core/signal";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 describe("plugin integration with binder", () => {

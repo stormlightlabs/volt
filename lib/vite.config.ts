@@ -8,6 +8,8 @@ const test: ViteUserConfig["test"] = {
   globals: true,
   watch: false,
   exclude: ["**/node_modules/**", "**/dist/**", "**/cli/tests/**"],
+  silent: true,
+  reporters: ["dot"],
   coverage: {
     provider: "v8",
     thresholds: { functions: 50, branches: 50 },
@@ -20,9 +22,9 @@ export default defineConfig(({ mode }) => ({
   resolve: {
     alias: {
       "$types": path.resolve(__dirname, "./src/types"),
-      "@volt": path.resolve(__dirname, "./src/index.ts"),
-      "@volt/core": path.resolve(__dirname, "./src/core"),
-      "@volt/plugins": path.resolve(__dirname, "./src/plugins"),
+      "$volt": path.resolve(__dirname, "./src/index.ts"),
+      "$core": path.resolve(__dirname, "./src/core"),
+      "$plugins": path.resolve(__dirname, "./src/plugins"),
     },
   },
   build: mode === "lib"

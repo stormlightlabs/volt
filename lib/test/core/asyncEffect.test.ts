@@ -1,5 +1,5 @@
-import { asyncEffect } from "@volt/core/asyncEffect";
-import { signal } from "@volt/core/signal";
+import { asyncEffect } from "$core/asyncEffect";
+import { signal } from "$core/signal";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 describe("asyncEffect", () => {

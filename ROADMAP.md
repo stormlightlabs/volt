@@ -7,7 +7,7 @@
 | Version | State | Milestone                                                  | Summary                                                                  |
 | ------- | ----- | ---------------------------------------------------------- | ------------------------------------------------------------------------ |
 |         |   ✓   | [Foundations](#foundations)                                | Initial project setup, tooling, and reactive signal prototype.           |
-|         |   ✓   | [Reactivity & Bindings](#reactivity--bindings)             | Core DOM bindings (`dava-volt-*`) and declarative updates.                  |
+|         |   ✓   | [Reactivity & Bindings](#reactivity--bindings)             | Core DOM bindings (`data-volt-*`) and declarative updates.                  |
 |         |   ✓   | [Actions & Effects](#actions--effects)                     | Event system and derived reactivity primitives.                          |
 |         |   ✓   | [Plugins Framework](#plugins-framework)                    | Modular plugin system and first built-in plugin set.                     |
 |         |       | [Streaming & Patch Engine](#streaming--patch-engine)       | SSE/WebSocket JSON patch streaming.                                      |
@@ -48,7 +48,7 @@ _NOTE_: `data-x-*` is now `data-volt-*`
 **Goal:** Add event-driven behavior and derived reactivity.
 **Outcome:** Fully functional reactive UI layer with event bindings and computed updates.
 **Deliverables:**
-    - ✓ Event binding system (`dava-volt-on-*`)
+    - ✓ Event binding system (`data-volt-on-*`)
     - ✓ `$el` and `$event` scoped references
     - ✓ Derived signals (`computed`, `effect`)
     - ✓ Async effects (e.g., fetch triggers)
@@ -61,10 +61,23 @@ _NOTE_: `data-x-*` is now `data-volt-*`
     - ✓ `registerPlugin(name, fn)` API
     - ✓ Context and lifecycle hooks
     - ✓ Built-ins:
-        - ✓ `dava-volt-persist`
-        - ✓ `dava-volt-scroll`
-        - ✓ `dava-volt-url`
+        - ✓ `data-volt-persist`
+        - ✓ `data-volt-scroll`
+        - ✓ `data-volt-url`
     - ✓ Registry
+
+### Backend Integration & HTTP Actions
+
+**Goal:** Provide backend integration with declarative HTTP requests and responses.
+**Outcome:** Volt.js can make backend requests and update the DOM
+**Deliverables:**
+    - ✓ HTTP action system (`data-volt-get`, `data-volt-post`, `data-volt-put`, `data-volt-patch`, `data-volt-delete`)
+    - ✓ Request configuration (`data-volt-trigger`, `data-volt-target`, `data-volt-swap`)
+    - ✓ Swap strategies (innerHTML, outerHTML, beforebegin, afterbegin, beforeend, afterend, delete, none)
+    - ✓ Loading states and indicators (`data-volt-indicator`)
+    - ✓ Error handling and retry logic
+    - ✓ Form serialization and submission
+    - ✓ Request/response headers customization
 
 ## To-Do
 
@@ -78,22 +91,8 @@ _NOTE_: `data-x-*` is now `data-volt-*`
     - ✓ Binding directives for text, attributes, classes, styles, and two-way form controls (`data-volt-[bind|text|model|class:*]`).
     - ✓ Control-flow directives (`data-volt-for`, `data-volt-if`, `data-volt-else`) with lifecycle-safe teardown.
     - ✓ Declarative event system (`data-volt-on:*`) with helper surface for list mutations and plugin hooks.
+    - ✓ SSR compatibility helpers
     - Sandboxed expression evaluator
-    - SSR compatibility helpers
-
-### Backend Integration & HTTP Actions
-
-**Goal:** Provide backend integration with declarative HTTP requests and responses.
-**Outcome:** Volt.js can make backend requests and update the DOM
-**Deliverables:**
-    - HTTP action system (`data-volt-get`, `data-volt-post`, `data-volt-put`, `data-volt-patch`, `data-volt-delete`)
-    - Request configuration (`data-volt-trigger`, `data-volt-target`, `data-volt-swap`)
-    - Swap strategies (innerHTML, outerHTML, beforebegin, afterbegin, beforeend, afterend, delete, none)
-    - Loading states and indicators (`data-volt-indicator`)
-    - Error handling and retry logic
-    - See [svelte](https://svelte.dev/docs/svelte/await-expressions) for inspiration for loading & errors (`#await`)
-    - Form serialization and submission
-    - Request/response headers customization
 
 ### Streaming & Patch Engine
 
@@ -131,11 +130,11 @@ _NOTE_: `data-x-*` is now `data-volt-*`
 **Goal:** Extend Volt.js with expressive attribute patterns and event options for fine-grained control.
 **Outcome:** Volt.js supports rich declarative behaviors and event semantics built entirely on standard DOM APIs.
 **Deliverables:**
-    - `data-x-show` — toggles element visibility via CSS rather than DOM removal (complements `data-x-if`)
-    - `data-x-style` — binds inline styles to reactive expressions
-    - `data-x-skip` — marks elements or subtrees to exclude from Volt’s reactive parsing
-    - `data-x-cloak` — hides content until the Volt runtime initializes
-    - Event options for `data-x-on-*` attributes:
+    - `data-volt-show` — toggles element visibility via CSS rather than DOM removal (complements `data-volt-if`)
+    - `data-volt-style` — binds inline styles to reactive expressions
+    - `data-volt-skip` — marks elements or subtrees to exclude from Volt’s reactive parsing
+    - `data-volt-cloak` — hides content until the Volt runtime initializes
+    - Event options for `data-volt-on-*` attributes:
         - `.prevent` — calls `preventDefault()` on the event
         - `.stop` — stops propagation
         - `.self` — triggers only when the event target is the bound element
@@ -145,7 +144,7 @@ _NOTE_: `data-x-*` is now `data-volt-*`
         - `.debounce` — defers handler execution (optional milliseconds)
         - `.throttle` — limits handler frequency (optional milliseconds)
         - `.passive` — adds a passive event listener for scroll/touch performance
-    - Input options for `data-x-bind` and `data-x-model`:
+    - Input options for `data-volt-bind` and `data-volt-model`:
         - `.number` — coerces values to numbers
         - `.trim` — removes surrounding whitespace
         - `.lazy` — syncs only on `change` instead of `input`
@@ -156,18 +155,18 @@ _NOTE_: `data-x-*` is now `data-volt-*`
 **Goal:** Implement store/context pattern
 **Outcome:** Volt.js provides intuitive global state management
 **Deliverables:**
-    - `$refs` - Scoped element references via dava-volt-ref="name". Provides an object mapping ref names to DOM nodes.
-        - Example: `dava-volt-on-click="$refs.username.focus()"`
+    - `$refs` - Scoped element references via data-volt-ref="name". Provides an object mapping ref names to DOM nodes.
+        - Example: `data-volt-on-click="$refs.username.focus()"`
     - `$next()` - Defers execution to the next microtask tick after DOM updates.
-        - Example: `dava-volt-on-click="$count++; $next(() => console.log('updated'))"`
+        - Example: `data-volt-on-click="$count++; $next(() => console.log('updated'))"`
     - `$watch(expr, fn)` - Imperatively observes a reactive signal or expression within the current scope.
-        - Example: `dava-volt-init="$watch('count', v => console.log(v))"`
+        - Example: `data-volt-init="$watch('count', v => console.log(v))"`
     - `$emit(event, detail?)` - Dispatches a native CustomEvent from the current element.
-        - Example: `dava-volt-on-click="$emit('user:save', { id })"`
+        - Example: `data-volt-on-click="$emit('user:save', { id })"`
     - `$store` - Accesses global reactive state registered with Volt’s global store.
-        - Example: `dava-volt-text="$store.theme"`
+        - Example: `data-volt-text="$store.theme"`
     - `$uid(name?)` - Generates a unique, deterministic ID string within the current scope.
-        - Example: `dava-volt-id="$uid('field')"`
+        - Example: `data-volt-id="$uid('field')"`
     - `$root` - Reference to the root element of the active reactive scope.
     - `$scope` - Reference to the current reactive scope object (signals + context).
 
@@ -189,9 +188,9 @@ _NOTE_: `data-x-*` is now `data-volt-*`
 **Goal:** Enable declarative background data fetching and periodic updates within the Volt.js runtime.
 **Outcome:** Volt.js elements can fetch or refresh data automatically based on time, visibility, or reactive conditions.
 **Deliverables:**
-    - `dava-volt-fetch` attribute for declarative background requests
+    - `data-volt-fetch` attribute for declarative background requests
     - Configurable polling intervals, delays, and signal-based triggers
-    - `dava-volt-visible` for fetching when an element enters the viewport (`IntersectionObserver`)
+    - `data-volt-visible` for fetching when an element enters the viewport (`IntersectionObserver`)
     - Background task scheduler with priority management
     - Automatic cancellation of requests when elements are unmounted
     - Conditional execution tied to reactive signals
@@ -202,14 +201,14 @@ _NOTE_: `data-x-*` is now `data-volt-*`
 **Goal:** Introduce seamless client-side navigation and stateful history control using web standards.
 **Outcome:** Volt.js provides enhanced navigation behavior with minimal overhead and full accessibility support.
 **Deliverables:**
-    - `dava-volt-navigate` for intercepting link and form actions
+    - `data-volt-navigate` for intercepting link and form actions
     - Integration with the History API (`pushState`, `replaceState`, `popState`)
     - Reactive synchronization of route and signal state
     - Smooth page and fragment transitions coordinated with Volt’s signal system
     - Native back/forward button support
     - Scroll position persistence and restoration
     - Optional preloading of linked resources on hover or idle
-    - `dava-volt-url` for declarative history updates
+    - `data-volt-url` for declarative history updates
     - Optional View Transition API integration for animated route changes
 
 ### Inspector & Developer Tools

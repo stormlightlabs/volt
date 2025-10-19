@@ -3,6 +3,7 @@
  * Supports one-way read, bidirectional sync, and hash-based routing
  */
 
+import type { Optional } from "$types/helpers";
 import type { PluginContext, Signal } from "$types/volt";
 
 /**
@@ -80,7 +81,7 @@ function handleUrlSync(context: PluginContext, signalPath: string): void {
   }
 
   let isUpdatingFromUrl = false;
-  let updateTimeout: number | undefined;
+  let updateTimeout: Optional<number>;
 
   const updateUrl = (value: unknown) => {
     if (isUpdatingFromUrl) return;

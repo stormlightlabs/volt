@@ -2,6 +2,7 @@
  * Plugin system for extending Volt.js with custom bindings
  */
 
+import type { Optional } from "$types/helpers";
 import type { PluginHandler } from "$types/volt";
 
 const pluginRegistry = new Map<string, PluginHandler>();
@@ -40,7 +41,7 @@ export function registerPlugin(name: string, handler: PluginHandler): void {
  * @param name - Plugin name
  * @returns Plugin handler function or undefined
  */
-export function getPlugin(name: string): PluginHandler | undefined {
+export function getPlugin(name: string): Optional<PluginHandler> {
   return pluginRegistry.get(name);
 }
 

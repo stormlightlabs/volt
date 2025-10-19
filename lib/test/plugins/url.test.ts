@@ -1,7 +1,7 @@
-import { mount } from "@volt/core/binder";
-import { registerPlugin } from "@volt/core/plugin";
-import { signal } from "@volt/core/signal";
-import { urlPlugin } from "@volt/plugins/url";
+import { mount } from "$core/binder";
+import { registerPlugin } from "$core/plugin";
+import { signal } from "$core/signal";
+import { urlPlugin } from "$plugins/url";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 describe("url plugin", () => {

@@ -4,6 +4,7 @@
  * Supports localStorage, sessionStorage, IndexedDB, and custom adapters
  */
 
+import type { Optional } from "$types/helpers";
 import type { PluginContext, Signal, StorageAdapter } from "$types/volt";
 
 /**
@@ -108,7 +109,7 @@ const idbAdapter = {
 /**
  * Open or create the IndexedDB database
  */
-let dbPromise: Promise<IDBDatabase> | undefined;
+let dbPromise: Optional<Promise<IDBDatabase>>;
 function openDB(): Promise<IDBDatabase> {
   if (dbPromise) return dbPromise;
 
@@ -137,7 +138,7 @@ function openDB(): Promise<IDBDatabase> {
 /**
  * Get storage adapter by name
  */
-function getStorageAdapter(type: string): StorageAdapter | undefined {
+function getStorageAdapter(type: string): Optional<StorageAdapter> {
   switch (type) {
     case "local": {
       return localStorageAdapter;

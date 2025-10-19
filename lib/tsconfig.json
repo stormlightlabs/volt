@@ -20,11 +20,10 @@
     "baseUrl": ".",
     "paths": {
       "$types/*": ["./src/types/*"],
-      "@volt/core": ["./src/core/index.ts"],
-      "@volt/core/*": ["./src/core/*"],
-      "@volt/plugins": ["./src/plugins/index.ts"],
-      "@volt/plugins/*": ["./src/plugins/*"],
-      "@volt": ["./src/index.ts"]
+      "$core/*": ["./src/core/*"],
+      "$plugins": ["./src/plugins/index.ts"],
+      "$plugins/*": ["./src/plugins/*"],
+      "$volt": ["./src/index.ts"]
     }
   },
   "include": ["src", "test"]

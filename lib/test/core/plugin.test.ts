@@ -1,4 +1,4 @@
-import { clearPlugins, getRegisteredPlugins, hasPlugin, registerPlugin, unregisterPlugin } from "@volt/core/plugin";
+import { clearPlugins, getRegisteredPlugins, hasPlugin, registerPlugin, unregisterPlugin } from "$core/plugin";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 describe("plugin system", () => {

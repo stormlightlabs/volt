@@ -1,4 +1,4 @@
-import { computed, effect, signal } from "@volt/core/signal";
+import { computed, effect, signal } from "$core/signal";
 import { describe, expect, it, vi } from "vitest";
 
 describe("signal", () => {

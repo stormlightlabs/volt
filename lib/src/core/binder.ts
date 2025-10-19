@@ -2,9 +2,11 @@
  * Binder system for mounting and managing Volt.js bindings
  */
 
+import type { Optional } from "$types/helpers";
 import type { BindingContext, CleanupFunction, PluginContext, Scope, Signal } from "$types/volt";
 import { getVoltAttributes, parseClassBinding, setHTML, setText, toggleClass, walkDOM } from "./dom";
 import { evaluate, extractDependencies, isSignal } from "./evaluator";
+import { bindDelete, bindGet, bindPatch, bindPost, bindPut } from "./http";
 import { executeGlobalHooks, notifyBindingCreated, notifyElementMounted, notifyElementUnmounted } from "./lifecycle";
 import { getPlugin } from "./plugin";
 
@@ -108,6 +110,26 @@ function bindAttribute(context: BindingContext, name: string, value: string): vo
     }
     case "for": {
       bindFor(context, value);
+      break;
+    }
+    case "get": {
+      bindGet(context, value);
+      break;
+    }
+    case "post": {
+      bindPost(context, value);
+      break;
+    }
+    case "put": {
+      bindPut(context, value);
+      break;
+    }
+    case "patch": {
+      bindPatch(context, value);
+      break;
+    }
+    case "delete": {
+      bindDelete(context, value);
       break;
     }
     default: {
@@ -384,7 +406,7 @@ function bindAttr(context: BindingContext, attrName: string, expression: string)
 /**
  * Find a signal in the scope by resolving a simple property path.
  */
-function findSignalInScope(scope: Scope, path: string): Signal<unknown> | undefined {
+function findSignalInScope(scope: Scope, path: string): Optional<Signal<unknown>> {
   const trimmed = path.trim();
   const parts = trimmed.split(".");
   let current: unknown = scope;
@@ -491,11 +513,11 @@ function bindFor(context: BindingContext, expression: string): void {
  * Supports data-volt-else on the next sibling element.
  * Subscribes to condition signal and shows/hides elements when condition changes.
  *
- * @param context - Binding context
- * @param expression - Expression to evaluate as condition
+ * @param ctx - Binding context
+ * @param expr - Expression to evaluate as condition
  */
-function bindIf(context: BindingContext, expression: string): void {
-  const ifTemplate = context.element as HTMLElement;
+function bindIf(ctx: BindingContext, expr: string): void {
+  const ifTemplate = ctx.element as HTMLElement;
   const parent = ifTemplate.parentElement;
 
   if (!parent) {
@@ -503,7 +525,7 @@ function bindIf(context: BindingContext, expression: string): void {
     return;
   }
 
-  let elseTemplate: HTMLElement | undefined;
+  let elseTemplate: Optional<HTMLElement>;
   let nextSibling = ifTemplate.nextElementSibling;
 
   while (nextSibling && nextSibling.nodeType !== 1) {
@@ -515,16 +537,16 @@ function bindIf(context: BindingContext, expression: string): void {
     elseTemplate.remove();
   }
 
-  const placeholder = document.createComment(`if: ${expression}`);
+  const placeholder = document.createComment(`if: ${expr}`);
   ifTemplate.before(placeholder);
   ifTemplate.remove();
 
-  let currentElement: Element | undefined;
-  let currentCleanup: CleanupFunction | undefined;
-  let currentBranch: "if" | "else" | undefined;
+  let currentElement: Optional<Element>;
+  let currentCleanup: Optional<CleanupFunction>;
+  let currentBranch: Optional<"if" | "else">;
 
   const render = () => {
-    const condition = evaluate(expression, context.scope);
+    const condition = evaluate(expr, ctx.scope);
     const shouldShow = Boolean(condition);
 
     const targetBranch = shouldShow ? "if" : (elseTemplate ? "else" : undefined);
@@ -545,13 +567,13 @@ function bindIf(context: BindingContext, expression: string): void {
     if (targetBranch === "if") {
       currentElement = ifTemplate.cloneNode(true) as Element;
       delete (currentElement as HTMLElement).dataset.voltIf;
-      currentCleanup = mount(currentElement, context.scope);
+      currentCleanup = mount(currentElement, ctx.scope);
       placeholder.before(currentElement);
       currentBranch = "if";
     } else if (targetBranch === "else" && elseTemplate) {
       currentElement = elseTemplate.cloneNode(true) as Element;
       delete (currentElement as HTMLElement).dataset.voltElse;
-      currentCleanup = mount(currentElement, context.scope);
+      currentCleanup = mount(currentElement, ctx.scope);
       placeholder.before(currentElement);
       currentBranch = "else";
     } else {
@@ -561,13 +583,13 @@ function bindIf(context: BindingContext, expression: string): void {
 
   render();
 
-  const signal = findSignalInScope(context.scope, expression);
+  const signal = findSignalInScope(ctx.scope, expr);
   if (signal) {
     const unsubscribe = signal.subscribe(render);
-    context.cleanups.push(unsubscribe);
+    ctx.cleanups.push(unsubscribe);
   }
 
-  context.cleanups.push(() => {
+  ctx.cleanups.push(() => {
     if (currentCleanup) {
       currentCleanup();
     }
@@ -579,7 +601,7 @@ function bindIf(context: BindingContext, expression: string): void {
  *
  * Supports: "item in items" or "(item, index) in items"
  */
-function parseForExpression(expr: string): { itemName: string; indexName?: string; arrayPath: string } | undefined {
+function parseForExpression(expr: string): Optional<{ itemName: string; indexName?: string; arrayPath: string }> {
   const trimmed = expr.trim();
 
   const withIndex = /^\((\w+)\s*,\s*(\w+)\)\s+in\s+(.+)$/.exec(trimmed);

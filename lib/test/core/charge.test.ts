@@ -1,5 +1,5 @@
+import { charge } from "$core/charge";
 import type { Signal } from "$types/volt";
-import { charge } from "@volt/core/charge";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 describe("charge", () => {

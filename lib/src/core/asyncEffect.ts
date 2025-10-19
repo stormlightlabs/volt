@@ -2,6 +2,7 @@
  * Async effect system with abort, race protection, debounce, throttle, and error handling
  */
 
+import type { Optional, Timer } from "$types/helpers";
 import type { AsyncEffectFunction, AsyncEffectOptions, ComputedSignal, Signal } from "$types/volt";
 
 /**
@@ -52,10 +53,10 @@ export function asyncEffect(
   const { abortable = false, debounce, throttle, onError, retries = 0, retryDelay = 0 } = options;
 
   let cleanup: (() => void) | void;
-  let abortController: AbortController | undefined;
+  let abortController: Optional<AbortController>;
   let executionId = 0;
-  let debounceTimer: ReturnType<typeof setTimeout> | undefined;
-  let throttleTimer: ReturnType<typeof setTimeout> | undefined;
+  let debounceTimer: Optional<Timer>;
+  let throttleTimer: Optional<Timer>;
   let lastExecutionTime = 0;
   let pendingExecution = false;
   let retryCount = 0;

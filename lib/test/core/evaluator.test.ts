@@ -1,5 +1,5 @@
-import { evaluate } from "@volt/core/evaluator";
-import { signal } from "@volt/core/signal";
+import { evaluate } from "$core/evaluator";
+import { signal } from "$core/signal";
 import { describe, expect, it } from "vitest";
 
 describe("evaluator", () => {
