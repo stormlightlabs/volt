@@ -29,5 +29,5 @@
       "$volt": ["./src/index.ts"]
     }
   },
-  "include": ["src", "test", "eslint.config.js", "vite.config.ts"]
+  "include": ["src", "test", "eslint.config.js", "vite.config.ts", "postcss.config.js"]
 }

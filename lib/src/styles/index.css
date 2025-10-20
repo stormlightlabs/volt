@@ -1,0 +1,34 @@
+/*
+  8b           d8            88
+  `8b         d8'            88    ,d
+   `8b       d8'             88    88
+    `8b     d8'  ,adPPYba,   88  MM88MMM        ,adPPYba,  ,adPPYba,  ,adPPYba,
+     `8b   d8'  a8"     "8a  88    88          a8"     ""  I8[    ""  I8[    ""
+      `8b d8'   8b       d8  88    88          8b           `"Y8ba,    `"Y8ba,
+       `888'    "8a,   ,a8"  88    88,    888  "8a,   ,aa  aa    ]8I  aa    ]8I
+        `8'      `"YbbdP"'   88    "Y888  888   `"Ybbd8"'  `"YbbdP"'  `"YbbdP"'
+*/
+
+/**
+ * Volt CSS - Classless stylesheet for elegant, readable web documents
+ *
+ * Design Philosophy:
+ * - Classless: Style semantic HTML5 elements directly
+ * - Dual theme: Automatic light/dark mode via prefers-color-scheme
+ * - Typography-first: Optimized for reading and information density
+ * - Accessible: WCAG AA contrast ratios, keyboard navigation support
+ * - Responsive: Mobile-first, adapts gracefully to all screen sizes
+ *
+ * Inspired by: magick.css, latex-css, sakura, matcha, mvp.css
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Google+Sans+Code:ital,wght@0,300..800;1,300..800&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap');
+
+/* Design system tokens */
+@import './variables.css';
+@import './base.css';
+@import './typography.css';
+@import './forms.css';
+@import './components.css';
+@import './collections.css';
+@import './media.css';

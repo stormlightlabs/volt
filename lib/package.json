@@ -5,8 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "pnpm build:lib && pnpm build:css",
     "build:lib": "tsc && vite build --mode lib",
+    "build:css": "postcss src/styles/index.css -o dist/volt.css",
+    "build:css:min": "postcss src/styles/index.css -o dist/volt.min.css --env production",
     "preview": "vite preview",
     "test": "vitest",
     "test:run": "vitest run",
@@ -16,8 +18,12 @@
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@vitest/coverage-v8": "3.2.4",
+    "cssnano": "^7.1.1",
     "dprint": "^0.50.2",
     "jsdom": "^27.0.0",
+    "postcss": "^8.5.6",
+    "postcss-cli": "^11.0.1",
+    "postcss-import": "^16.1.1",
     "vite": "npm:rolldown-vite@7.1.14"
   }
 }

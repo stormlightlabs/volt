@@ -1,0 +1,158 @@
+/* ========================================================================== */
+/* Components                                                                 */
+/* ========================================================================== */
+
+/**
+ * Dialog (Modal)
+ *
+ * Native <dialog> element provides semantic modal functionality.
+ * Structure: <dialog><article><header>...</header>content<footer>...</footer></article></dialog>
+ * Close buttons should use aria-label="Close" for targeting.
+ */
+dialog {
+  border: none;
+  padding: 0;
+  margin: auto;
+  max-width: min(90vw, 600px);
+  max-height: 90vh;
+  background-color: var(--color-bg);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+}
+
+dialog::backdrop {
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+}
+
+@media (prefers-color-scheme: dark) {
+  dialog::backdrop {
+    background-color: rgba(0, 0, 0, 0.7);
+  }
+}
+
+dialog article {
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+}
+
+dialog header {
+  position: relative;
+  border-bottom: 1px solid var(--color-border);
+  padding: var(--space-lg);
+  margin: 0;
+}
+
+dialog header h1,
+dialog header h2,
+dialog header h3,
+dialog header h4,
+dialog header h5,
+dialog header h6 {
+  margin-top: 0;
+  margin-bottom: 0;
+  padding-right: var(--space-3xl);
+}
+
+dialog header button[aria-label="Close"],
+dialog header button[aria-label="close"] {
+  position: absolute;
+  top: var(--space-lg);
+  right: var(--space-lg);
+  background: none;
+  border: none;
+  font-size: 1.75rem;
+  line-height: 1;
+  padding: var(--space-xs);
+  margin: 0;
+  width: auto;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: color var(--transition-fast), transform var(--transition-fast);
+}
+
+dialog header button[aria-label="Close"]:hover,
+dialog header button[aria-label="close"]:hover {
+  color: var(--color-text);
+  background: none;
+  transform: scale(1.1);
+}
+
+dialog article > :not(header):not(footer) {
+  padding: var(--space-lg);
+  overflow-y: auto;
+  flex: 1;
+}
+
+dialog form {
+  margin: 0;
+  max-width: none;
+}
+
+dialog footer {
+  border-top: 1px solid var(--color-border);
+  padding: var(--space-lg);
+  margin: 0;
+  display: flex;
+  gap: var(--space-md);
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+dialog footer button {
+  margin: 0;
+}
+
+@media (max-width: 768px) {
+  dialog {
+    max-width: 95vw;
+    max-height: 95vh;
+  }
+
+  dialog header,
+  dialog article > :not(header):not(footer),
+  dialog footer {
+    padding: var(--space-md);
+  }
+
+  dialog header button[aria-label="Close"],
+  dialog header button[aria-label="close"] {
+    top: var(--space-md);
+    right: var(--space-md);
+  }
+}
+
+/**
+ * Accordian
+ *
+ * implemented as details and summary
+ */
+details {
+  margin: var(--space-lg) 0;
+  padding: var(--space-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  max-width: var(--content-width);
+}
+
+summary {
+  font-weight: 700;
+  cursor: pointer;
+  user-select: none;
+  padding: var(--space-sm);
+  margin: calc(-1 * var(--space-sm));
+  transition: background-color var(--transition-fast);
+}
+
+summary:hover {
+  background-color: var(--color-bg-alt);
+}
+
+details[open] summary {
+  margin-bottom: var(--space-md);
+  border-bottom: 1px solid var(--color-border);
+}

@@ -1,0 +1,96 @@
+/**
+ * Volt CSS Variables
+ *
+ * Design system tokens for the Volt CSS framework.
+ * Light theme is default, dark theme overrides via media query.
+ */
+
+:root {
+  /* Typography Scale - Modular scale based on 1.25 ratio */
+  --font-size-base: 18px;
+  --font-size-sm: 0.889rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.266rem;
+  --font-size-2xl: 1.424rem;
+  --font-size-3xl: 1.802rem;
+  --font-size-4xl: 2.027rem;
+  --font-size-5xl: 2.566rem;
+
+  --font-sans: "Inter", sans-serif;
+  --font-serif: "Libre Baskerville", serif;
+  --font-mono: "Google Sans Code", monospace;
+
+  /* Spacing Scale - Based on 0.5rem increments */
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+  --space-2xl: 3rem;
+  --space-3xl: 4rem;
+
+  --line-height-tight: 1.25;
+  --line-height-base: 1.6;
+  --line-height-relaxed: 1.8;
+
+  --content-width: 79ch;
+  /* Width of margin notes */
+  --sidenote-width: 18rem;
+  /* Space between content and sidenotes */
+  --sidenote-gap: 2rem;
+
+  --color-bg: #fefefe;
+  /* For code blocks, tables */
+  --color-bg-alt: #f5f5f5;
+  --color-text: #1a1a1a;
+  --color-text-muted: #666666;
+  /* Links, primary actions */
+  --color-accent: #0066cc;
+  --color-accent-hover: #0052a3;
+  --color-border: #d4d4d4;
+  --color-code-bg: #f8f8f8;
+  /* Highlighted text */
+  --color-mark: #fff3cd;
+  --color-success: #22863a;
+  --color-warning: #bf8700;
+  --color-error: #cb2431;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+
+  /* Border Radius */
+  --radius-xs: 1px;
+  --radius-sm: 3px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+
+  --transition-fast: 150ms ease-in-out;
+  --transition-base: 250ms ease-in-out;
+}
+
+/**
+ * Dark Theme Overrides
+ *
+ * Automatically applied when user prefers dark color scheme
+ */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg: #1a1a1a;
+    --color-bg-alt: #2a2a2a;
+    --color-text: #e6e6e6;
+    --color-text-muted: #a0a0a0;
+    --color-accent: #4da6ff;
+    --color-accent-hover: #66b3ff;
+    --color-border: #404040;
+    --color-code-bg: #2a2a2a;
+    --color-mark: #4a4a00;
+    --color-success: #34d058;
+    --color-warning: #ffdf5d;
+    --color-error: #f97583;
+
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.5);
+  }
+}

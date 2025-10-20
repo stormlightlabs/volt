@@ -92,13 +92,19 @@ Include the stylesheet in your HTML `<head>`:
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="/src/styles/base.css">
+    <link rel="stylesheet" href="volt.css">
     <title>My Document</title>
   </head>
   <body>
     <!-- Your markup -->
   </body>
 </html>
+```
+
+Or import in JavaScript/TypeScript:
+
+```js
+import 'volt/styles';
 ```
 
 ### Example Document Structure
@@ -180,9 +186,14 @@ Forms get styling with focus states, required field indicators, and spacing betw
 
 ### CSS Custom Properties
 
-All design tokens are defined as CSS custom properties (CSS variables) in the `:root` selector. Override them to customize the appearance:
+All design tokens are defined as CSS custom properties (CSS variables) in `variables.css`.
+Override them in your own stylesheet to customize the appearance:
 
 ```css
+/* Load Volt CSS first */
+@import 'volt.css';
+
+/* Then override variables */
 :root {
   /* Change the accent color */
   --color-accent: #d63384;
@@ -199,7 +210,9 @@ All design tokens are defined as CSS custom properties (CSS variables) in the `:
 }
 ```
 
-### Properties
+See `variables.css` for the complete list of available tokens.
+
+### Available Properties
 
 **Typography**:
 

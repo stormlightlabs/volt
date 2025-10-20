@@ -1,0 +1,43 @@
+/**
+ * Images are responsive by default, maintains aspect ratio
+ */
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  border-radius: var(--radius-sm);
+}
+
+/**
+ * Figures with captions
+ * Common in academic and technical writing
+ */
+figure {
+  margin: var(--space-xl) 0;
+  max-width: var(--content-width);
+}
+
+figcaption {
+  margin-top: var(--space-sm);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  font-style: italic;
+  text-align: center;
+}
+
+video, audio {
+  max-width: 100%;
+  margin: var(--space-xl) 0;
+}
+
+canvas, svg {
+  max-width: 100%;
+  height: auto;
+}
+
+iframe {
+  max-width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  margin: var(--space-xl) 0;
+}

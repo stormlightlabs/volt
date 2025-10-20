@@ -32,33 +32,54 @@
 
 ```sh
 volt/
-├── package.json
-├── tsconfig.json
-├── vite.config.ts
-├── README.md
-├── src/
-│   ├── index.ts          # entry point
-│   ├── core/
-│   │   ├── signal.ts     # reactive primitives
-│   │   ├── dom.ts        # DOM helpers
-│   │   ├── patch.ts      # JSON patch engine
-│   │   ├── stream.ts     # SSE / WebSocket layer
-│   │   ├── plugin.ts     # plugin registration API
-│   │   └── binder.ts     # mounts and binds data-volt-* attributes
-│   └── plugins/
-│       ├── persist.ts
-│       ├── scroll.ts
-│       ├── animate.ts
-│       └── url.ts
-└── test/
-    ├── setupTests.ts
-    ├── core/
-    │   ├── signal.test.ts
-    │   ├── dom.test.ts
-    │   └── patch.test.ts
-    └── integration/
-        ├── mount.test.ts
-        └── plugin.persist.test.ts
+├── dev/
+├── docs/
+├── examples/
+├── lib
+│   ├── index.html
+│   ├── public
+│   ├── src
+│   │   ├── core
+│   │   │   ├── asyncEffect.ts
+│   │   │   ├── binder.ts
+│   │   │   ├── charge.ts
+│   │   │   ├── dom.ts
+│   │   │   ├── evaluator.ts
+│   │   │   ├── http.ts
+│   │   │   ├── lifecycle.ts
+│   │   │   ├── plugin.ts
+│   │   │   ├── reactive.ts
+│   │   │   ├── shared.ts
+│   │   │   ├── signal.ts
+│   │   │   ├── ssr.ts
+│   │   │   └── tracker.ts
+│   │   ├── debug
+│   │   │   ├── graph.ts
+│   │   │   ├── logger.ts
+│   │   │   └── registry.ts
+│   │   ├── debug.ts
+│   │   ├── demo/
+│   │   ├── index.ts
+│   │   ├── main.ts
+│   │   ├── plugins
+│   │   │   ├── persist.ts
+│   │   │   ├── scroll.ts
+│   │   │   └── url.ts
+│   │   ├── styles
+│   │   │   ├── index.css
+│   │   │   ├── variables.css
+│   │   │   ├── typography.css
+│   │   │   ├── forms.css
+│   │   │   ├── components.css
+│   │   │   ├── collections.css
+│   │   │   ├── media.css
+│   │   │   └── base.css
+│   │   └── types
+│   │       ├── helpers.ts
+│   │       └── volt.d.ts
+│   └──  test/
+└── README.md
+
 ```
 
 ## License
