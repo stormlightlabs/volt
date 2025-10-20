@@ -9,9 +9,11 @@ import type {
   FormControlElement,
   Modifier,
   PluginContext,
+  PluginHandler,
   Scope,
   Signal,
 } from "$types/volt";
+import { BOOLEAN_ATTRS } from "./constants";
 import { getVoltAttrs, parseClassBinding, setHTML, setText, toggleClass, walkDOM } from "./dom";
 import { evaluate, extractDeps } from "./evaluator";
 import { bindDelete, bindGet, bindPatch, bindPost, bindPut } from "./http";
@@ -96,6 +98,15 @@ export function mount(root: Element, scope: Scope): CleanupFunction {
   };
 }
 
+function execPlugin(plugin: PluginHandler, ctx: BindingContext, val: string, base: string) {
+  const pluginCtx = createPluginCtx(ctx);
+  try {
+    plugin(pluginCtx, val);
+  } catch (error) {
+    console.error(`Error in plugin "${base}":`, error);
+  }
+}
+
 /**
  * Bind a single data-volt-* attribute to an element.
  * Routes to the appropriate binding handler.
@@ -115,14 +126,29 @@ function bindAttribute(ctx: BindingContext, name: string, value: string): void {
     return;
   }
 
+  if (name.includes(":")) {
+    const colonIndex = name.indexOf(":");
+    const pluginName = name.slice(0, colonIndex);
+    const suffix = name.slice(colonIndex + 1);
+    const plugin = getPlugin(pluginName);
+
+    if (plugin) {
+      const combinedVal = `${suffix}:${value}`;
+      execPlugin(plugin, ctx, combinedVal, pluginName);
+      return;
+    }
+  }
+
   const { baseName, modifiers } = parseModifiers(name);
 
   switch (baseName) {
     case "text": {
+      const bindText = bindNode("text");
       bindText(ctx, value);
       break;
     }
     case "html": {
+      const bindHTML = bindNode("html");
       bindHTML(ctx, value);
       break;
     }
@@ -144,6 +170,10 @@ function bindAttribute(ctx: BindingContext, name: string, value: string): void {
     }
     case "for": {
       bindFor(ctx, value);
+      break;
+    }
+    // data-volt-else is a marker attribute handled by bindIf when processing data-volt-if
+    case "else": {
       break;
     }
     case "get": {
@@ -169,12 +199,7 @@ function bindAttribute(ctx: BindingContext, name: string, value: string): void {
     default: {
       const plugin = getPlugin(baseName);
       if (plugin) {
-        const pluginContext = createPluginCtx(ctx);
-        try {
-          plugin(pluginContext, value);
-        } catch (error) {
-          console.error(`Error in plugin "${baseName}":`, error);
-        }
+        execPlugin(plugin, ctx, value, baseName);
       } else {
         console.warn(`Unknown binding: data-volt-${baseName}`);
       }
@@ -183,36 +208,36 @@ function bindAttribute(ctx: BindingContext, name: string, value: string): void {
 }
 
 /**
- * Bind data-volt-text to update element's text content.
+ * Creates a reactive binding for data-volt-text or data-volt-html that updates element content.
+ * Returns a curried function that handles binding data-volt-text|html to update an element's text or html content
  * Subscribes to signals in the expression and updates on change.
  */
-function bindText(ctx: BindingContext, expr: string): void {
-  const update = () => {
-    const value = evaluate(expr, ctx.scope);
-    setText(ctx.element, value);
+function bindNode(kind: "text" | "html") {
+  return function(ctx: BindingContext, expr: string): void {
+    const update = () => {
+      const value = evaluate(expr, ctx.scope);
+      if (kind === "text") {
+        setText(ctx.element, value);
+      } else {
+        setHTML(ctx.element, String(value ?? ""));
+      }
+    };
+    update();
+
+    const deps = extractDeps(expr, ctx.scope);
+    for (const dep of deps) {
+      const unsubscribe = dep.subscribe(update);
+      ctx.cleanups.push(unsubscribe);
+    }
   };
-
-  update();
-
-  const deps = extractDeps(expr, ctx.scope);
-  for (const dep of deps) {
-    const unsubscribe = dep.subscribe(update);
-    ctx.cleanups.push(unsubscribe);
-  }
 }
 
 /**
- * Bind data-volt-html to update element's HTML content.
- * Subscribes to signals in the expression and updates on change.
+ * Helper function to execute an update function and subscribe to all signal dependencies.
+ * Used by bindings that need reactive updates (class, show, style, for, if).
  */
-function bindHTML(ctx: BindingContext, expr: string): void {
-  const update = () => {
-    const value = evaluate(expr, ctx.scope);
-    setHTML(ctx.element, String(value ?? ""));
-  };
-
+function updateAndUnsub(ctx: BindingContext, update: () => void, expr: string) {
   update();
-
   const deps = extractDeps(expr, ctx.scope);
   for (const dep of deps) {
     const unsubscribe = dep.subscribe(update);
@@ -244,13 +269,7 @@ function bindClass(ctx: BindingContext, expr: string): void {
     prevClasses = classes;
   };
 
-  update();
-
-  const deps = extractDeps(expr, ctx.scope);
-  for (const dep of deps) {
-    const unsubscribe = dep.subscribe(update);
-    ctx.cleanups.push(unsubscribe);
-  }
+  updateAndUnsub(ctx, update, expr);
 }
 
 /**
@@ -272,18 +291,14 @@ function bindShow(ctx: BindingContext, expr: string): void {
     }
   };
 
-  update();
-
-  const deps = extractDeps(expr, ctx.scope);
-  for (const dep of deps) {
-    const unsubscribe = dep.subscribe(update);
-    ctx.cleanups.push(unsubscribe);
-  }
+  updateAndUnsub(ctx, update, expr);
 }
 
 /**
  * Bind data-volt-style to reactively apply inline styles.
- * Supports object notation {color: 'red', fontSize: '16px'} or string notation 'color: red; font-size: 16px'.
+ * Supports
+ *  - object notation {color: 'red', fontSize: '16px'}
+ *  - string notation 'color: red; font-size: 16px'.
  */
 function bindStyle(ctx: BindingContext, expr: string): void {
   const element = ctx.element as HTMLElement;
@@ -310,13 +325,7 @@ function bindStyle(ctx: BindingContext, expr: string): void {
     }
   };
 
-  update();
-
-  const deps = extractDeps(expr, ctx.scope);
-  for (const dep of deps) {
-    const unsubscribe = dep.subscribe(update);
-    ctx.cleanups.push(unsubscribe);
-  }
+  updateAndUnsub(ctx, update, expr);
 }
 
 /**
@@ -467,7 +476,6 @@ function setElementValue(el: FormControlElement, value: unknown, type: string | 
     switch (type) {
       case "checkbox": {
         el.checked = Boolean(value);
-
         break;
       }
       case "radio": {
@@ -535,19 +543,7 @@ function bindAttr(ctx: BindingContext, attrName: string, expr: string, modifiers
       }
     }
 
-    const booleanAttrs = new Set([
-      "disabled",
-      "checked",
-      "selected",
-      "readonly",
-      "required",
-      "multiple",
-      "autofocus",
-      "autoplay",
-      "controls",
-      "loop",
-      "muted",
-    ]);
+    const booleanAttrs = new Set(BOOLEAN_ATTRS);
 
     if (booleanAttrs.has(attrName)) {
       if (value) {
@@ -633,13 +629,7 @@ function bindFor(ctx: BindingContext, expr: string): void {
     }
   };
 
-  render();
-
-  const deps = extractDeps(arrayPath, ctx.scope);
-  for (const dep of deps) {
-    const unsubscribe = dep.subscribe(render);
-    ctx.cleanups.push(unsubscribe);
-  }
+  updateAndUnsub(ctx, render, expr);
 
   ctx.cleanups.push(() => {
     for (const cleanup of renderedCleanups) {
@@ -717,13 +707,7 @@ function bindIf(ctx: BindingContext, expr: string): void {
     }
   };
 
-  render();
-
-  const deps = extractDeps(expr, ctx.scope);
-  for (const dep of deps) {
-    const unsubscribe = dep.subscribe(render);
-    ctx.cleanups.push(unsubscribe);
-  }
+  updateAndUnsub(ctx, render, expr);
 
   ctx.cleanups.push(() => {
     if (currentCleanup) {

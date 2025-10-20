@@ -4,7 +4,7 @@
  * @packageDocumentation
  */
 
-export { asyncEffect } from "$core/asyncEffect";
+export { asyncEffect } from "$core/async-effect";
 export { mount } from "$core/binder";
 export { charge } from "$core/charge";
 export { parseHttpConfig, request, serializeForm, serializeFormToJSON, swap } from "$core/http";

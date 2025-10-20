@@ -15,6 +15,8 @@ const lifecycleHooks = new Map<GlobalHookName, Set<MountHookCallback | UnmountHo
   ["afterUnmount", new Set()],
 ]);
 
+const elementLifecycleStates = new WeakMap<Element, ElementLifecycleState>();
+
 /**
  * Register a global lifecycle hook.
  * Global hooks run for every mount/unmount operation in the application.
@@ -126,8 +128,6 @@ export function execGlobalHooks(hookName: GlobalHookName, root: Element, scope?:
     }
   }
 }
-
-const elementLifecycleStates = new WeakMap<Element, ElementLifecycleState>();
 
 /**
  * Get or create lifecycle state for an element.

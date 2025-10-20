@@ -6,37 +6,11 @@
  */
 
 import type { Dep, Scope } from "$types/volt";
+import { DANGEROUS_GLOBALS, DANGEROUS_PROPERTIES, SAFE_GLOBALS } from "./constants";
 import { findScopedSignal, isNil, isSignal } from "./shared";
 
-const DANGEROUS_PROPERTIES = new Set(["__proto__", "prototype", "constructor"]);
-
-const SAFE_GLOBALS = new Set([
-  "Array",
-  "Object",
-  "String",
-  "Number",
-  "Boolean",
-  "Date",
-  "Math",
-  "JSON",
-  "RegExp",
-  "Map",
-  "Set",
-  "Promise",
-]);
-
-const DANGEROUS_GLOBALS = new Set([
-  "Function",
-  "eval",
-  "globalThis",
-  "window",
-  "global",
-  "process",
-  "require",
-  "import",
-  "module",
-  "exports",
-]);
+const dangerousProps = new Set(DANGEROUS_PROPERTIES);
+const safeGlobals = new Set(SAFE_GLOBALS);
 
 function isSafeProp(key: unknown): boolean {
   if (typeof key !== "string" && typeof key !== "number") {
@@ -44,7 +18,7 @@ function isSafeProp(key: unknown): boolean {
   }
 
   const keyStr = String(key);
-  return !DANGEROUS_PROPERTIES.has(keyStr);
+  return !dangerousProps.has(keyStr);
 }
 
 function isSafeAccess(object: unknown, key: unknown): boolean {
@@ -54,7 +28,7 @@ function isSafeAccess(object: unknown, key: unknown): boolean {
 
   if (typeof object === "function") {
     const keyStr = String(key);
-    if (keyStr === "constructor" && object.name && !SAFE_GLOBALS.has(object.name)) {
+    if (keyStr === "constructor" && object.name && !safeGlobals.has(object.name)) {
       return false;
     }
   }
@@ -334,6 +308,7 @@ class Parser {
   private tokens: Token[];
   private current = 0;
   private scope: Scope;
+  private dangerousGlobals = new Set(DANGEROUS_GLOBALS);
 
   constructor(tokens: Token[], scope: Scope) {
     this.tokens = tokens;
@@ -824,15 +799,19 @@ class Parser {
       throw new Error(`Unsafe property access: ${path}`);
     }
 
-    if (DANGEROUS_GLOBALS.has(path)) {
+    if (this.dangerousGlobals.has(path)) {
       throw new Error(`Access to dangerous global: ${path}`);
     }
 
-    if (!(path in this.scope)) {
-      return undefined;
+    if (path in this.scope) {
+      return this.scope[path];
     }
 
-    return this.scope[path];
+    if (safeGlobals.has(path)) {
+      return (globalThis as Record<string, unknown>)[path];
+    }
+
+    return undefined;
   }
 
   private match(...types: TokenType[]): boolean {

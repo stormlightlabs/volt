@@ -1,4 +1,4 @@
-import { asyncEffect } from "$core/asyncEffect";
+import { asyncEffect } from "$core/async-effect";
 import { signal } from "$core/signal";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -208,7 +208,7 @@ describe("asyncEffect", () => {
 
       await vi.runAllTimersAsync();
 
-      expect(results[results.length - 1]).toBe(1);
+      expect(results.at(-1)).toBe(1);
     });
 
     it("tracks execution order with race conditions", async () => {
