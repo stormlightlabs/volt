@@ -325,3 +325,20 @@ export type DepGraph = { nodes: GraphNode[]; edges: Array<{ from: string; to: st
 export type SignalType = "signal" | "computed" | "reactive";
 
 export type SignalMetadata = { id: string; type: SignalType; name?: string; createdAt: number; stackTrace?: string };
+
+export type FormControlElement = HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
+
+/**
+ * Throttle/Debounced function
+ */
+export type TimedFunction<A extends unknown[]> = ((...args: A) => void) & { cancel: () => void };
+
+/**
+ * Represents a parsed modifier with optional numeric value
+ */
+export type Modifier = { name: string; value?: number };
+
+/**
+ * Result of parsing an attribute name with modifiers
+ */
+export type ParsedAttribute = { baseName: string; modifiers: Modifier[] };

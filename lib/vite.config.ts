@@ -1,8 +1,7 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { defineConfig } from "vite";
+import { type BuildEnvironmentOptions, defineConfig } from "vite";
 import { type ViteUserConfig } from "vitest/config";
-
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const test: ViteUserConfig["test"] = {
@@ -21,6 +20,20 @@ const test: ViteUserConfig["test"] = {
   },
 };
 
+const buildOptions = (mode: string): BuildEnvironmentOptions => ({
+  minify: mode === "lib" ? "oxc" : true,
+  ...(mode === "lib"
+    ? {
+      lib: {
+        entry: { voltx: path.resolve(__dirname, "src/index.ts"), debug: path.resolve(__dirname, "src/debug.ts") },
+        name: "VoltX",
+        formats: ["es"],
+      },
+      rolldownOptions: { output: { assetFileNames: "voltx.[ext]", minify: true } },
+    }
+    : {}),
+});
+
 export default defineConfig(({ mode }) => ({
   resolve: {
     alias: {
@@ -32,18 +45,7 @@ export default defineConfig(({ mode }) => ({
       "$vebug": path.resolve(__dirname, "./src/debug.ts"),
     },
   },
-  build: mode === "lib"
-    ? {
-      lib: {
-        entry: {
-          volt: path.resolve(__dirname, "src/index.ts"),
-          debug: path.resolve(__dirname, "src/debug.ts"),
-        },
-        name: "Volt",
-        formats: ["es"],
-      },
-      rolldownOptions: { output: { assetFileNames: "volt.[ext]" } },
-    }
-    : undefined,
+  build: buildOptions(mode),
   test,
+  plugins: [],
 }));

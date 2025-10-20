@@ -3,11 +3,20 @@
  */
 
 import type { Optional } from "$types/helpers";
-import type { BindingContext, CleanupFunction, PluginContext, Scope, Signal } from "$types/volt";
+import type {
+  BindingContext,
+  CleanupFunction,
+  FormControlElement,
+  Modifier,
+  PluginContext,
+  Scope,
+  Signal,
+} from "$types/volt";
 import { getVoltAttrs, parseClassBinding, setHTML, setText, toggleClass, walkDOM } from "./dom";
 import { evaluate, extractDeps } from "./evaluator";
 import { bindDelete, bindGet, bindPatch, bindPost, bindPut } from "./http";
 import { execGlobalHooks, notifyBindingCreated, notifyElementMounted, notifyElementUnmounted } from "./lifecycle";
+import { debounce, getModifierValue, hasModifier, parseModifiers, throttle } from "./modifiers";
 import { getPlugin } from "./plugin";
 import { findScopedSignal, isNil } from "./shared";
 
@@ -93,18 +102,22 @@ export function mount(root: Element, scope: Scope): CleanupFunction {
  */
 function bindAttribute(ctx: BindingContext, name: string, value: string): void {
   if (name.startsWith("on-")) {
-    const eventName = name.slice(3);
-    bindEvent(ctx, eventName, value);
+    const eventSpec = name.slice(3);
+    const { baseName: eventName, modifiers } = parseModifiers(eventSpec);
+    bindEvent(ctx, eventName, value, modifiers);
     return;
   }
 
-  if (name.startsWith("bind:")) {
-    const attrName = name.slice(5);
-    bindAttr(ctx, attrName, value);
+  if (name.startsWith("bind:") || name.startsWith("bind-")) {
+    const attrSpec = name.slice(5);
+    const { baseName: attrName, modifiers } = parseModifiers(attrSpec);
+    bindAttr(ctx, attrName, value, modifiers);
     return;
   }
 
-  switch (name) {
+  const { baseName, modifiers } = parseModifiers(name);
+
+  switch (baseName) {
     case "text": {
       bindText(ctx, value);
       break;
@@ -126,7 +139,7 @@ function bindAttribute(ctx: BindingContext, name: string, value: string): void {
       break;
     }
     case "model": {
-      bindModel(ctx, value);
+      bindModel(ctx, value, modifiers);
       break;
     }
     case "for": {
@@ -154,16 +167,16 @@ function bindAttribute(ctx: BindingContext, name: string, value: string): void {
       break;
     }
     default: {
-      const plugin = getPlugin(name);
+      const plugin = getPlugin(baseName);
       if (plugin) {
         const pluginContext = createPluginCtx(ctx);
         try {
           plugin(pluginContext, value);
         } catch (error) {
-          console.error(`Error in plugin "${name}":`, error);
+          console.error(`Error in plugin "${baseName}":`, error);
         }
       } else {
-        console.warn(`Unknown binding: data-volt-${name}`);
+        console.warn(`Unknown binding: data-volt-${baseName}`);
       }
     }
   }
@@ -200,9 +213,9 @@ function bindHTML(ctx: BindingContext, expr: string): void {
 
   update();
 
-  const dependencies = extractDeps(expr, ctx.scope);
-  for (const dependency of dependencies) {
-    const unsubscribe = dependency.subscribe(update);
+  const deps = extractDeps(expr, ctx.scope);
+  for (const dep of deps) {
+    const unsubscribe = dep.subscribe(update);
     ctx.cleanups.push(unsubscribe);
   }
 }
@@ -307,11 +320,22 @@ function bindStyle(ctx: BindingContext, expr: string): void {
 }
 
 /**
- * Bind data-volt-on-* to attach event listeners.
+ * Bind data-volt-on-* to attach event listeners with support for modifiers.
  * Provides $el and $event in the scope for the event handler.
+ *
+ * Supported modifiers:
+ * - .prevent - calls preventDefault()
+ * - .stop - calls stopPropagation()
+ * - .self - only trigger if event.target === element
+ * - .window - attach listener to window
+ * - .document - attach listener to document
+ * - .once - run handler only once
+ * - .debounce[.ms] - debounce handler (default 300ms)
+ * - .throttle[.ms] - throttle handler (default 300ms)
+ * - .passive - add passive event listener
  */
-function bindEvent(ctx: BindingContext, eventName: string, expr: string): void {
-  const handler = (event: Event) => {
+function bindEvent(ctx: BindingContext, eventName: string, expr: string, modifiers: Modifier[] = []): void {
+  const executeHandler = (event: Event) => {
     const eventScope: Scope = { ...ctx.scope, $el: ctx.element, $event: event };
 
     try {
@@ -324,25 +348,73 @@ function bindEvent(ctx: BindingContext, eventName: string, expr: string): void {
     }
   };
 
-  ctx.element.addEventListener(eventName, handler);
+  let wrappedExecute = executeHandler;
+
+  if (hasModifier(modifiers, "debounce")) {
+    const wait = getModifierValue(modifiers, "debounce", 300);
+    const debouncedExecute = debounce(executeHandler, wait);
+    wrappedExecute = debouncedExecute as typeof executeHandler;
+    ctx.cleanups.push(() => debouncedExecute.cancel());
+  } else if (hasModifier(modifiers, "throttle")) {
+    const wait = getModifierValue(modifiers, "throttle", 300);
+    const throttledExecute = throttle(executeHandler, wait);
+    wrappedExecute = throttledExecute as typeof executeHandler;
+    ctx.cleanups.push(() => throttledExecute.cancel());
+  }
+
+  const handler = (event: Event) => {
+    if (hasModifier(modifiers, "self") && event.target !== ctx.element) {
+      return;
+    }
+
+    if (hasModifier(modifiers, "prevent")) {
+      event.preventDefault();
+    }
+
+    if (hasModifier(modifiers, "stop")) {
+      event.stopPropagation();
+    }
+
+    wrappedExecute(event);
+  };
+
+  const target = hasModifier(modifiers, "window")
+    ? globalThis
+    : (hasModifier(modifiers, "document") ? document : ctx.element);
+
+  const options: AddEventListenerOptions = {};
+  if (hasModifier(modifiers, "once")) {
+    options.once = true;
+  }
+  if (hasModifier(modifiers, "passive")) {
+    options.passive = true;
+  }
+
+  target.addEventListener(eventName, handler, options);
 
   ctx.cleanups.push(() => {
-    ctx.element.removeEventListener(eventName, handler);
+    target.removeEventListener(eventName, handler, options);
   });
 }
 
 /**
- * Bind data-volt-model for two-way data binding on form elements.
+ * Bind data-volt-model for two-way data binding on form elements with support for modifiers.
  * Syncs the signal value with the input value bidirectionally.
+ *
+ * Supported modifiers:
+ * - .number - coerces values to numbers
+ * - .trim - removes surrounding whitespace
+ * - .lazy - syncs on 'change' instead of 'input'
+ * - .debounce[.ms] - debounces signal updates (default 300ms)
  */
-function bindModel(context: BindingContext, signalPath: string): void {
+function bindModel(context: BindingContext, signalPath: string, modifiers: Modifier[] = []): void {
   const signal = findScopedSignal(context.scope, signalPath);
   if (!signal) {
     console.error(`Signal "${signalPath}" not found for data-volt-model`);
     return;
   }
 
-  const element = context.element as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
+  const element = context.element as FormControlElement;
   const type = element instanceof HTMLInputElement ? element.type : null;
   const initialValue = signal.get();
   setElementValue(element, initialValue, type);
@@ -353,12 +425,36 @@ function bindModel(context: BindingContext, signalPath: string): void {
   });
   context.cleanups.push(unsubscribe);
 
-  const eventName = type === "checkbox" || type === "radio" ? "change" : "input";
+  const isLazy = hasModifier(modifiers, "lazy");
+  const isNumber = hasModifier(modifiers, "number");
+  const isTrim = hasModifier(modifiers, "trim");
 
-  const handler = () => {
-    const value = getElementValue(element, type);
+  const defaultEventName = type === "checkbox" || type === "radio" ? "change" : "input";
+  const eventName = isLazy ? "change" : defaultEventName;
+
+  const baseHandler = () => {
+    let value = getElementValue(element, type);
+
+    if (typeof value === "string") {
+      if (isTrim) {
+        value = value.trim();
+      }
+      if (isNumber) {
+        value = value === "" ? Number.NaN : Number(value);
+      }
+    }
+
     (signal as Signal<unknown>).set(value);
   };
+
+  let handler = baseHandler;
+
+  if (hasModifier(modifiers, "debounce")) {
+    const wait = getModifierValue(modifiers, "debounce", 300);
+    const debouncedHandler = debounce(baseHandler, wait);
+    handler = debouncedHandler as typeof baseHandler;
+    context.cleanups.push(() => debouncedHandler.cancel());
+  }
 
   element.addEventListener(eventName, handler);
   context.cleanups.push(() => {
@@ -366,11 +462,7 @@ function bindModel(context: BindingContext, signalPath: string): void {
   });
 }
 
-function setElementValue(
-  el: HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement,
-  value: unknown,
-  type: string | null,
-): void {
+function setElementValue(el: FormControlElement, value: unknown, type: string | null): void {
   if (el instanceof HTMLInputElement) {
     switch (type) {
       case "checkbox": {
@@ -397,7 +489,7 @@ function setElementValue(
   }
 }
 
-function getElementValue(el: HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement, type: string | null): unknown {
+function getElementValue(el: FormControlElement, type: string | null): unknown {
   if (el instanceof HTMLInputElement) {
     if (type === "checkbox") {
       return el.checked;
@@ -420,12 +512,28 @@ function getElementValue(el: HTMLInputElement | HTMLSelectElement | HTMLTextArea
 }
 
 /**
- * Bind data-volt-bind:attr for generic attribute binding.
+ * Bind data-volt-bind:attr for generic attribute binding with support for modifiers.
  * Updates any HTML attribute reactively based on expression value.
+ *
+ * Supported modifiers:
+ * - .number - coerces values to numbers
+ * - .trim - removes surrounding whitespace
  */
-function bindAttr(ctx: BindingContext, attrName: string, expr: string): void {
+function bindAttr(ctx: BindingContext, attrName: string, expr: string, modifiers: Modifier[] = []): void {
+  const isNumber = hasModifier(modifiers, "number");
+  const isTrim = hasModifier(modifiers, "trim");
+
   const update = () => {
-    const value = evaluate(expr, ctx.scope);
+    let value = evaluate(expr, ctx.scope);
+
+    if (typeof value === "string") {
+      if (isTrim) {
+        value = value.trim();
+      }
+      if (isNumber) {
+        value = value === "" ? Number.NaN : Number(value);
+      }
+    }
 
     const booleanAttrs = new Set([
       "disabled",

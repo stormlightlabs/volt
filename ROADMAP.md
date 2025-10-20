@@ -14,7 +14,7 @@
 |         |   ✓   | [Backend Integration & HTTP Actions](#backend-integration--http-actions)         |
 |         |   ✓   | [Proxy-Based Reactivity Enhancements](#proxy-based-reactivity-enhancements)      |
 | v0.1.0  |   ✓   | [Markup Based Reactivity](#markup-based-reactivity)                              |
-| v0.2.0  |       | [Reactive Attributes & Event Modifiers](#reactive-attributes--event-modifiers)   |
+| v0.2.0  |   ✓   | [Reactive Attributes & Event Modifiers](#reactive-attributes--event-modifiers)   |
 | v0.3.0  |       | [Global State](#global-state)                                                    |
 | v0.4.0  |       | [Animation & Transitions](#animation--transitions)                               |
 | v0.5.0  |       | [Persistence & Offline](#persistence--offline)                                   |
@@ -74,32 +74,13 @@ _NOTE_: `data-x-*` is now `data-volt-*`
     - Separate reactive() function for objects/arrays to gives users choice
     - Keep .get()/.set() - explicitness is valuable for understanding reactivity (include in docs)
 
-## To-Do
-
 ### Reactive Attributes & Event Modifiers
 
 **Goal:** Extend Volt.js with expressive attribute patterns and event options for fine-grained control.
 **Outcome:** Volt.js supports rich declarative behaviors and event semantics built entirely on standard DOM APIs.
-**Deliverables:**
-    - ✓ `data-volt-show` - toggles element visibility via CSS rather than DOM removal (complements `data-volt-if`)
-    - ✓ `data-volt-style` - binds inline styles to reactive expressions
-    - ✓ `data-volt-skip` - marks elements or subtrees to exclude from Volt’s reactive parsing
-    - ✓ `data-volt-cloak` - hides content until the Volt runtime initializes
-    - Event options for `data-volt-on-*` attributes:
-        - `.prevent` - calls `preventDefault()` on the event
-        - `.stop` - stops propagation
-        - `.self` - triggers only when the event target is the bound element
-        - `.window` - attaches the listener to `window`
-        - `.document` - attaches the listener to `document`
-        - `.once` - runs the handler a single time
-        - `.debounce` - defers handler execution (optional milliseconds)
-        - `.throttle` - limits handler frequency (optional milliseconds)
-        - `.passive` - adds a passive event listener for scroll/touch performance
-    - Input options for `data-volt-bind` and `data-volt-model`:
-        - `.number` - coerces values to numbers
-        - `.trim` - removes surrounding whitespace
-        - `.lazy` - syncs only on `change` instead of `input`
-        - `.debounce` - delays updates to reduce jitter
+**Summary:** Introduced expressive attribute patterns and event modifiers for precise DOM and input control, for fine-grained declarative behavior entirely through standard DOM APIs.
+
+## To-Do
 
 ### Global State
 
