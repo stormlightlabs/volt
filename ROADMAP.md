@@ -2,21 +2,28 @@
 
 - [Completed](#completed)
 - [TODO](#to-do)
+    - [Parking Lot](#parking-lot)
 - [Examples (Planned)](#examples)
 
-| Version | State | Milestone                                                  | Summary                                                                  |
-| ------- | ----- | ---------------------------------------------------------- | ------------------------------------------------------------------------ |
-|         |   ✓   | [Foundations](#foundations)                                | Initial project setup, tooling, and reactive signal prototype.           |
-|         |   ✓   | [Reactivity & Bindings](#reactivity--bindings)             | Core DOM bindings (`data-volt-*`) and declarative updates.                  |
-|         |   ✓   | [Actions & Effects](#actions--effects)                     | Event system and derived reactivity primitives.                          |
-|         |   ✓   | [Plugins Framework](#plugins-framework)                    | Modular plugin system and first built-in plugin set.                     |
-|         |       | [Streaming & Patch Engine](#streaming--patch-engine)       | SSE/WebSocket JSON patch streaming.                                      |
-|         |       | [Persistence & Offline](#persistence--offline)             | State persistence, storage sync, and fallback behaviors.                 |
-| v0.1.0  |   ✓   | [Markup Based Reactivity](#markup-based-reactivity)        | Allow users to write apps without any bundled JS                         |
-| v0.2.0  |       | [Animation & Transitions](#animation--transitions)         | Declarative animation layer and browser View Transition API integration. |
-| v0.3.0  |       | [Inspector & Developer Tools](#inspector--developer-tools) | Built-in signal inspector, debug overlays, and dev tooling.              |
-| v0.4.0  |       | PWA Capabilities                                           | TODO                                                                     |
-| v1.0.0  |       | [Release](#stable-release)                                 | Public API freeze, plugin registry, comprehensive docs & tests.          |
+| Version | State | Milestone                                                                        |
+| ------- | ----- | -------------------------------------------------------------------------------- |
+|         |   ✓   | [Foundations](#foundations)                                                      |
+|         |   ✓   | [Reactivity & Bindings](#reactivity--bindings)                                   |
+|         |   ✓   | [Actions & Effects](#actions--effects)                                           |
+|         |   ✓   | [Plugins Framework](#plugins-framework)                                          |
+|         |   ✓   | [Backend Integration & HTTP Actions](#backend-integration--http-actions)         |
+|         |   ✓   | [Proxy-Based Reactivity Enhancements](#proxy-based-reactivity-enhancements)      |
+| v0.1.0  |   ✓   | [Markup Based Reactivity](#markup-based-reactivity)                              |
+| v0.2.0  |       | [Reactive Attributes & Event Modifiers](#reactive-attributes--event-modifiers)   |
+| v0.3.0  |       | [Global State](#global-state)                                                    |
+| v0.4.0  |       | [Animation & Transitions](#animation--transitions)                               |
+| v0.5.0  |       | [Persistence & Offline](#persistence--offline)                                   |
+|         |       | [Background Requests & Reactive Polling](#background-requests--reactive-polling) |
+| v0.6.0  |       | [Navigation & History Management](#navigation--history-management)               |
+| v0.7.0  |       | [Streaming & Patch Engine](#streaming--patch-engine)                             |
+| v0.8.0  |       | PWA Capabilities                                                                 |
+| v0.9.0  |       | [Inspector & Developer Tools](#inspector--developer-tools)                       |
+| v1.0.0  |       | [Stable Release](#stable-release)                                                |
 
 ## Completed
 
@@ -206,11 +213,14 @@ _NOTE_: `data-x-*` is now `data-volt-*`
 **Outcome:** Volt.js 1.0 is stable, documented, performant, and ready for production.
 **Deliverables:**
     - ✓ Documentation site (VitePress)
-    - Full API reference with examples -> refactor generator in `@volt/dev` package
+    - Full API reference with examples
+    - Create generator in `@voltx/cli` package
     - Finalized plugin registry and CLI (`volt plugins list/init`)
     - Versioned documentation (stormlightlabs.github.io/volt)
     - Announcement post and release notes
     - Community contribution guide & governance doc
+
+## Parking Lot
 
 ## Examples
 
