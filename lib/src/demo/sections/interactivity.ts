@@ -43,6 +43,7 @@ export function createInteractivitySection(): HTMLElement {
               placeholder: "Type here...",
               required: true,
             }),
+            // FIXME: this needs to be the modal footer
             dom.footer(
               null,
               dom.button({ type: "button", "data-volt-on-click": "closeDialog" }, "Cancel"),

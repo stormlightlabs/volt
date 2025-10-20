@@ -65,9 +65,9 @@ export function createPluginsSection(): HTMLElement {
         ),
       ),
       dom.div(
-        { "data-volt-url:urlParam": "query" },
-        dom.label({ for: "url-input" }, "URL Parameter (synced with ?urlParam=...):"),
-        dom.input({
+        // FIXME: this needs to be constrained in the stylesheet to allow for the sidenotes
+        { "data-volt-url:urlParam": "query", "style": "max-width: var(--content-width);" },
+        ...dom.labelFor("URL Parameter (synced with ?urlParam=...)", {
           type: "text",
           id: "url-input",
           "data-volt-model": "urlParam",

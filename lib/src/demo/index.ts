@@ -213,19 +213,15 @@ function buildDemoStructure(): HTMLElement {
     ),
     dom.footer(
       null,
-      dom.hr(null),
       dom.p(
         null,
         "Built with ",
         dom.a({ href: "https://github.com/stormlightlabs/volt" }, "Volt.js"),
-        " - A lightweight reactive framework",
+        " - A lightweight, reactive hypermedia framework",
       ),
       dom.p(
         null,
-        dom.small(
-          null,
-          "This demo showcases both Volt.js reactive features and Volt CSS classless styling. View source to see how everything works!",
-        ),
+        "This demo showcases both Volt.js reactive features and Volt CSS classless styling. View source to see how everything works!",
       ),
     ),
   );

@@ -119,6 +119,7 @@ dialog footer button {
     padding: var(--space-md);
   }
 
+
   dialog header button[aria-label="Close"],
   dialog header button[aria-label="close"] {
     top: var(--space-md);
