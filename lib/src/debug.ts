@@ -2,11 +2,11 @@
  * Volt.js Debug Utilities
  *
  * Lazy-loadable debugging module for signal introspection and visualization.
- * Import from 'volt/debug' to access these utilities without affecting production bundle size.
+ * Import from 'voltx.js/debug' to access these utilities without affecting production bundle size.
  *
  * @example
  * ```ts
- * import { debugSignal, debugComputed, logAllSignals } from 'volt/debug';
+ * import { debugSignal, debugComputed, logAllSignals } from 'voltx.js/debug';
  *
  * const count = debugSignal(0, 'count');
  * const doubled = debugComputed(() => count.get() * 2, 'doubled');
@@ -14,7 +14,7 @@
  * logAllSignals();
  * ```
  *
- * @module volt/debug
+ * @module voltx.js/debug
  * @packageDocumentation
  */
 

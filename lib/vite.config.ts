@@ -34,7 +34,14 @@ export default defineConfig(({ mode }) => ({
   },
   build: mode === "lib"
     ? {
-      lib: { entry: path.resolve(__dirname, "src/index.ts"), name: "Volt", fileName: "volt", formats: ["es"] },
+      lib: {
+        entry: {
+          volt: path.resolve(__dirname, "src/index.ts"),
+          debug: path.resolve(__dirname, "src/debug.ts"),
+        },
+        name: "Volt",
+        formats: ["es"],
+      },
       rolldownOptions: { output: { assetFileNames: "volt.[ext]" } },
     }
     : undefined,

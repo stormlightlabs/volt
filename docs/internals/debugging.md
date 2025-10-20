@@ -1,7 +1,7 @@
 # Debugging
 
-The Volt.js debugging system provides introspection and visualization tools for reactive primitives.
-It's a lazy-loadable module (`volt/debug`) that doesn't affect production bundle size.
+The VoltX.js debugging system provides introspection and visualization tools for reactive primitives.
+It's a lazy-loadable module (`voltx.js/debug`) that doesn't affect production bundle size.
 
 ## Architecture
 
@@ -101,14 +101,14 @@ The logger provides multiple output formats:
 For development, import debug utilities directly:
 
 ```ts
-import { debugSignal, debugComputed, logAllSignals, buildDependencyGraph } from 'volt/debug';
+import { debugSignal, debugComputed, logAllSignals, buildDependencyGraph } from 'voltx.js/debug';
 ```
 
 For debugging existing code, attach debugger to existing signals:
 
 ```ts
-import { signal } from 'volt';
-import { attachDebugger, vdebugger } from 'volt/debug';
+import { signal } from 'voltx.js';
+import { attachDebugger, vdebugger } from 'voltx.js/debug';
 
 const count = signal(0);
 attachDebugger(count, 'signal', 'count');
@@ -118,7 +118,7 @@ vdebugger.log(count);
 For browser console debugging, expose vdebugger globally:
 
 ```ts
-import { vdebugger } from 'volt/debug';
+import { vdebugger } from 'voltx.js/debug';
 window.vdebugger = vdebugger;
 ```
 

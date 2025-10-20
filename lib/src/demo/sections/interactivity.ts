@@ -21,7 +21,7 @@ export function createInteractivitySection(): HTMLElement {
           null,
           "Modern browsers support the dialog element natively, providing built-in accessibility features and keyboard handling (ESC to close, focus trapping, etc.).",
         ),
-        " Volt CSS styles it elegantly, and Volt.js handles the interaction.",
+        " VoltX CSS styles it elegantly, and VoltX.js handles the interaction.",
       ),
       dom.button({ "data-volt-on-click": "openDialog" }, "Open Dialog"),
       dom.p({ "data-volt-if": "dialogMessage.get()", "data-volt-text": "dialogMessage" }),
@@ -32,11 +32,7 @@ export function createInteractivitySection(): HTMLElement {
           dom.header(
             null,
             dom.h3(null, "Dialog Demo"),
-            dom.button({
-              "data-volt-on-click": "closeDialog",
-              "aria-label": "Close",
-              style: "float: right; background: none; border: none; font-size: 1.5rem; cursor: pointer;",
-            }, "×"),
+            dom.button({ "data-volt-on-click": "closeDialog", "aria-label": "Close" }, "×"),
           ),
           dom.form(
             { "data-volt-on-submit": "submitDialog" },
@@ -48,7 +44,7 @@ export function createInteractivitySection(): HTMLElement {
               required: true,
             }),
             dom.footer(
-              { style: "display: flex; gap: 1rem; justify-content: flex-end;" },
+              null,
               dom.button({ type: "button", "data-volt-on-click": "closeDialog" }, "Cancel"),
               dom.button({ type: "submit" }, "Submit"),
             ),

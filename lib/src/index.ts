@@ -1,5 +1,5 @@
 /**
- * Volt.js - A lightweight reactive framework for declarative UIs
+ * VoltX.js - A lightweight reactive framework for declarative UIs
  *
  * @packageDocumentation
  */

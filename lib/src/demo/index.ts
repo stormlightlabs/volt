@@ -20,7 +20,7 @@ registerPlugin("persist", persistPlugin);
 registerPlugin("scroll", scrollPlugin);
 registerPlugin("url", urlPlugin);
 
-const message = signal("Welcome to Volt.js Demo");
+const message = signal("Welcome to the Volt.js Demo");
 const count = signal(0);
 const doubled = computed(() => count.get() * 2);
 
@@ -172,11 +172,22 @@ export const demoScope = {
   scrollToSection,
 };
 
-/**
- * Build the complete demo structure programmatically
- */
+const buildNav = () =>
+  dom.nav(
+    null,
+    dom.a({ href: "#typography" }, "Typography"),
+    " | ",
+    dom.a({ href: "#interactivity" }, "Interactivity"),
+    " | ",
+    dom.a({ href: "#forms" }, "Forms"),
+    " | ",
+    dom.a({ href: "#reactivity" }, "Reactivity"),
+    " | ",
+    dom.a({ href: "#plugins" }, "Plugins"),
+  );
+
 function buildDemoStructure(): HTMLElement {
-  const container = dom.div(
+  return dom.div(
     null,
     dom.header(
       null,
@@ -188,18 +199,7 @@ function buildDemoStructure(): HTMLElement {
           null,
           "This demo demonstrates both the framework's reactive capabilities and the elegant, semantic styling of Volt CSS. No CSS classes needed!",
         ),
-      ),
-      dom.nav(
-        null,
-        dom.a({ href: "#typography" }, "Typography"),
-        " | ",
-        dom.a({ href: "#interactivity" }, "Interactivity"),
-        " | ",
-        dom.a({ href: "#forms" }, "Forms"),
-        " | ",
-        dom.a({ href: "#reactivity" }, "Reactivity"),
-        " | ",
-        dom.a({ href: "#plugins" }, "Plugins"),
+        buildNav(),
       ),
     ),
     dom.el(
@@ -229,8 +229,6 @@ function buildDemoStructure(): HTMLElement {
       ),
     ),
   );
-
-  return container;
 }
 
 export function setupDemo() {

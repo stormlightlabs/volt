@@ -1,19 +1,38 @@
 {
-  "name": "volt",
-  "private": true,
+  "name": "voltx.js",
   "version": "0.1.0",
+  "description": "A lightweight reactive framework for declarative UIs",
   "type": "module",
+  "author": "Owais Jamil",
+  "license": "MIT",
+  "repository": { "type": "git", "url": "https://github.com/stormlightlabs/volt.git", "directory": "lib" },
+  "keywords": ["reactive", "signals", "framework", "ui", "declarative", "html", "dom", "frontend"],
+  "main": "./dist/volt.js",
+  "module": "./dist/volt.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": { "types": "./dist/index.d.ts", "import": "./dist/volt.js" },
+    "./debug": { "types": "./dist/debug.d.ts", "import": "./dist/debug.js" },
+    "./css": "./dist/volt.css",
+    "./package.json": "./package.json"
+  },
+  "files": ["dist", "src", "README.md"],
   "scripts": {
     "dev": "vite",
     "build": "pnpm build:lib && pnpm build:css",
-    "build:lib": "tsc && vite build --mode lib",
+    "build:lib": "tsc -p tsconfig.build.json && vite build --mode lib",
     "build:css": "postcss src/styles/index.css -o dist/volt.css",
     "build:css:min": "postcss src/styles/index.css -o dist/volt.min.css --env production",
     "preview": "vite preview",
     "test": "vitest",
     "test:run": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "pnpm build && pnpm test:run",
+    "publish:npm": "npm publish --access=public",
+    "publish:jsr": "npx jsr publish",
+    "publish:all": "pnpm publish:npm && pnpm publish:jsr"
   },
+  "publishConfig": { "access": "public" },
   "devDependencies": {
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.9.1",

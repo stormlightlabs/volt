@@ -1,14 +1,14 @@
 {
-  "name": "volt-monorepo",
+  "name": "voltx.js-monorepo",
   "version": "1.0.0",
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "pnpm --filter volt dev",
+    "dev": "pnpm --filter voltx.js dev",
     "build": "pnpm -r build",
-    "preview": "pnpm --filter volt preview",
+    "preview": "pnpm --filter voltx.js preview",
     "test": "pnpm -r test",
-    "test:ui": "pnpm --filter volt test:ui",
+    "test:ui": "pnpm --filter voltx.js test:ui",
     "test:run": "pnpm -r test:run",
     "docs:dev": "pnpm --filter @volt/docs dev",
     "docs:build": "pnpm --filter @volt/docs build",

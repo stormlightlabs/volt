@@ -1,0 +1,32 @@
+# Development files
+*.log
+*.swp
+*.swo
+*~
+
+# Test files
+test/
+**/*.test.ts
+**/*.spec.ts
+coverage/
+
+# Build config
+tsconfig*.json
+vite.config.ts
+vitest.config.ts
+postcss.config.js
+eslint.config.js
+
+# Development
+node_modules/
+.DS_Store
+.vscode/
+.idea/
+
+# Demo
+demo/
+index.html
+
+# Keep dist and src
+!dist/
+!src/

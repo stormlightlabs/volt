@@ -1,4 +1,4 @@
-# Volt Plugin System Spec
+# VoltX Plugin System Spec
 
 ## Overview
 
@@ -67,7 +67,7 @@ interface PluginContext {
 ### Example: Custom Tooltip Plugin
 
 ```ts
-import { registerPlugin } from 'volt';
+import { registerPlugin } from 'voltx.js';
 
 registerPlugin('tooltip', (context, value) => {
   const tooltip = document.createElement('div');
