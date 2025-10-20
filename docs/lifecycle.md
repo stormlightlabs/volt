@@ -1,6 +1,6 @@
 # Server-Side Rendering & Lifecycle
 
-Server-Side Rendering (SSR) with Volt.js enables you to render initial HTML on the server and seamlessly hydrate it on the client without re-rendering or flash of unstyled content.
+Server-Side Rendering (SSR) with VoltX enables you to render initial HTML on the server and seamlessly hydrate it on the client without re-rendering or flash of unstyled content.
 
 ## When to use SSR
 
@@ -27,7 +27,7 @@ The server generates HTML with `data-volt` attributes and embedded state. Volt o
 
 ### Client-Side: Hydration
 
-Instead of re-rendering the DOM, Volt.js "hydrates" the existing server-rendered HTML by:
+Instead of re-rendering the DOM, VoltX.js "hydrates" the existing server-rendered HTML by:
 
 1. Reading the embedded state from the `<script>` tag
 2. Recreating reactive signals from the serialized values
@@ -70,7 +70,7 @@ Use the `hydrate()` function instead of `charge()` to hydrate all `[data-volt]` 
 
 ### CSS-Based Hiding
 
-Hide content until Volt.js hydrates:
+Hide content until VoltX.js hydrates:
 
 ```html
 <style>
@@ -133,7 +133,7 @@ Render fully functional HTML that works without JavaScript, then enhance with in
 
   <input type="email" name="email" required>
 
-  <!-- Enhanced with Volt.js for client-side validation -->
+  <!-- Enhanced with VoltX.js for client-side validation -->
   <p data-volt-if="submitted" data-volt-text="'Thank you!'"></p>
 
   <button type="submit">Submit</button>

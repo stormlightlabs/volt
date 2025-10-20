@@ -1,4 +1,4 @@
-# Volt Bindings
+# VoltX Bindings
 
 Bindings connect reactive state to the DOM using `data-volt-*` attributes. Each binding evaluates expressions and updates the DOM when dependencies change.
 
@@ -56,7 +56,7 @@ The `data-volt-class` binding toggles CSS classes based on an object expression:
 
 Each key in the object is a class name. When the corresponding value is truthy, the class is added; when falsy, the class is removed.
 
-Class names with hyphens or spaces must be quoted. The binding preserves existing classes not managed by Volt.js.
+Class names with hyphens or spaces must be quoted. The binding preserves existing classes not managed by VoltX.js.
 
 ## Event Bindings
 
@@ -372,7 +372,8 @@ Signal changes update the URL, and URL changes (back/forward navigation) update 
 Register custom bindings for domain-specific behavior using the plugin API:
 
 ```js
-import { registerPlugin } from '@voltjs/volt';
+import { registerPlugin } from 'voltx.js';
+// or: import { registerPlugin } from '@voltx/core';
 
 registerPlugin('tooltip', (ctx) => {
   const message = ctx.evaluate(ctx.element.getAttribute('data-volt-tooltip'));

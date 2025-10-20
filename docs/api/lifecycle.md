@@ -5,7 +5,7 @@ updated: 2025-10-18
 
 # lifecycle
 
-Global lifecycle hook system for Volt.js
+Global lifecycle hook system for VoltX.js
 Provides beforeMount, afterMount, beforeUnmount, and afterUnmount hooks
 
 ## registerGlobalHook

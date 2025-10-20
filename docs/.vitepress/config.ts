@@ -5,8 +5,9 @@ import { u } from "./utils";
  * @see https://vitepress.dev/reference/site-config
  */
 export default defineConfig({
-  title: "Volt.js",
+  title: "VoltX.js",
   description: "A reactive, hypermedia framework.",
+  base: "/volt/",
   appearance: "dark",
   themeConfig: {
     nav: [{ text: "Home", link: "/" }, { text: "Overview", link: "/overview" }, { text: "CSS", link: "/css/volt-css" }],

@@ -1,4 +1,6 @@
-# Volt.js
+# VoltX.js
+
+> ⚠️ **Pre-release Software**: VoltX.js is in active development. Breaking changes are expected until v1.0. Use in production at your own risk.
 
 ## Philosophy/Goals
 

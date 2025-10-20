@@ -1,12 +1,10 @@
 # Installation
 
-<!-- TODO: Figure out actual project path @voltjs/volt -->
-
-Volt.js can be installed via CDN or package manager. Choose the method that best fits your project setup.
+VoltX.js can be installed via CDN or package manager. Choose the method that best fits your project setup.
 
 ## CDN (unpkg)
 
-The simplest way to get started is loading Volt.js directly from a CDN. This approach requires no build tools and works immediately in any HTML file.
+The simplest way to get started is loading VoltX.js directly from a CDN. This approach requires no build tools and works immediately in any HTML file.
 
 ### ES Modules
 
@@ -14,7 +12,7 @@ Use the module build for modern browsers with ES module support:
 
 ```html
 <script type="module">
-  import { charge, registerPlugin } from 'https://unpkg.com/@voltjs/volt@latest/dist/volt.js';
+  import { charge, registerPlugin } from 'https://unpkg.com/voltx.js@latest/dist/volt.js';
   charge();
 </script>
 ```
@@ -23,21 +21,33 @@ You can optionally pin to a specific version:
 
 ```html
 <script type="module">
-  import { charge } from 'https://unpkg.com/@voltjs/volt@0.1.0/dist/volt.js';
+  import { charge } from 'https://unpkg.com/voltx.js@0.1.0/dist/volt.js';
   charge();
 </script>
 ```
 
 ## Package Manager
 
-For applications using node based tools, install Volt.js via npm or similar:
+For applications using node based tools, install VoltX.js via npm or JSR:
+
+### npm
 
 ```bash
-npm install @voltjs/volt
+npm install voltx.js
 ```
 
 ```bash
-pnpm add @voltjs/volt
+pnpm add voltx.js
+```
+
+### JSR (Deno, Node.js, Bun)
+
+```bash
+npx jsr add @voltx/core
+```
+
+```bash
+deno add jsr:@voltx/core
 ```
 
 ### Module Imports
@@ -45,8 +55,11 @@ pnpm add @voltjs/volt
 Import only the functions you need to minimize bundle size:
 
 ```js
-import { charge, registerPlugin } from '@voltjs/volt';
-import { persistPlugin } from '@voltjs/volt/plugins';
+// npm
+import { charge, registerPlugin } from 'voltx.js';
+
+// JSR
+import { charge, registerPlugin } from '@voltx/core';
 
 registerPlugin('persist', persistPlugin);
 charge();
@@ -56,7 +69,7 @@ The framework uses tree-shaking to eliminate unused code when bundled with moder
 
 ## TypeScript
 
-Volt.js is written in TypeScript and includes complete type definitions.
+VoltX.js is written in TypeScript and includes complete type definitions.
 
 TypeScript users get automatic type inference for:
 
@@ -77,7 +90,7 @@ For applications that can be built entirely in HTML, use the declarative approac
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Volt.js App</title>
+  <title>VoltX.js App</title>
 </head>
 <body>
   <div data-volt data-volt-state='{"count": 0}'>
@@ -86,7 +99,7 @@ For applications that can be built entirely in HTML, use the declarative approac
   </div>
 
   <script type="module">
-    import { charge } from 'https://unpkg.com/@voltjs/volt@latest/dist/volt.js';
+    import { charge } from 'https://unpkg.com/voltx.js@latest/dist/volt.js';
     charge();
   </script>
 </body>
@@ -101,7 +114,7 @@ For applications requiring initialization logic, use the programmatic API with `
 
 ```html
 <script type="module">
-  import { mount, signal } from 'https://unpkg.com/@voltjs/volt@latest/dist/volt.js';
+  import { mount, signal } from 'https://unpkg.com/voltx.js@latest/dist/volt.js';
 
   const count = signal(0);
 
@@ -120,7 +133,8 @@ For SSR applications, use the `hydrate()` function instead of `charge()` to pres
 
 ```html
 <script type="module">
-  import { hydrate } from '@voltjs/volt';
+  import { hydrate } from 'voltx.js';
+  // or: import { hydrate } from '@voltx/core';
   hydrate();
 </script>
 ```
@@ -129,12 +143,11 @@ See the [Server-Side Rendering & Lifecycle](./lifecycle) documentation for compl
 
 ## Plugin Setup
 
-Volt.js includes several built-in plugins that must be registered before use:
+VoltX.js includes several built-in plugins that must be registered before use:
 
 ```html
 <script type="module">
-  import { charge, registerPlugin } from '@voltjs/volt';
-  import { persistPlugin, scrollPlugin, urlPlugin } from '@voltjs/volt/plugins';
+  import { charge, registerPlugin, persistPlugin, scrollPlugin, urlPlugin } from 'voltx.js';
 
   registerPlugin('persist', persistPlugin);
   registerPlugin('scroll', scrollPlugin);
@@ -148,7 +161,7 @@ Register plugins before calling `charge()`, `mount()`, or `hydrate()` to ensure 
 
 ## Browser Compatibility
 
-Volt.js requires modern browsers with support for:
+VoltX.js requires modern browsers with support for:
 
 - ES2020 syntax (optional chaining, nullish coalescing)
 - ES modules

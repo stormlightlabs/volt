@@ -1,6 +1,6 @@
 # State Management
 
-Volt.js uses signal-based reactivity for state management. State changes automatically trigger DOM updates without virtual DOM diffing or reconciliation.
+VoltX uses signal-based reactivity for state management. State changes automatically trigger DOM updates without virtual DOM diffing or reconciliation.
 
 ## Reactive Primitives
 
@@ -124,6 +124,6 @@ Signal updates are synchronous and deterministic. To trace state changes:
 
 - Use browser DevTools to set breakpoints in signal `.set()` calls
 - Subscribe to signals and log changes for debugging
-- Enable Volt.js lifecycle hooks to observe mount and binding creation
+- Enable VoltX.js lifecycle hooks to observe mount and binding creation
 
 All errors in effects and subscriptions are caught and logged rather than thrown, preventing cascade failures.

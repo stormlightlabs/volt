@@ -1,6 +1,6 @@
 # Building a Counter
 
-This tutorial walks through building a simple counter application to demonstrate Volt.js fundamentals: reactive state, event handling, computed values, and declarative markup.
+This tutorial walks through building a simple counter application to demonstrate VoltX.js fundamentals: reactive state, event handling, computed values, and declarative markup.
 
 ## Basic Counter (Declarative)
 
@@ -14,7 +14,7 @@ Create an HTML file with this structure:
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Counter - Volt.js</title>
+  <title>Counter - VoltX.js</title>
 </head>
 <body>
   <div data-volt data-volt-state='{"count": 0}'>
@@ -23,7 +23,7 @@ Create an HTML file with this structure:
   </div>
 
   <script type="module">
-    import { charge } from 'https://unpkg.com/@voltjs/volt@latest/dist/volt.js';
+    import { charge } from 'https://unpkg.com/voltx.js@latest/dist/volt.js';
     charge();
   </script>
 </body>
@@ -159,8 +159,7 @@ Use the persist plugin to save the count across page reloads:
 </div>
 
 <script type="module">
-  import { charge, registerPlugin } from 'https://unpkg.com/@voltjs/volt@latest/dist/volt.js';
-  import { persistPlugin } from 'https://unpkg.com/@voltjs/volt@latest/dist/plugins.js';
+  import { charge, registerPlugin, persistPlugin } from 'https://unpkg.com/voltx.js@latest/dist/volt.js';
 
   registerPlugin('persist', persistPlugin);
   charge();
@@ -227,7 +226,7 @@ For applications requiring initialization logic or custom functions, use the pro
 
 ```html
 <script type="module">
-  import { mount, signal, computed } from 'https://unpkg.com/@voltjs/volt@latest/dist/volt.js';
+  import { mount, signal, computed } from 'https://unpkg.com/voltx.js@latest/dist/volt.js';
 
   const count = signal(0);
   const message = computed(() => {
@@ -270,7 +269,7 @@ Use programmatic mounting when you need:
 
 ## Summary
 
-This counter demonstrates core Volt.js concepts:
+This counter demonstrates core VoltX.js concepts:
 
 - Reactive state with signals
 - Event handling with `data-volt-on-*`

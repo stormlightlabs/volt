@@ -5,7 +5,7 @@ updated: 2025-10-18
 
 # Event Handling
 
-Volt.js provides declarative event handling through `data-volt-on-*` attributes with automatic access to special scoped references.
+VoltX provides declarative event handling through `data-volt-on-*` attributes with automatic access to special scoped references.
 
 ## Event Binding Syntax
 
@@ -35,7 +35,7 @@ The `$event` reference provides access to the native browser event object.
 
 ## Event Types
 
-Volt.js aims to support all standard DOM events through `data-volt-on-*`:
+VoltX.js aims to support all standard DOM events through `data-volt-on-*`:
 
 **Mouse Events:**
 
@@ -66,7 +66,7 @@ Volt.js aims to support all standard DOM events through `data-volt-on-*`:
 
 ## Implementation Details
 
-When an event handler is bound, Volt.js:
+When an event handler is bound, VoltX.js:
 
 1. Creates a new scope that extends the component scope
 2. Injects `$el` (the bound element) and `$event` (the event object) into this scope

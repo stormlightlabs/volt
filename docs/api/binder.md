@@ -5,11 +5,11 @@ updated: 2025-10-18
 
 # binder
 
-Binder system for mounting and managing Volt.js bindings
+Binder system for mounting and managing VoltX.js bindings
 
 ## mount
 
-Mount Volt.js on a root element and its descendants and binds all data-volt-* attributes to the provided scope.
+Mount VoltX.js on a root element and its descendants and binds all data-volt-* attributes to the provided scope.
 Returns a cleanup function to unmount and dispose all bindings.
 
 ```typescript

@@ -335,7 +335,7 @@ Respecting user preferences improves accessibility and reduces eye strain. Autom
 
 ## License
 
-Part of the Volt.js project. MIT licensed.
+Part of the VoltX project. MIT licensed.
 
 ## Further Reading
 

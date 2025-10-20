@@ -4,7 +4,7 @@ outline: deep
 
 # Framework Overview
 
-Volt.js is a lightweight, hypermedia based reactive framework for building declarative UIs.
+VoltX is a lightweight, hypermedia based reactive framework for building declarative UIs.
 
 It combines HTML-driven behavior via `data-volt-*` attributes with signal-based reactivity.
 

@@ -98,7 +98,7 @@ registerPlugin('tooltip', (context, value) => {
 
 ## Built-in Plugins
 
-Volt.js ships with three built-in plugins that must be explicitly registered.
+VoltX.js ships with three built-in plugins that must be explicitly registered.
 
 ### data-volt-persist
 

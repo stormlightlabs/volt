@@ -10,9 +10,9 @@
     "test": "pnpm -r test",
     "test:ui": "pnpm --filter voltx.js test:ui",
     "test:run": "pnpm -r test:run",
-    "docs:dev": "pnpm --filter @volt/docs dev",
-    "docs:build": "pnpm --filter @volt/docs build",
-    "docs:preview": "pnpm --filter @volt/docs preview",
+    "docs:dev": "pnpm --filter @voltx/docs dev",
+    "docs:build": "pnpm --filter @voltx/docs build",
+    "docs:preview": "pnpm --filter @voltx/docs preview",
     "typecheck": "pnpm -r typecheck"
   },
   "devDependencies": {

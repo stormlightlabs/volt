@@ -1,6 +1,6 @@
 # Expression Evaluation
 
-Volt.js evaluates JavaScript-like expressions in HTML templates using a sandboxed recursive descent parser.
+VoltX.js evaluates JavaScript-like expressions in HTML templates using a sandboxed recursive descent parser.
 The evaluator is CSP-compliant and does not use `eval()` or `new Function()`.
 
 ## Supported Syntax

@@ -1,5 +1,10 @@
 # VoltX.js
 
+> [!WARNING]
+> VoltX.js is in active development.
+>
+> Breaking changes are expected until v1.0. Use in production at your own risk.
+
 A lightweight reactive framework for declarative UIs. Build interactive applications using only HTML attributes powered by signals.
 
 ## Features
@@ -61,7 +66,7 @@ Or include via CDN:
 
 ## Documentation
 
-Full documentation available at [your-docs-url]
+Full documentation available at [https://stormlightlabs.github.io/volt/](https://stormlightlabs.github.io/volt/)
 
 ## License
 

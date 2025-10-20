@@ -3,9 +3,12 @@
 layout: home
 
 hero:
-  name: "Volt.js"
-  text: "A reactive, hypermedia framework."
-  tagline: A reactive, hypermedia framework.
+  name: "VoltX.js"
+  # text: "A reactive, hypermedia framework."
+  tagline: |
+    A reactive, hypermedia framework.
+
+    ⚠️ Pre-release software: Breaking changes expected
   actions:
     - theme: brand
       text: Overview

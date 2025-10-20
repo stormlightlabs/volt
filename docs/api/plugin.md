@@ -5,12 +5,12 @@ updated: 2025-10-18
 
 # plugin
 
-Plugin system for extending Volt.js with custom bindings
+Plugin system for extending VoltX.js with custom bindings
 
 ## registerPlugin
 
 Register a custom plugin with a given name.
-Plugins extend Volt.js with custom data-volt-* attribute bindings.
+Plugins extend VoltX.js with custom data-volt-* attribute bindings.
 
 ```typescript
 export function registerPlugin(name: string, handler: PluginHandler): void
