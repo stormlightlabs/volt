@@ -1,5 +1,10 @@
 # VoltX.js
 
+[![codecov](https://codecov.io/gh/stormlightlabs/volt/branch/main/graph/badge.svg)](https://codecov.io/gh/stormlightlabs/volt)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![JSR](https://jsr.io/badges/@voltx/core)](https://jsr.io/@voltx/core)
+![NPM Version](https://img.shields.io/npm/v/voltx.js?logo=npm)
+
 > ⚠️ **Pre-release Software**: VoltX.js is in active development. Breaking changes are expected until v1.0. Use in production at your own risk.
 
 ## Philosophy/Goals
