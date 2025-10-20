@@ -14,6 +14,7 @@ const test: ViteUserConfig["test"] = {
   reporters: ["dot"],
   coverage: {
     provider: "v8",
+    reporter: ["text", "json-summary", "html", "lcov", "json"],
     thresholds: { functions: 50, branches: 50 },
     include: ["**/src/**"],
     exclude: ["**/cli/src/**", "**/src/main.ts"],

@@ -26,6 +26,8 @@
     "preview": "vite preview",
     "test": "vitest",
     "test:run": "vitest run",
+    "coverage": "vitest run --coverage",
+    "codecov": "vitest run --coverage --reporter=json",
     "typecheck": "tsc --noEmit",
     "prepublishOnly": "pnpm build && pnpm test:run",
     "publish:npm": "npm publish --access=public",
