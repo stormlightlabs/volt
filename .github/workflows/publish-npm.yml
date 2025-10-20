@@ -1,4 +1,4 @@
-name: Release components package
+name: Publish to npm
 
 on:
   push:
