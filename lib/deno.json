@@ -1,0 +1,13 @@
+{
+  "name": "@voltx/core",
+  "version": "0.1.0",
+  "exports": "./src/index.ts",
+  "imports": {
+    "$core/": "./src/core/",
+    "$plugins/": "./src/plugins/",
+    "$types/": "./src/types/",
+    "$debug": "./src/debug.ts",
+    "$vebug": "./src/debug.ts",
+    "$volt": "./src/index.ts"
+  }
+}
