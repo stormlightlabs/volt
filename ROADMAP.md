@@ -17,8 +17,9 @@
 | v0.2.0  |   ✓   | [Reactive Attributes & Event Modifiers](#reactive-attributes--event-modifiers)   |
 | v0.3.0  |   ✓   | [Global State](#global-state)                                                    |
 | v0.4.0  |       | [Animation & Transitions](#animation--transitions)                               |
-|         |       | [History API Routing Plugin](#history-api-routing-plugin)                        |
-| v0.5.0  |       | [Persistence & Offline](#persistence--offline)                                   |
+| v0.5.0. |       | [History API Routing Plugin](#history-api-routing-plugin)                        |
+|         |       | [Refactor](#evaluator--binder-hardening)                                         |
+|         |       | [Persistence & Offline](#persistence--offline)                                   |
 |         |       | [Background Requests & Reactive Polling](#background-requests--reactive-polling) |
 | v0.6.0  |       | [Navigation & History Management](#navigation--history-management)               |
 | v0.7.0  |       | [Streaming & Patch Engine](#streaming--patch-engine)                             |
@@ -214,6 +215,13 @@ _NOTE_: `data-x-*` is now `data-volt-*`
     - Community contribution guide & governance doc
 
 ## Parking Lot
+
+### Evaluator & Binder Hardening
+
+- [ ] Replace the hand-rolled parser in `lib/src/core/evaluator.ts` with a cached `new Function` compiler that runs in `'use strict'`, only receives explicitly whitelisted globals, and keeps hazardous constructors out of scope.
+- [ ] Introduce a `createScopeProxy` helper that wraps user scopes in an `Object.create(null)` proxy, blocks prototype pollution vectors (`constructor`, `__proto__`, `globalThis`), unwraps signals on read, and freezes the injected `$` helpers before exposing them to expressions.
+- [ ] Slim `lib/src/core/binder.ts` into a directive registry so only structural directives ship in core; have optional pieces (HTTP actions, surge transitions, etc.) self-register through plugins to enable tree shaking.
+- [ ] Run expressions and plugin hooks against the hardened proxy scope, surface evaluation errors back to callers instead of swallowing them, and cover the guardrails with Vitest cases that assert unsafe access is rejected.
 
 ## Examples
 

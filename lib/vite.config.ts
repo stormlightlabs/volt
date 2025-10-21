@@ -1,6 +1,6 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { type BuildEnvironmentOptions, defineConfig } from "vite";
+import { type BuildEnvironmentOptions, defineConfig, type LibraryOptions } from "vite";
 import { type ViteUserConfig } from "vitest/config";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -22,32 +22,40 @@ const test: ViteUserConfig["test"] = {
 };
 
 const buildOptions = (mode: string): BuildEnvironmentOptions => {
-  const isLibBuild = mode === "lib" || mode === "lib:min";
-  const shouldMinify = mode === "lib:min";
+  const [baseMode, ...flags] = mode.split(":");
+  const isLibBuild = baseMode === "lib";
+  const shouldMinify = flags.includes("min");
+  const target = flags.find((flag) => flag !== "min") ?? "all";
 
-  return {
-    minify: shouldMinify ? "oxc" : false,
-    ...(isLibBuild
-      ? {
-        lib: {
-          entry: { voltx: path.resolve(__dirname, "src/index.ts"), debug: path.resolve(__dirname, "src/debug.ts") },
-          name: "VoltX",
-          formats: ["es"],
-          fileName: (format, entryName) => {
-            const suffix = shouldMinify ? ".min.js" : ".js";
-            return `${entryName}${suffix}`;
-          },
-        },
-        rolldownOptions: {
-          output: { assetFileNames: "voltx.[ext]", manualChunks: undefined, preserveModules: false },
-          onwarn(warning, warn) {
-            if (warning.code === "UNUSED_EXTERNAL_IMPORT") return;
-            warn(warning);
-          },
-        },
-      }
-      : {}),
+  if (!isLibBuild) return { minify: shouldMinify ? "oxc" : false };
+
+  const entry: LibraryOptions["entry"] = {};
+  if (target === "all" || target === "voltx") entry.voltx = path.resolve(__dirname, "src/index.ts");
+  if (target === "all" || target === "debug") entry.debug = path.resolve(__dirname, "src/debug.ts");
+
+  if (Object.keys(entry).length === 0) {
+    entry.voltx = path.resolve(__dirname, "src/index.ts");
+  }
+
+  const lib: BuildEnvironmentOptions["lib"] = {
+    entry,
+    name: "VoltX",
+    formats: ["es"],
+    fileName: (format, entryName) => {
+      const suffix = shouldMinify ? ".min.js" : ".js";
+      return `${entryName}${suffix}`;
+    },
   };
+
+  const rolldownOptions: BuildEnvironmentOptions["rolldownOptions"] = {
+    output: { assetFileNames: "voltx.[ext]" },
+    onwarn(warning, warn) {
+      if (warning.code === "UNUSED_EXTERNAL_IMPORT") return;
+      warn(warning);
+    },
+  };
+
+  return { minify: shouldMinify ? "oxc" : false, lib, rolldownOptions };
 };
 
 export default defineConfig(({ mode }) => ({
@@ -61,10 +69,7 @@ export default defineConfig(({ mode }) => ({
       "$vebug": path.resolve(__dirname, "./src/debug.ts"),
     },
   },
-  build: {
-    ...buildOptions(mode),
-    emptyOutDir: false, // Don't clear dist/ to preserve TypeScript declarations
-  },
+  build: { ...buildOptions(mode), emptyOutDir: false },
   test,
   plugins: [],
 }));
