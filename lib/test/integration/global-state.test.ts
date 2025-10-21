@@ -459,10 +459,7 @@ describe("Global State Integration", () => {
 
       charge();
 
-      expect(consoleError).toHaveBeenCalledWith(
-        expect.stringContaining("Error evaluating expression"),
-        expect.any(Error),
-      );
+      expect(consoleError).toHaveBeenCalledWith(expect.stringContaining("Error in data-volt-init"), expect.any(Error));
 
       consoleError.mockRestore();
     });

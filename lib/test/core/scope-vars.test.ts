@@ -267,7 +267,7 @@ describe("Special Scope Variables", () => {
       probe("null.toString()", () => {});
 
       expect(consoleError).toHaveBeenCalledWith(
-        expect.stringContaining("Error evaluating expression"),
+        expect.stringContaining("Error in $probe expression"),
         expect.any(Error),
       );
 

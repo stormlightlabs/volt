@@ -22,8 +22,8 @@
     "build": "pnpm build:clean && pnpm build:types && pnpm build:lib && pnpm build:lib:min && pnpm build:css && pnpm build:css:min && pnpm build:finalize",
     "build:clean": "rm -rf dist",
     "build:types": "tsc -p tsconfig.build.json",
-    "build:lib": "vite build --mode lib",
-    "build:lib:min": "vite build --mode lib:min",
+    "build:lib": "vite build --mode lib:voltx && vite build --mode lib:debug",
+    "build:lib:min": "vite build --mode lib:min:voltx && vite build --mode lib:min:debug",
     "build:css": "postcss src/styles/index.css -o dist/voltx.css",
     "build:css:min": "postcss src/styles/index.css -o dist/voltx.min.css --env production",
     "build:finalize": "node scripts/build-finalize.js",
@@ -51,6 +51,7 @@
     "postcss": "^8.5.6",
     "postcss-cli": "^11.0.1",
     "postcss-import": "^16.1.1",
+    "terser": "^5.44.0",
     "vite": "npm:rolldown-vite@7.1.14"
   }
 }

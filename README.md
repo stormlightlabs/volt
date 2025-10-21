@@ -5,7 +5,9 @@
 [![JSR](https://jsr.io/badges/@voltx/core)](https://jsr.io/@voltx/core)
 ![NPM Version](https://img.shields.io/npm/v/voltx.js?logo=npm)
 
-> ⚠️ **Pre-release Software**: VoltX.js is in active development. Breaking changes are expected until v1.0. Use in production at your own risk.
+> ⚠️ **Pre-release Software**: VoltX.js remains in active development. Expect breaking changes until v1.0 and evaluate before using in production.
+
+Volt is a monorepo centered around the VoltX.js runtime—a lightweight, declarative alternative to component-centric UI frameworks. The repo also ships the Volt CLI and the documentation site that demonstrates and explains the runtime.
 
 ## Philosophy/Goals
 
@@ -33,61 +35,23 @@
 | Bindings | `data-volt-text`, `data-volt-html`, `data-volt-class` connect attributes or text to expressions.  |
 | Actions  | `data-volt-on-click`, `data-volt-on-input`, etc. attach event handlers declaratively.             |
 | Streams  | `data-volt-stream="/events"` listens for SSE or WebSocket updates and applies JSON patches.       |
-| Plugins  | Modular extensions (`data-volt-persist`, `data-volt-animate`, etc.) that enhance the core.        |
+| Plugins  | Modular extensions (`data-volt-persist`, `data-volt-surge`, `data-volt-shift`, etc.) to enhance the core. |
 
-## Project Structure
+## Packages
 
 ```sh
 volt/
-├── dev/
-├── docs/
-├── examples/
-├── lib
-│   ├── index.html
-│   ├── public
-│   ├── src
-│   │   ├── core
-│   │   │   ├── asyncEffect.ts
-│   │   │   ├── binder.ts
-│   │   │   ├── charge.ts
-│   │   │   ├── dom.ts
-│   │   │   ├── evaluator.ts
-│   │   │   ├── http.ts
-│   │   │   ├── lifecycle.ts
-│   │   │   ├── plugin.ts
-│   │   │   ├── reactive.ts
-│   │   │   ├── shared.ts
-│   │   │   ├── signal.ts
-│   │   │   ├── ssr.ts
-│   │   │   └── tracker.ts
-│   │   ├── debug
-│   │   │   ├── graph.ts
-│   │   │   ├── logger.ts
-│   │   │   └── registry.ts
-│   │   ├── debug.ts
-│   │   ├── demo/
-│   │   ├── index.ts
-│   │   ├── main.ts
-│   │   ├── plugins
-│   │   │   ├── persist.ts
-│   │   │   ├── scroll.ts
-│   │   │   └── url.ts
-│   │   ├── styles
-│   │   │   ├── index.css
-│   │   │   ├── variables.css
-│   │   │   ├── typography.css
-│   │   │   ├── forms.css
-│   │   │   ├── components.css
-│   │   │   ├── collections.css
-│   │   │   ├── media.css
-│   │   │   └── base.css
-│   │   └── types
-│   │       ├── helpers.ts
-│   │       └── volt.d.ts
-│   └──  test/
-└── README.md
-
+├── lib/   VoltX.js runtime published to npm (`voltx.js`) and JSR (`@voltx/core`)
+├── dev/   Volt CLI and local tooling
+└── docs/  VitePress documentation site
 ```
+
+## Getting Started
+
+- Runtime usage: see [`lib/README.md`](./lib/README.md) for installation guides and quick-start examples.
+- Local development: `pnpm install` then `pnpm --filter lib dev` run package-specific scripts (`build`, `test`, etc.).
+    - Review [contribution](./CONTRIBUTING.md) guidelines
+- Documentation: `pnpm --filter docs docs:dev` launches the VitePress site.
 
 ## License
 

@@ -1,7 +1,7 @@
 # Expression Evaluation
 
-VoltX.js evaluates JavaScript-like expressions in HTML templates using a sandboxed recursive descent parser.
-The evaluator is CSP-compliant and does not use `eval()` or `new Function()`.
+VoltX.js evaluates JavaScript-like expressions in HTML templates using a cached `new Function()` compiler wrapped in a hardened scope proxy.
+The evaluator compiles each unique expression once, caches the resulting function, and executes it against a sandboxed scope that only exposes explicitly whitelisted globals.
 
 ## Supported Syntax
 
@@ -22,7 +22,8 @@ Signals are automatically unwrapped when referenced in expressions.
 
 ## Security Model
 
-The evaluator implements a balanced sandbox that blocks dangerous operations while attempting to preserve flexibility for most use cases.
+The evaluator wraps each scope in an `Object.create(null)` proxy that filters dangerous identifiers, unwraps signals safely, and prevents prototype-chain access.
+Even though the implementation relies on `new Function()`, the compiled function only ever sees the proxy—never the real `globalThis`.
 
 ### Blocked Access
 
@@ -36,18 +37,22 @@ The following global names are blocked even if present in scope:
 
 Standard constructors and utilities remain accessible: `Array`, `Object`, `String`, `Number`, `Boolean`, `Date`, `Math`, `JSON`, `RegExp`, `Map`, `Set`, `Promise`.
 
-All built-in methods on native types (strings, arrays, objects, etc.) are permitted. Signal methods (`get`, `set`, `subscribe`) are explicitly allowed even though `constructor` is otherwise blocked.
+All built-in methods on native types (strings, arrays, objects, etc.) are permitted.
+Signal methods (`get`, `set`, `subscribe`) are explicitly allowed even though `constructor` is otherwise blocked.
 
 ### Error Handling
 
-Expressions containing unsafe operations or syntax errors are caught, logged to the console, and return `undefined` rather than throwing. This prevents malicious or malformed expressions from breaking the application.
+Expressions containing unsafe operations or syntax errors are wrapped in an `EvaluationError`.
+VoltX logs the error with the original expression for easier debugging and returns `undefined` to keep the UI responsive.
+
+Boolean negation is rewritten internally (`!foo` becomes `!$unwrap(foo)`) so signals behave like plain values during coercion without leaking signal internals into the template.
 
 ## Guidelines
 
 ### Performance
 
-Expressions are parsed on every evaluation. For optimal performance, keep expressions simple and use computed signals for complex calculations.
-The evaluator automatically tracks signal dependencies so only affected bindings re-evaluate when signals change.
+Expressions are compiled on first use and subsequent evaluations hit the cache.
+Keep expressions simple and prefer computed signals for heavy logic—the evaluator already tracks dependencies so only affected bindings re-run.
 
 ### Best Practices
 
@@ -55,3 +60,4 @@ The evaluator automatically tracks signal dependencies so only affected bindings
 - Never use untrusted user input directly in expressions without validation.
 - Prefer simple, readable expressions in templates over complex nested operations.
 - Structure your scope data with consistent shapes (or consistent types) to avoid runtime errors.
+- Remember that event handlers (`data-volt-on-*`) evaluate statements without unwrapping signals; call `signal.set(...)` or `store.set(...)` directly when you need to mutate state.

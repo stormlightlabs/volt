@@ -18,8 +18,6 @@
  * @packageDocumentation
  */
 
-import { reactive as coreReactive } from "$core/reactive";
-import { computed as coreComputed, signal as coreSignal } from "$core/signal";
 import type { ComputedSignal, Signal, SignalType } from "$types/volt";
 import {
   buildDependencyGraph,
@@ -52,6 +50,7 @@ import {
   registerReactive,
   registerSignal,
 } from "./debug/registry";
+import { computed as coreComputed, reactive as coreReactive, signal as coreSignal } from "./index";
 
 /**
  * Create a signal with automatic debug registration.

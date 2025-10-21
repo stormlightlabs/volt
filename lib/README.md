@@ -1,5 +1,9 @@
 # VoltX.js
 
+[![codecov](https://codecov.io/gh/stormlightlabs/volt/branch/main/graph/badge.svg)](https://codecov.io/gh/stormlightlabs/volt)
+[![JSR](https://jsr.io/badges/@voltx/core)](https://jsr.io/@voltx/core)
+![NPM Version](https://img.shields.io/npm/v/voltx.js?logo=npm)
+
 > [!WARNING]
 > VoltX.js is in active development.
 >
@@ -9,12 +13,12 @@ A lightweight reactive framework for declarative UIs. Build interactive applicat
 
 ## Features
 
-- Declarative HTML-driven reactivity via `data-volt-*` attributes
-- Signal-based state management with automatic DOM updates
-- Zero dependencies, under 15 KB gzipped
-- No virtual DOM, no build step required
-- Server-side rendering and hydration support
-- Built-in plugins for persistence, routing, and scroll management
+- Declarative, HTML-first reactivity via `data-volt-*` attributes
+- Fine-grained signals and effects that update the DOM without a virtual DOM
+- Zero runtime dependencies and a sub-15 KB gzipped core
+- Built-in transport for SSE/WebSocket streams and JSON Patch updates
+- Hydration-friendly rendering with SSR helpers
+- Optional CSS design system and debug overlay for inspecting signal graphs
 
 ## Installation
 
@@ -50,6 +54,16 @@ import { charge, signal } from "jsr:@voltx/core";
 </script>
 ```
 
+## Plugins
+
+- `data-volt-persist` – automatically sync state across reloads and tabs
+- `data-volt-url` – keep signals in sync with query params and hashes
+- `data-volt-scroll` – manage scroll restoration and anchored navigation
+- `data-volt-shift` – trigger reusable keyframe animations
+- `data-volt-surge` – apply enter/leave transitions with view-transition support
+
+Plugins are opt-in and can be combined declaratively or registered programmatically via `charge({ plugins: [...] })`.
+
 ## Using CSS
 
 Import the optional CSS framework:
@@ -67,6 +81,12 @@ Or include via CDN:
 ## Documentation
 
 Full documentation available at [https://stormlightlabs.github.io/volt/](https://stormlightlabs.github.io/volt/)
+
+## Development
+
+- `pnpm install` (at the repo root) to bootstrap the workspace
+- `pnpm --filter lib dev` runs package scripts such as `build`, `test`, and `typecheck`
+- `pnpm dev` spins up the playground in `lib/dev` for interactive testing
 
 ## License
 

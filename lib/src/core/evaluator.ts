@@ -1,873 +1,517 @@
 /**
- * Safe expression evaluation with operators support
+ * Safe expression evaluation using cached Function compiler
  *
- * Implements a recursive descent parser for expressions without using eval().
- * Includes sandboxing to prevent prototype pollution and sandbox escape attacks.
+ * Replaces hand-rolled parser with Function constructor for significant bundle size reduction.
+ * Includes hardened scope proxy to prevent prototype pollution and auto-unwrap signals.
  */
 
 import type { Scope } from "$types/volt";
 import { DANGEROUS_GLOBALS, DANGEROUS_PROPERTIES, SAFE_GLOBALS } from "./constants";
-import { isNil, isSignal } from "./shared";
+import { isSignal } from "./shared";
+
+/**
+ * Custom error class for expression evaluation failures
+ *
+ * Provides context about which expression failed and the underlying cause.
+ */
+export class EvaluationError extends Error {
+  public expr: string;
+  public cause: unknown;
+  constructor(expression: string, cause: unknown) {
+    const message = cause instanceof Error ? cause.message : String(cause);
+    super(`Error evaluating "${expression}": ${message}`);
+    this.name = "EvaluationError";
+    this.expr = expression;
+    this.cause = cause;
+  }
+}
 
 const dangerousProps = new Set(DANGEROUS_PROPERTIES);
+const dangerousGlobals = new Set(DANGEROUS_GLOBALS);
 const safeGlobals = new Set(SAFE_GLOBALS);
 
-function isSafeProp(key: unknown): boolean {
-  if (typeof key !== "string" && typeof key !== "number") {
-    return true;
-  }
-
-  const keyStr = String(key);
-  return !dangerousProps.has(keyStr);
+interface WrapOptions {
+  unwrapSignals: boolean;
 }
 
-function isSafeAccess(object: unknown, key: unknown): boolean {
-  if (!isSafeProp(key)) {
+const defaultWrapOptions: WrapOptions = { unwrapSignals: false };
+const readWrapOptions: WrapOptions = { unwrapSignals: true };
+
+export type EvaluateOpts = { unwrapSignals?: boolean };
+
+/**
+ * Check if a property name is dangerous and should be blocked
+ */
+function isDangerousProperty(key: unknown): boolean {
+  if (typeof key !== "string" && typeof key !== "symbol") {
     return false;
   }
-
-  if (typeof object === "function") {
-    const keyStr = String(key);
-    if (keyStr === "constructor" && object.name && !safeGlobals.has(object.name)) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
-type TokenType =
-  | "NUMBER"
-  | "STRING"
-  | "TRUE"
-  | "FALSE"
-  | "NULL"
-  | "UNDEFINED"
-  | "IDENTIFIER"
-  | "DOT"
-  | "LBRACKET"
-  | "RBRACKET"
-  | "LPAREN"
-  | "RPAREN"
-  | "LBRACE"
-  | "RBRACE"
-  | "COMMA"
-  | "QUESTION"
-  | "COLON"
-  | "ARROW"
-  | "DOT_DOT_DOT"
-  | "PLUS"
-  | "MINUS"
-  | "STAR"
-  | "SLASH"
-  | "PERCENT"
-  | "BANG"
-  | "EQ_EQ_EQ"
-  | "BANG_EQ_EQ"
-  | "LT"
-  | "GT"
-  | "LT_EQ"
-  | "GT_EQ"
-  | "AND_AND"
-  | "OR_OR"
-  | "EOF";
-
-type Token = { type: TokenType; value: unknown; start: number; end: number };
-
-function tokenize(expr: string): Token[] {
-  const tokens: Token[] = [];
-  let pos = 0;
-
-  while (pos < expr.length) {
-    const char = expr[pos];
-
-    if (/\s/.test(char)) {
-      pos++;
-      continue;
-    }
-
-    if (/\d/.test(char) || (char === "-" && pos + 1 < expr.length && /\d/.test(expr[pos + 1]))) {
-      const start = pos;
-      if (char === "-") pos++;
-      while (pos < expr.length && /[\d.]/.test(expr[pos])) {
-        pos++;
-      }
-      tokens.push({ type: "NUMBER", value: Number(expr.slice(start, pos)), start, end: pos });
-      continue;
-    }
-
-    if (char === "\"" || char === "'") {
-      const start = pos;
-      const quote = char;
-      pos++;
-      let value = "";
-      while (pos < expr.length && expr[pos] !== quote) {
-        if (expr[pos] === "\\") {
-          pos++;
-          if (pos < expr.length) {
-            value += expr[pos];
-          }
-        } else {
-          value += expr[pos];
-        }
-        pos++;
-      }
-      if (pos < expr.length) pos++;
-      tokens.push({ type: "STRING", value, start, end: pos });
-      continue;
-    }
-
-    if (/[a-zA-Z_$]/.test(char)) {
-      const start = pos;
-      while (pos < expr.length && /[a-zA-Z0-9_$]/.test(expr[pos])) {
-        pos++;
-      }
-      const value = expr.slice(start, pos);
-
-      switch (value) {
-        case "true": {
-          tokens.push({ type: "TRUE", value: true, start, end: pos });
-          break;
-        }
-        case "false": {
-          tokens.push({ type: "FALSE", value: false, start, end: pos });
-          break;
-        }
-        case "null": {
-          tokens.push({ type: "NULL", value: null, start, end: pos });
-          break;
-        }
-        case "undefined": {
-          tokens.push({ type: "UNDEFINED", value: undefined, start, end: pos });
-          break;
-        }
-        default: {
-          tokens.push({ type: "IDENTIFIER", value, start, end: pos });
-        }
-      }
-      continue;
-    }
-
-    const start = pos;
-
-    if (pos + 2 < expr.length) {
-      const threeChar = expr.slice(pos, pos + 3);
-      if (threeChar === "===") {
-        tokens.push({ type: "EQ_EQ_EQ", value: "===", start, end: pos + 3 });
-        pos += 3;
-        continue;
-      }
-      if (threeChar === "!==") {
-        tokens.push({ type: "BANG_EQ_EQ", value: "!==", start, end: pos + 3 });
-        pos += 3;
-        continue;
-      }
-      if (threeChar === "...") {
-        tokens.push({ type: "DOT_DOT_DOT", value: "...", start, end: pos + 3 });
-        pos += 3;
-        continue;
-      }
-    }
-
-    if (pos + 1 < expr.length) {
-      const twoChar = expr.slice(pos, pos + 2);
-      switch (twoChar) {
-        case "<=": {
-          tokens.push({ type: "LT_EQ", value: "<=", start, end: pos + 2 });
-          pos += 2;
-          continue;
-        }
-        case ">=": {
-          tokens.push({ type: "GT_EQ", value: ">=", start, end: pos + 2 });
-          pos += 2;
-          continue;
-        }
-        case "&&": {
-          tokens.push({ type: "AND_AND", value: "&&", start, end: pos + 2 });
-          pos += 2;
-          continue;
-        }
-        case "||": {
-          tokens.push({ type: "OR_OR", value: "||", start, end: pos + 2 });
-          pos += 2;
-          continue;
-        }
-        case "=>": {
-          tokens.push({ type: "ARROW", value: "=>", start, end: pos + 2 });
-          pos += 2;
-          continue;
-        }
-      }
-    }
-
-    switch (char) {
-      case ".": {
-        tokens.push({ type: "DOT", value: ".", start, end: pos + 1 });
-        pos++;
-        break;
-      }
-      case "[": {
-        tokens.push({ type: "LBRACKET", value: "[", start, end: pos + 1 });
-        pos++;
-        break;
-      }
-      case "]": {
-        tokens.push({ type: "RBRACKET", value: "]", start, end: pos + 1 });
-        pos++;
-        break;
-      }
-      case "(": {
-        tokens.push({ type: "LPAREN", value: "(", start, end: pos + 1 });
-        pos++;
-        break;
-      }
-      case ")": {
-        tokens.push({ type: "RPAREN", value: ")", start, end: pos + 1 });
-        pos++;
-        break;
-      }
-      case "+": {
-        tokens.push({ type: "PLUS", value: "+", start, end: pos + 1 });
-        pos++;
-        break;
-      }
-      case "-": {
-        tokens.push({ type: "MINUS", value: "-", start, end: pos + 1 });
-        pos++;
-        break;
-      }
-      case "*": {
-        tokens.push({ type: "STAR", value: "*", start, end: pos + 1 });
-        pos++;
-        break;
-      }
-      case "/": {
-        tokens.push({ type: "SLASH", value: "/", start, end: pos + 1 });
-        pos++;
-        break;
-      }
-      case "%": {
-        tokens.push({ type: "PERCENT", value: "%", start, end: pos + 1 });
-        pos++;
-        break;
-      }
-      case "!": {
-        tokens.push({ type: "BANG", value: "!", start, end: pos + 1 });
-        pos++;
-        break;
-      }
-      case "<": {
-        tokens.push({ type: "LT", value: "<", start, end: pos + 1 });
-        pos++;
-        break;
-      }
-      case ">": {
-        tokens.push({ type: "GT", value: ">", start, end: pos + 1 });
-        pos++;
-        break;
-      }
-      case "{": {
-        tokens.push({ type: "LBRACE", value: "{", start, end: pos + 1 });
-        pos++;
-        break;
-      }
-      case "}": {
-        tokens.push({ type: "RBRACE", value: "}", start, end: pos + 1 });
-        pos++;
-        break;
-      }
-      case ",": {
-        tokens.push({ type: "COMMA", value: ",", start, end: pos + 1 });
-        pos++;
-        break;
-      }
-      case "?": {
-        tokens.push({ type: "QUESTION", value: "?", start, end: pos + 1 });
-        pos++;
-        break;
-      }
-      case ":": {
-        tokens.push({ type: "COLON", value: ":", start, end: pos + 1 });
-        pos++;
-        break;
-      }
-      default: {
-        throw new Error(`Unexpected character '${char}' at position ${pos}`);
-      }
-    }
-  }
-
-  tokens.push({ type: "EOF", value: null, start: pos, end: pos });
-  return tokens;
+  return dangerousProps.has(String(key));
 }
 
 /**
- * Recursive descent parser for expression evaluation with operator precedence
+ * Type guard to check if a Dep has a set method (is a Signal vs ComputedSignal)
  */
-class Parser {
-  private tokens: Token[];
-  private current = 0;
-  private scope: Scope;
-  private dangerousGlobals = new Set(DANGEROUS_GLOBALS);
+function hasSetMethod(
+  dep: unknown,
+): dep is { get: () => unknown; set: (v: unknown) => void; subscribe: (fn: () => void) => () => void } {
+  return (typeof dep === "object"
+    && dep !== null
+    && "set" in dep
+    && typeof (dep as { set?: unknown }).set === "function");
+}
 
-  constructor(tokens: Token[], scope: Scope) {
-    this.tokens = tokens;
-    this.scope = scope;
+/**
+ * Wrap a signal to behave like its value while preserving methods
+ *
+ * Creates a proxy that:
+ * - Returns signal methods (.get, .subscribe, and .set if available) when accessed
+ * - Acts like the unwrapped value for all other operations
+ * - Unwraps nested signals in the value
+ *
+ * Handles both Signal (has set) and ComputedSignal (no set)
+ */
+function wrapSignal(
+  signal: { get: () => unknown; subscribe: (fn: () => void) => () => void },
+  options: WrapOptions,
+): unknown {
+  const hasSet = hasSetMethod(signal);
+
+  const wrapper: Record<string | symbol, unknown> = {
+    get: signal.get,
+    subscribe: signal.subscribe,
+    valueOf: () => signal.get(),
+    toString: () => String(signal.get()),
+    [Symbol.toPrimitive]: (_hint: string) => signal.get(),
+  };
+
+  if (hasSet) {
+    wrapper.set = signal.set;
   }
 
-  parse(): unknown {
-    return this.parseExpr();
-  }
-
-  private parseExpr(): unknown {
-    return this.parseTernary();
-  }
-
-  private parseTernary(): unknown {
-    const expr = this.parseLogicalOr();
-
-    if (this.match("QUESTION")) {
-      const trueBranch = this.parseExpr();
-      this.consume("COLON", "Expected ':' in ternary expression");
-      const falseBranch = this.parseExpr();
-      return expr ? trueBranch : falseBranch;
-    }
-
-    return expr;
-  }
-
-  private parseLogicalOr(): unknown {
-    let left = this.parseLogicalAnd();
-
-    while (this.match("OR_OR")) {
-      const right = this.parseLogicalAnd();
-      left = Boolean(left) || Boolean(right);
-    }
-
-    return left;
-  }
-
-  private parseLogicalAnd(): unknown {
-    let left = this.parseEquality();
-
-    while (this.match("AND_AND")) {
-      const right = this.parseEquality();
-      left = Boolean(left) && Boolean(right);
-    }
-
-    return left;
-  }
-
-  private parseEquality(): unknown {
-    let left = this.parseRelational();
-
-    while (true) {
-      if (this.match("EQ_EQ_EQ")) {
-        const right = this.parseRelational();
-        left = left === right;
-      } else if (this.match("BANG_EQ_EQ")) {
-        const right = this.parseRelational();
-        left = left !== right;
-      } else {
-        break;
-      }
-    }
-
-    return left;
-  }
-
-  private parseRelational(): unknown {
-    let left = this.parseAdditive();
-
-    while (true) {
-      if (this.match("LT")) {
-        const right = this.parseAdditive();
-        left = (left as number) < (right as number);
-      } else if (this.match("GT")) {
-        const right = this.parseAdditive();
-        left = (left as number) > (right as number);
-      } else if (this.match("LT_EQ")) {
-        const right = this.parseAdditive();
-        left = (left as number) <= (right as number);
-      } else if (this.match("GT_EQ")) {
-        const right = this.parseAdditive();
-        left = (left as number) >= (right as number);
-      } else {
-        break;
-      }
-    }
-
-    return left;
-  }
-
-  private parseAdditive(): unknown {
-    let left = this.parseMultiplicative();
-
-    while (true) {
-      if (this.match("PLUS")) {
-        const right = this.parseMultiplicative();
-        left = (left as number) + (right as number);
-      } else if (this.match("MINUS")) {
-        const right = this.parseMultiplicative();
-        left = (left as number) - (right as number);
-      } else {
-        break;
-      }
-    }
-
-    return left;
-  }
-
-  private parseMultiplicative(): unknown {
-    let left = this.parseUnary();
-
-    while (true) {
-      if (this.match("STAR")) {
-        const right = this.parseUnary();
-        left = (left as number) * (right as number);
-      } else if (this.match("SLASH")) {
-        const right = this.parseUnary();
-        left = (left as number) / (right as number);
-      } else if (this.match("PERCENT")) {
-        const right = this.parseUnary();
-        left = (left as number) % (right as number);
-      } else {
-        break;
-      }
-    }
-
-    return left;
-  }
-
-  private parseUnary(): unknown {
-    if (this.match("BANG")) {
-      const operand = this.parseUnary();
-      return !operand;
-    }
-
-    if (this.match("MINUS")) {
-      const operand = this.parseUnary();
-      return -(operand as number);
-    }
-
-    if (this.match("PLUS")) {
-      const operand = this.parseUnary();
-      return +(operand as number);
-    }
-
-    return this.parseMemberAccess();
-  }
-
-  private parseMemberAccess(): unknown {
-    let object = this.parsePrimary();
-
-    while (true) {
-      if (this.match("DOT")) {
-        const prop = this.consume("IDENTIFIER", "Expected property name after '.'");
-        const propValue = this.getMember(object, prop.value as string);
-
-        if (this.check("LPAREN")) {
-          this.advance();
-          const args = this.parseArgumentList();
-          this.consume("RPAREN", "Expected ')' after arguments");
-          const propName = prop.value as string;
-          const isSignalMethod = isSignal(object)
-            && (propName === "get" || propName === "set" || propName === "subscribe");
-          const unwrappedObject = !isSignalMethod && isSignal(object) ? object.get() : object;
-          object = this.callMethod(unwrappedObject, propName, args);
-        } else {
-          object = propValue;
-        }
-      } else if (this.match("LBRACKET")) {
-        const index = this.parseExpr();
-        this.consume("RBRACKET", "Expected ']' after member access");
-        object = this.getMember(object, index);
-      } else if (this.match("LPAREN")) {
-        const args = this.parseArgumentList();
-        this.consume("RPAREN", "Expected ')' after arguments");
-
-        if (typeof object === "function") {
-          const func = object as { name?: string };
-          if (func.name === "Function" || func.name === "eval") {
-            throw new Error("Cannot call dangerous function");
-          }
-          object = (object as (...args: unknown[]) => unknown)(...args);
-        } else {
-          throw new TypeError("Attempting to call a non-function value");
-        }
-      } else {
-        break;
-      }
-    }
-
-    if (isSignal(object)) {
-      return (object as { get: () => unknown }).get();
-    }
-
-    return object;
-  }
-
-  private parseArgumentList(): unknown[] {
-    const args: unknown[] = [];
-
-    if (this.check("RPAREN")) {
-      return args;
-    }
-
-    do {
-      args.push(this.parseExpr());
-    } while (this.match("COMMA"));
-
-    return args;
-  }
-
-  private callMethod(object: unknown, methodName: string, args: unknown[]): unknown {
-    if (isNil(object)) {
-      throw new Error(`Cannot call method '${methodName}' on ${object}`);
-    }
-
-    if (!isSafeAccess(object, methodName)) {
-      throw new Error(`Unsafe method call: ${methodName}`);
-    }
-
-    const method = (object as Record<string, unknown>)[methodName];
-
-    if (typeof method !== "function") {
-      throw new TypeError(`'${methodName}' is not a function`);
-    }
-
-    return (method as (...args: unknown[]) => unknown).call(object, ...args);
-  }
-
-  private parsePrimary(): unknown {
-    if (this.match("NUMBER", "STRING", "TRUE", "FALSE", "NULL", "UNDEFINED")) {
-      return this.previous().value;
-    }
-
-    if (this.match("IDENTIFIER")) {
-      const identifier = this.previous().value as string;
-
-      if (this.check("ARROW")) {
-        this.current--;
-        return this.parseArrowFunction();
+  return new Proxy(wrapper, {
+    get(target, prop) {
+      if (isDangerousProperty(prop)) {
+        return;
       }
 
-      return this.resolvePropPath(identifier);
-    }
-
-    if (this.match("LPAREN")) {
-      const start = this.current;
-
-      if (this.isArrowFunctionParams()) {
-        this.current = start - 1;
-        return this.parseArrowFunction();
+      if (prop === "get" || prop === "subscribe") {
+        return target[prop];
       }
 
-      const expr = this.parseExpr();
-      this.consume("RPAREN", "Expected ')' after expression");
-      return expr;
-    }
-
-    if (this.match("LBRACKET")) {
-      return this.parseArrayLiteral();
-    }
-
-    if (this.match("LBRACE")) {
-      return this.parseObjectLiteral();
-    }
-
-    throw new Error(`Unexpected token: ${this.peek().type}`);
-  }
-
-  private parseArrayLiteral(): unknown[] {
-    const elements: unknown[] = [];
-
-    if (this.match("RBRACKET")) {
-      return elements;
-    }
-
-    do {
-      if (this.match("DOT_DOT_DOT")) {
-        const spreadValue = this.parseExpr();
-        if (Array.isArray(spreadValue)) {
-          elements.push(...spreadValue);
-        } else {
-          throw new TypeError("Spread operator can only be used with arrays");
-        }
-      } else {
-        elements.push(this.parseExpr());
+      if (prop === "set" && hasSet) {
+        return target[prop];
       }
-    } while (this.match("COMMA"));
 
-    this.consume("RBRACKET", "Expected ']' after array elements");
-    return elements;
-  }
+      if (prop === "valueOf" || prop === "toString" || prop === Symbol.toPrimitive) {
+        return target[prop];
+      }
 
-  private parseObjectLiteral(): Record<string, unknown> {
-    const object: Record<string, unknown> = {};
+      const unwrapped = signal.get();
+      if (unwrapped && (typeof unwrapped === "object" || typeof unwrapped === "function")) {
+        const wrapped = wrapValue(unwrapped, options);
+        return (wrapped as Record<string | symbol, unknown>)[prop];
+      }
 
-    if (this.match("RBRACE")) {
-      return object;
-    }
+      if (unwrapped !== null && unwrapped !== undefined) {
+        const boxed = new Object(unwrapped) as Record<string | symbol, unknown>;
+        const value = Reflect.get(boxed, prop, boxed);
 
-    do {
-      if (this.match("DOT_DOT_DOT")) {
-        const spreadValue = this.parseExpr();
-        if (typeof spreadValue === "object" && spreadValue !== null && !Array.isArray(spreadValue)) {
-          for (const key of Object.keys(spreadValue)) {
-            if (!isSafeProp(key)) {
-              throw new Error(`Unsafe property in spread: ${key}`);
-            }
-          }
-          Object.assign(object, spreadValue);
-        } else {
-          throw new Error("Spread operator can only be used with objects in object literals");
-        }
-      } else {
-        let key: string;
-
-        if (this.match("IDENTIFIER")) {
-          key = this.previous().value as string;
-        } else if (this.match("STRING")) {
-          key = this.previous().value as string;
-        } else {
-          throw new Error("Expected property key in object literal");
+        if (typeof value === "function") {
+          return value.bind(unwrapped);
         }
 
-        if (!isSafeProp(key)) {
-          throw new Error(`Unsafe property key in object literal: ${key}`);
-        }
-
-        this.consume("COLON", "Expected ':' after property key");
-        const value = this.parseExpr();
-        object[key] = value;
-      }
-    } while (this.match("COMMA"));
-
-    this.consume("RBRACE", "Expected '}' after object properties");
-    return object;
-  }
-
-  private parseArrowFunction(): (...args: unknown[]) => unknown {
-    const params: string[] = [];
-
-    if (this.match("IDENTIFIER")) {
-      params.push(this.previous().value as string);
-    } else if (this.match("LPAREN")) {
-      if (!this.check("RPAREN")) {
-        do {
-          const param = this.consume("IDENTIFIER", "Expected parameter name");
-          params.push(param.value as string);
-        } while (this.match("COMMA"));
-      }
-      this.consume("RPAREN", "Expected ')' after parameters");
-    } else {
-      throw new Error("Expected arrow function parameters");
-    }
-
-    this.consume("ARROW", "Expected '=>' in arrow function");
-
-    if (this.match("LBRACE")) {
-      let braceDepth = 1;
-      while (braceDepth > 0 && !this.isAtEnd()) {
-        if (this.check("LBRACE")) braceDepth++;
-        if (this.check("RBRACE")) braceDepth--;
-        this.advance();
-      }
-      throw new Error("Arrow function block bodies are not yet supported. Use single expressions only.");
-    } else {
-      const exprTokens: Token[] = [];
-      let parenDepth = 0;
-      let bracketDepth = 0;
-      let braceDepth = 0;
-
-      outer: while (!this.isAtEnd()) {
-        const token = this.peek();
-
-        switch (token.type) {
-          case "LPAREN": {
-            parenDepth++;
-            break;
-          }
-          case "RPAREN": {
-            if (parenDepth === 0) break outer;
-            parenDepth--;
-            break;
-          }
-          case "LBRACKET": {
-            bracketDepth++;
-            break;
-          }
-          case "RBRACKET": {
-            if (bracketDepth === 0) break outer;
-            bracketDepth--;
-            break;
-          }
-          case "LBRACE": {
-            braceDepth++;
-            break;
-          }
-          case "RBRACE": {
-            if (braceDepth === 0) break outer;
-            braceDepth--;
-            break;
-          }
-          case "COMMA": {
-            if (parenDepth === 0 && bracketDepth === 0 && braceDepth === 0) {
-              break outer;
-            }
-            break;
-          }
-          default: {
-            break;
-          }
-        }
-
-        exprTokens.push(this.advance());
+        return wrapValue(value, options);
       }
 
-      const capturedScope = this.scope;
+      return;
+    },
 
-      return (...args: unknown[]) => {
-        const arrowScope: Scope = { ...capturedScope };
-        for (const [index, param] of params.entries()) {
-          arrowScope[param] = args[index];
-        }
-
-        const parser = new Parser([...exprTokens, { type: "EOF", value: null, start: 0, end: 0 }], arrowScope);
-        return parser.parse();
-      };
-    }
-  }
-
-  private isArrowFunctionParams(): boolean {
-    const saved = this.current;
-    let result = false;
-
-    try {
-      if (this.check("RPAREN")) {
-        this.advance();
-        if (this.check("ARROW")) {
-          result = true;
-        }
-      } else {
-        while (!this.isAtEnd() && !this.check("RPAREN")) {
-          if (!this.match("IDENTIFIER", "COMMA")) {
-            result = false;
-            break;
-          }
-        }
-        if (this.match("RPAREN") && this.check("ARROW")) {
-          result = true;
-        }
+    has(_target, prop) {
+      if (isDangerousProperty(prop)) {
+        return false;
       }
-    } finally {
-      this.current = saved;
-    }
 
-    return result;
-  }
+      if (prop === "get" || prop === "subscribe") {
+        return true;
+      }
 
-  private getMember(object: unknown, key: unknown): unknown {
-    if (isNil(object)) {
-      return undefined;
-    }
+      if (prop === "set" && hasSet) {
+        return true;
+      }
 
-    if (!isSafeAccess(object, key)) {
-      throw new Error(`Unsafe property access: ${String(key)}`);
-    }
+      const unwrapped = signal.get();
+      if (unwrapped && (typeof unwrapped === "object" || typeof unwrapped === "function")) {
+        return prop in unwrapped;
+      }
+      if (unwrapped !== null && unwrapped !== undefined) {
+        const boxed = new Object(unwrapped) as Record<string | symbol, unknown>;
+        return Reflect.has(boxed, prop);
+      }
+      return false;
+    },
+  }) as unknown;
+}
 
-    if (isSignal(object) && (key === "get" || key === "set" || key === "subscribe")) {
-      return (object as Record<string, unknown>)[key as string];
-    }
-
-    if (isSignal(object)) {
-      object = (object as { get: () => unknown }).get();
-    }
-
-    const value = (object as Record<string | number, unknown>)[key as string | number];
-
-    if (isSignal(value)) {
-      return value.get();
-    }
-
+/**
+ * Wrap a value to block dangerous property access
+ *
+ * Wraps ALL objects to prevent prototype pollution attacks.
+ * Built-in methods still work because we only block dangerous properties.
+ */
+function wrapValue(value: unknown, options: WrapOptions = defaultWrapOptions): unknown {
+  if (value === null || value === undefined) {
     return value;
   }
 
-  private resolvePropPath(path: string): unknown {
-    if (!isSafeProp(path)) {
-      throw new Error(`Unsafe property access: ${path}`);
+  if (isSignal(value)) {
+    if (options.unwrapSignals) {
+      return wrapValue((value as { get: () => unknown }).get(), options);
     }
-
-    if (this.dangerousGlobals.has(path)) {
-      throw new Error(`Access to dangerous global: ${path}`);
-    }
-
-    if (path in this.scope) {
-      return this.scope[path];
-    }
-
-    if (safeGlobals.has(path)) {
-      return (globalThis as Record<string, unknown>)[path];
-    }
-
-    return undefined;
+    return wrapSignal(value, options);
   }
 
-  private match(...types: TokenType[]): boolean {
-    for (const type of types) {
-      if (this.check(type)) {
-        this.advance();
+  if (typeof value !== "object" && typeof value !== "function") {
+    return value;
+  }
+
+  return new Proxy(value as object, {
+    get(target, prop) {
+      if (isDangerousProperty(prop)) {
+        return;
+      }
+
+      const result = (target as Record<string | symbol, unknown>)[prop];
+
+      if (typeof result === "function") {
+        return result.bind(target);
+      }
+
+      return wrapValue(result, options);
+    },
+
+    set(target, prop, newValue) {
+      if (isDangerousProperty(prop)) {
         return true;
       }
-    }
+
+      (target as Record<string | symbol, unknown>)[prop] = newValue;
+      return true;
+    },
+
+    has(target, prop) {
+      if (isDangerousProperty(prop)) {
+        return false;
+      }
+      return prop in target;
+    },
+  });
+}
+
+/**
+ * Create a hardened proxy around a scope object
+ *
+ * This proxy:
+ * - Blocks access to dangerous properties (constructor, __proto__, prototype, globalThis)
+ * - Auto-unwraps signals on get (transparent reactivity)
+ * - Only allows access to scope properties and whitelisted globals
+ * - Uses Object.create(null) to prevent prototype chain attacks
+ * - Wraps all returned values to prevent nested dangerous access
+ *
+ * @param scope - The scope object to wrap
+ * @returns Proxied scope with security hardening
+ */
+function createScopeProxy(scope: Scope, options: WrapOptions = defaultWrapOptions): Scope {
+  const base = Object.create(null) as Scope;
+
+  return new Proxy(base, {
+    get(_target, prop) {
+      const propStr = String(prop);
+
+      if (dangerousGlobals.has(propStr)) {
+        return;
+      }
+
+      if (isDangerousProperty(prop)) {
+        return;
+      }
+
+      if (propStr in scope) {
+        const value = scope[propStr];
+        return wrapValue(value, options);
+      }
+
+      if (safeGlobals.has(propStr)) {
+        return wrapValue((globalThis as Record<string, unknown>)[propStr], options);
+      }
+
+      return;
+    },
+
+    set(_target, prop, value) {
+      if (isDangerousProperty(prop)) {
+        return true;
+      }
+
+      const propStr = String(prop);
+
+      if (propStr in scope) {
+        const existing = scope[propStr];
+        if (isSignal(existing) && hasSetMethod(existing)) {
+          existing.set(value);
+          return true;
+        }
+      }
+
+      scope[propStr] = value;
+      return true;
+    },
+
+    /**
+     * Always return true to prevent 'with' statement from falling back to outer scope
+     */
+    has(_target, prop) {
+      if (prop === "$unwrap") {
+        return false;
+      }
+      return true;
+    },
+
+    ownKeys(_target) {
+      return Object.keys(scope).filter((key) => !isDangerousProperty(key));
+    },
+
+    getOwnPropertyDescriptor(_target, prop) {
+      if (isDangerousProperty(prop)) {
+        return;
+      }
+
+      const propStr = String(prop);
+
+      if (propStr in scope) {
+        return { configurable: true, enumerable: true, writable: true, value: scope[propStr] };
+      }
+
+      return;
+    },
+  });
+}
+
+/**
+ * Cache for compiled expression functions
+ *
+ * Key: expression string
+ * Value: compiled function
+ */
+type CompiledExpr = (scope: Scope, unwrap: (value: unknown) => unknown) => unknown;
+
+const exprCache = new Map<string, CompiledExpr>();
+
+function isIdentifierStart(char: string): boolean {
+  if (char.length === 0) {
     return false;
   }
+  const code = char.charCodeAt(0);
+  return ((code >= 65 && code <= 90) || (code >= 97 && code <= 122) || char === "_" || char === "$");
+}
 
-  private check(type: TokenType): boolean {
-    if (this.isAtEnd()) return false;
-    return this.peek().type === type;
+function isIdentifierPart(char: string): boolean {
+  if (char.length === 0) {
+    return false;
+  }
+  const code = char.charCodeAt(0);
+  return ((code >= 65 && code <= 90)
+    || (code >= 97 && code <= 122)
+    || (code >= 48 && code <= 57)
+    || char === "_" || char === "$");
+}
+
+function isWhitespace(char: string): boolean {
+  return char === " " || char === "\n" || char === "\r" || char === "\t";
+}
+
+function transformExpr(expr: string): string {
+  let result = "";
+  let index = 0;
+
+  while (index < expr.length) {
+    const char = expr[index];
+
+    if (char === "!") {
+      const next = expr[index + 1] ?? "";
+
+      if (next === "=") {
+        result += "!";
+        index += 1;
+        continue;
+      }
+
+      let cursor = index + 1;
+      while (cursor < expr.length && isWhitespace(expr[cursor])) {
+        cursor += 1;
+      }
+
+      const identStart = expr[cursor] ?? "";
+      if (!isIdentifierStart(identStart)) {
+        result += "!";
+        index += 1;
+        continue;
+      }
+
+      let end = cursor + 1;
+      while (end < expr.length && isIdentifierPart(expr.charAt(end))) {
+        end += 1;
+      }
+
+      while (end < expr.length && expr[end] === ".") {
+        const afterDot = expr[end + 1] ?? "";
+        if (!isIdentifierStart(afterDot)) {
+          break;
+        }
+        end += 2;
+        while (end < expr.length && isIdentifierPart(expr.charAt(end))) {
+          end += 1;
+        }
+      }
+
+      const nextChar = expr[end] ?? "";
+      if (nextChar === "(") {
+        result += "!";
+        index += 1;
+        continue;
+      }
+
+      const identifier = expr.slice(cursor, end);
+      result += "!$unwrap(" + identifier + ")";
+      index = end;
+      continue;
+    }
+
+    result += char;
+    index += 1;
   }
 
-  private advance(): Token {
-    if (!this.isAtEnd()) this.current++;
-    return this.previous();
+  return result;
+}
+
+function unwrapMaybeSignal(value: unknown): unknown {
+  if (isSignal(value)) {
+    return (value as { get: () => unknown }).get();
+  }
+  return value;
+}
+
+/**
+ * Compile an expression into a function using the Function constructor
+ *
+ * Uses 'with' statement to allow direct variable access from scope.
+ * The with statement works because we're not in strict mode for the function body,
+ * but the scope proxy ensures safety.
+ *
+ * @param expr - Expression string to compile
+ * @param isStmt - Whether this is a statement (no return) or expression (return value)
+ * @returns Compiled function
+ */
+function compileExpr(expr: string, isStmt = false): CompiledExpr {
+  const cacheKey = `${isStmt ? "stmt" : "expr"}:${expr}`;
+
+  let fn = exprCache.get(cacheKey);
+  if (fn) {
+    return fn;
   }
 
-  private isAtEnd(): boolean {
-    return this.peek().type === "EOF";
-  }
-
-  private peek(): Token {
-    return this.tokens[this.current];
-  }
-
-  private previous(): Token {
-    return this.tokens[this.current - 1];
-  }
-
-  private consume(type: TokenType, message: string): Token {
-    if (this.check(type)) return this.advance();
-    throw new Error(`${message} at position ${this.peek().start}`);
+  try {
+    const transformed = transformExpr(expr);
+    if (isStmt) {
+      fn = new Function("$scope", "$unwrap", `with($scope){${transformed}}`) as CompiledExpr;
+    } else {
+      fn = new Function("$scope", "$unwrap", `with($scope){return(${transformed})}`) as CompiledExpr;
+    }
+    exprCache.set(cacheKey, fn);
+    return fn;
+  } catch (error) {
+    throw new EvaluationError(expr, error);
   }
 }
 
 /**
- * Evaluate an expression against a scope object.
+ * Unwrap signals at the top level only
  *
- * Supports literals, property access, operators, and member access.
+ * Unwraps direct signals and wrapped signals but preserves object/array structure.
+ * This allows bindings to still track nested signals while unwrapping top-level signal results.
+ */
+function unwrapSignal(value: unknown): unknown {
+  if (isSignal(value)) {
+    return (value as { get: () => unknown }).get();
+  }
+
+  if (
+    value
+    && typeof value === "object"
+    && typeof (value as { get?: unknown }).get === "function"
+    && typeof (value as { subscribe?: unknown }).subscribe === "function"
+  ) {
+    return (value as { get: () => unknown }).get();
+  }
+
+  return value;
+}
+
+/**
+ * Evaluate an expression against a scope object
+ *
+ * Supports:
+ * - Literals: numbers, strings, booleans, null, undefined
+ * - Operators: +, -, *, /, %, ==, !=, ===, !==, <, >, <=, >=, &&, ||, !
+ * - Property access: obj.prop, obj['prop'], nested paths
+ * - Ternary: condition ? trueVal : falseVal
+ * - Array/object literals: [1, 2, 3], {key: value}
+ * - Function calls: fn(arg1, arg2)
+ * - Arrow functions: (x) => x * 2
+ * - Signals auto-unwrapped
  *
  * @param expr - The expression string to evaluate
  * @param scope - The scope object containing values
  * @returns The evaluated result
+ * @throws EvaluationError if expression is invalid or evaluation fails
  */
-export function evaluate(expr: string, scope: Scope): unknown {
+export function evaluate(expr: string, scope: Scope, opts?: EvaluateOpts): unknown {
   try {
-    const tokens = tokenize(expr);
-    const parser = new Parser(tokens, scope);
-    return parser.parse();
+    const fn = compileExpr(expr, false);
+    const wrapOptions = opts && opts.unwrapSignals ? readWrapOptions : defaultWrapOptions;
+    const proxiedScope = createScopeProxy(scope, wrapOptions);
+    const result = fn(proxiedScope, unwrapMaybeSignal);
+    return unwrapSignal(result);
   } catch (error) {
-    console.error(`Error evaluating expression "${expr}":`, error);
-    return undefined;
+    if (error instanceof EvaluationError) {
+      throw error;
+    }
+    if (error instanceof ReferenceError) {
+      return undefined;
+    }
+    throw new EvaluationError(expr, error);
+  }
+}
+
+/**
+ * Evaluate multiple statements against a scope object
+ *
+ * Used for event handlers that may contain multiple semicolon-separated statements.
+ * Statements are executed in order but no return value is captured.
+ *
+ * @param expr - The statement(s) to evaluate
+ * @param scope - The scope object containing values
+ * @throws EvaluationError if evaluation fails
+ */
+export function evaluateStatements(expr: string, scope: Scope): void {
+  try {
+    const fn = compileExpr(expr, true);
+    const proxiedScope = createScopeProxy(scope);
+    fn(proxiedScope, unwrapMaybeSignal);
+  } catch (error) {
+    if (error instanceof EvaluationError) {
+      throw error;
+    }
+    throw new EvaluationError(expr, error);
   }
 }

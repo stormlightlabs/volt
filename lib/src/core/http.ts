@@ -16,6 +16,7 @@ import type {
   Scope,
   SwapStrategy,
 } from "$types/volt";
+import { registerDirective } from "./binder";
 import { evaluate } from "./evaluator";
 import { sleep } from "./shared";
 
@@ -654,7 +655,6 @@ export function bindDelete(ctx: BindingContext, url: string): void {
 
 /**
  * Generic HTTP method binding handler
- *
  * Attaches an event listener that triggers an HTTP request when fired & automatically serializes forms for POST/PUT/PATCH methods.
  */
 function bindHttpMethod(ctx: BindingContext | PluginContext, method: HttpMethod, url: string): void {
@@ -688,3 +688,13 @@ function bindHttpMethod(ctx: BindingContext | PluginContext, method: HttpMethod,
     ctx.cleanups.push(cleanup);
   }
 }
+
+/**
+ * Auto-register HTTP directives when this module is imported
+ * This enables tree-shaking: if the HTTP module isn't imported, these directives won't be included in the bundle.
+ */
+registerDirective("get", bindGet);
+registerDirective("post", bindPost);
+registerDirective("put", bindPut);
+registerDirective("patch", bindPatch);
+registerDirective("delete", bindDelete);
