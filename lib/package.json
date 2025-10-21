@@ -1,6 +1,6 @@
 {
   "name": "voltx.js",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "A lightweight reactive framework for declarative UIs",
   "type": "module",
   "author": "Owais Jamil",
@@ -27,6 +27,7 @@
     "build:css": "postcss src/styles/index.css -o dist/voltx.css",
     "build:css:min": "postcss src/styles/index.css -o dist/voltx.min.css --env production",
     "build:finalize": "node scripts/build-finalize.js",
+    "build:jsr": "pnpm build:clean && pnpm build:types && pnpm build:lib && pnpm build:lib:min && pnpm build:finalize",
     "preview": "vite preview",
     "test": "vitest",
     "test:run": "vitest run",
