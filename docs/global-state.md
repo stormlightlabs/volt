@@ -517,9 +517,3 @@ console.log(metadata.origin);      // Root element
 console.log(metadata.pins);        // Pin registry
 console.log(metadata.uidCounter);  // Current UID counter
 ```
-
-## See Also
-
-- [Reactivity](/reactivity) - Understanding signals and computed values
-- [Plugins](/plugins) - Extending Volt with plugins
-- [HTTP Actions](/http) - Server communication patterns
