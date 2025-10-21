@@ -7,8 +7,11 @@
 
 import { persistPlugin } from "$plugins/persist";
 import { scrollPlugin } from "$plugins/scroll";
+import { shiftPlugin } from "$plugins/shift";
+import { surgePlugin } from "$plugins/surge";
 import { urlPlugin } from "$plugins/url";
 import { computed, effect, mount, registerPlugin, signal } from "$volt";
+import { createAnimationsSection } from "./sections/animations";
 import { createFormsSection } from "./sections/forms";
 import { createInteractivitySection } from "./sections/interactivity";
 import { createPluginsSection } from "./sections/plugins";
@@ -19,6 +22,8 @@ import * as dom from "./utils";
 registerPlugin("persist", persistPlugin);
 registerPlugin("scroll", scrollPlugin);
 registerPlugin("url", urlPlugin);
+registerPlugin("surge", surgePlugin);
+registerPlugin("shift", shiftPlugin);
 
 const message = signal("Welcome to the Volt.js Demo");
 const count = signal(0);
@@ -46,6 +51,20 @@ const dialogInput = signal("");
 const persistedCount = signal(0);
 const scrollPosition = signal(0);
 const urlParam = signal("");
+
+const showFade = signal(false);
+const showSlideDown = signal(false);
+const showScale = signal(false);
+const showBlur = signal(false);
+const showSlowFade = signal(false);
+const showDelayedSlide = signal(false);
+const showGranular = signal(false);
+const showCombined = signal(false);
+const triggerBounce = signal(0);
+const triggerShake = signal(0);
+const triggerFlash = signal(0);
+const triggerTripleBounce = signal(0);
+const triggerLongShake = signal(0);
 
 const activeTodos = computed(() => todos.get().filter((todo) => !todo.done));
 const completedTodos = computed(() => todos.get().filter((todo) => todo.done));
@@ -154,6 +173,19 @@ export const demoScope = {
   persistedCount,
   scrollPosition,
   urlParam,
+  showFade,
+  showSlideDown,
+  showScale,
+  showBlur,
+  showSlowFade,
+  showDelayedSlide,
+  showGranular,
+  showCombined,
+  triggerBounce,
+  triggerShake,
+  triggerFlash,
+  triggerTripleBounce,
+  triggerLongShake,
   increment,
   decrement,
   reset,
@@ -184,6 +216,8 @@ const buildNav = () =>
     dom.a({ href: "#reactivity" }, "Reactivity"),
     " | ",
     dom.a({ href: "#plugins" }, "Plugins"),
+    " | ",
+    dom.a({ href: "#animations" }, "Animations"),
   );
 
 function buildDemoStructure(): HTMLElement {
@@ -210,6 +244,7 @@ function buildDemoStructure(): HTMLElement {
       createFormsSection(),
       createReactivitySection(),
       createPluginsSection(),
+      createAnimationsSection(),
     ),
     dom.footer(
       null,
