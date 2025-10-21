@@ -565,3 +565,28 @@ export type ParsedTransition = {
    */
   delay?: number;
 };
+
+/**
+ * Animation preset for CSS keyframe animations
+ */
+export type AnimationPreset = {
+  /**
+   * Array of keyframes for the animation
+   */
+  keyframes: Keyframe[];
+
+  /**
+   * Duration in milliseconds (default: varies by preset)
+   */
+  duration: number;
+
+  /**
+   * Number of iterations (use Infinity for infinite)
+   */
+  iterations: number;
+
+  /**
+   * CSS timing function (default: "ease")
+   */
+  timing: string;
+};

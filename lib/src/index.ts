@@ -37,9 +37,18 @@ export {
 } from "$core/transitions";
 export { persistPlugin, registerStorageAdapter } from "$plugins/persist";
 export { scrollPlugin } from "$plugins/scroll";
+export {
+  getAnimation,
+  getRegisteredAnimations,
+  hasAnimation,
+  registerAnimation,
+  shiftPlugin,
+  unregisterAnimation,
+} from "$plugins/shift";
 export { surgePlugin } from "$plugins/surge";
 export { urlPlugin } from "$plugins/url";
 export type {
+  AnimationPreset,
   ArcFunction,
   AsyncEffectFunction,
   AsyncEffectOptions,

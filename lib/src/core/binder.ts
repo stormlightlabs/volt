@@ -2,6 +2,7 @@
  * Binder system for mounting and managing Volt.js bindings
  */
 
+import { executeSurgeEnter, executeSurgeLeave, hasSurge } from "$plugins/surge";
 import type { Nullable, Optional } from "$types/helpers";
 import type {
   BindingContext,
@@ -268,20 +269,59 @@ function bindClass(ctx: BindingContext, expr: string): void {
 /**
  * Bind data-volt-show to toggle element visibility via CSS display property.
  * Unlike data-volt-if, this keeps the element in the DOM and toggles display: none.
+ * Integrates with surge plugin for smooth transitions when available.
  */
 function bindShow(ctx: BindingContext, expr: string): void {
   const el = ctx.element as HTMLElement;
   const originalInlineDisplay = el.style.display;
+  const hasSurgeTransition = hasSurge(el);
+
+  if (!hasSurgeTransition) {
+    const update = () => {
+      const value = evaluate(expr, ctx.scope);
+      const shouldShow = Boolean(value);
+
+      if (shouldShow) {
+        el.style.display = originalInlineDisplay;
+      } else {
+        el.style.display = "none";
+      }
+    };
+
+    updateAndRegister(ctx, update, expr);
+    return;
+  }
+
+  let isVisible = el.style.display !== "none";
+  let isTransitioning = false;
 
   const update = () => {
     const value = evaluate(expr, ctx.scope);
     const shouldShow = Boolean(value);
 
-    if (shouldShow) {
-      el.style.display = originalInlineDisplay;
-    } else {
-      el.style.display = "none";
+    if (shouldShow === isVisible || isTransitioning) {
+      return;
     }
+
+    isTransitioning = true;
+
+    requestAnimationFrame(() => {
+      void (async () => {
+        try {
+          if (shouldShow) {
+            el.style.display = originalInlineDisplay;
+            await executeSurgeEnter(el);
+            isVisible = true;
+          } else {
+            await executeSurgeLeave(el);
+            el.style.display = "none";
+            isVisible = false;
+          }
+        } finally {
+          isTransitioning = false;
+        }
+      })();
+    });
   };
 
   updateAndRegister(ctx, update, expr);
@@ -643,8 +683,8 @@ function bindFor(ctx: BindingContext, expr: string): void {
   }
 
   const { itemName, indexName, arrayPath } = parsed;
-  const template = ctx.element as HTMLElement;
-  const parent = template.parentElement;
+  const templ = ctx.element as HTMLElement;
+  const parent = templ.parentElement;
 
   if (!parent) {
     console.error("data-volt-for element must have a parent");
@@ -652,8 +692,8 @@ function bindFor(ctx: BindingContext, expr: string): void {
   }
 
   const placeholder = document.createComment(`for: ${expr}`);
-  template.before(placeholder);
-  template.remove();
+  templ.before(placeholder);
+  templ.remove();
 
   const renderedElements: Element[] = [];
   const renderedCleanups: CleanupFunction[] = [];
@@ -675,7 +715,7 @@ function bindFor(ctx: BindingContext, expr: string): void {
     }
 
     for (const [index, item] of arrayValue.entries()) {
-      const clone = template.cloneNode(true) as Element;
+      const clone = templ.cloneNode(true) as Element;
       delete (clone as HTMLElement).dataset.voltFor;
 
       const itemScope: Scope = { ...ctx.scope, [itemName]: item };
@@ -703,70 +743,131 @@ function bindFor(ctx: BindingContext, expr: string): void {
 /**
  * Bind data-volt-if to conditionally render an element. Supports data-volt-else on the next sibling element.
  * Subscribes to condition signal and shows/hides elements when condition changes.
+ * Integrates with surge plugin for smooth enter/leave transitions when available.
  */
 function bindIf(ctx: BindingContext, expr: string): void {
-  const ifTemplate = ctx.element as HTMLElement;
-  const parent = ifTemplate.parentElement;
+  const ifTempl = ctx.element as HTMLElement;
+  const parent = ifTempl.parentElement;
 
   if (!parent) {
     console.error("data-volt-if element must have a parent");
     return;
   }
 
-  let elseTemplate: Optional<HTMLElement>;
-  let nextSibling = ifTemplate.nextElementSibling;
+  let elseTempl: Optional<HTMLElement>;
+  let nextSibling = ifTempl.nextElementSibling;
 
   while (nextSibling && nextSibling.nodeType !== 1) {
     nextSibling = nextSibling.nextElementSibling;
   }
 
   if (nextSibling && Object.hasOwn((nextSibling as HTMLElement).dataset, "voltElse")) {
-    elseTemplate = nextSibling as HTMLElement;
-    elseTemplate.remove();
+    elseTempl = nextSibling as HTMLElement;
+    elseTempl.remove();
   }
 
   const placeholder = document.createComment(`if: ${expr}`);
-  ifTemplate.before(placeholder);
-  ifTemplate.remove();
+  ifTempl.before(placeholder);
+  ifTempl.remove();
+
+  const ifHasSurge = hasSurge(ifTempl);
+  const elseHasSurge = elseTempl ? hasSurge(elseTempl) : false;
+  const anySurge = ifHasSurge || elseHasSurge;
 
   let currentElement: Optional<Element>;
   let currentCleanup: Optional<CleanupFunction>;
   let currentBranch: Optional<"if" | "else">;
+  let isTransitioning = false;
 
   const render = () => {
     const condition = evaluate(expr, ctx.scope);
     const shouldShow = Boolean(condition);
 
-    const targetBranch = shouldShow ? "if" : (elseTemplate ? "else" : undefined);
+    const targetBranch = shouldShow ? "if" : (elseTempl ? "else" : undefined);
 
-    if (targetBranch === currentBranch) {
+    if (targetBranch === currentBranch || isTransitioning) {
       return;
     }
 
-    if (currentCleanup) {
-      currentCleanup();
-      currentCleanup = undefined;
-    }
-    if (currentElement) {
-      currentElement.remove();
-      currentElement = undefined;
+    if (!anySurge) {
+      if (currentCleanup) {
+        currentCleanup();
+        currentCleanup = undefined;
+      }
+      if (currentElement) {
+        currentElement.remove();
+        currentElement = undefined;
+      }
+
+      if (targetBranch === "if") {
+        currentElement = ifTempl.cloneNode(true) as Element;
+        delete (currentElement as HTMLElement).dataset.voltIf;
+        currentCleanup = mount(currentElement, ctx.scope);
+        placeholder.before(currentElement);
+        currentBranch = "if";
+      } else if (targetBranch === "else" && elseTempl) {
+        currentElement = elseTempl.cloneNode(true) as Element;
+        delete (currentElement as HTMLElement).dataset.voltElse;
+        currentCleanup = mount(currentElement, ctx.scope);
+        placeholder.before(currentElement);
+        currentBranch = "else";
+      } else {
+        currentBranch = undefined;
+      }
+      return;
     }
 
-    if (targetBranch === "if") {
-      currentElement = ifTemplate.cloneNode(true) as Element;
-      delete (currentElement as HTMLElement).dataset.voltIf;
-      currentCleanup = mount(currentElement, ctx.scope);
-      placeholder.before(currentElement);
-      currentBranch = "if";
-    } else if (targetBranch === "else" && elseTemplate) {
-      currentElement = elseTemplate.cloneNode(true) as Element;
-      delete (currentElement as HTMLElement).dataset.voltElse;
-      currentCleanup = mount(currentElement, ctx.scope);
-      placeholder.before(currentElement);
-      currentBranch = "else";
-    } else {
-      currentBranch = undefined;
-    }
+    isTransitioning = true;
+
+    requestAnimationFrame(() => {
+      void (async () => {
+        try {
+          if (currentElement) {
+            const currentEl = currentElement as HTMLElement;
+            const currentHasSurge = currentBranch === "if" ? ifHasSurge : elseHasSurge;
+
+            if (currentHasSurge) {
+              await executeSurgeLeave(currentEl);
+            }
+
+            if (currentCleanup) {
+              currentCleanup();
+              currentCleanup = undefined;
+            }
+            currentElement.remove();
+            currentElement = undefined;
+          }
+
+          if (targetBranch === "if") {
+            currentElement = ifTempl.cloneNode(true) as Element;
+            delete (currentElement as HTMLElement).dataset.voltIf;
+            placeholder.before(currentElement);
+
+            if (ifHasSurge) {
+              await executeSurgeEnter(currentElement as HTMLElement);
+            }
+
+            currentCleanup = mount(currentElement, ctx.scope);
+            currentBranch = "if";
+          } else if (targetBranch === "else" && elseTempl) {
+            currentElement = elseTempl.cloneNode(true) as Element;
+            delete (currentElement as HTMLElement).dataset.voltElse;
+            placeholder.before(currentElement);
+
+            if (elseHasSurge) {
+              await executeSurgeEnter(currentElement as HTMLElement);
+            }
+
+            currentCleanup = mount(currentElement, ctx.scope);
+            currentBranch = "else";
+          } else {
+            currentBranch = undefined;
+          }
+        } finally {
+          isTransitioning = false;
+        }
+      })();
+    });
   };
 
   updateAndRegister(ctx, render, expr);
