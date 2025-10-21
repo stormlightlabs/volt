@@ -2,7 +2,7 @@
   "name": "@voltx/core",
   "version": "0.4.0",
   "license": "MIT",
-  "exports": { ".": "./src/index.ts", "./debug": "./src/debug.ts", "./css": "./dist/voltx.css" },
+  "exports": { ".": "./src/index.ts", "./debug": "./src/debug.ts" },
   "imports": {
     "$core/": "./src/core/",
     "$plugins/": "./src/plugins/",
