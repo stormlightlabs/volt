@@ -23,8 +23,21 @@ export { getScopeMetadata } from "$core/scope-metadata";
 export { computed, effect, signal } from "$core/signal";
 export { deserializeScope, hydrate, isHydrated, isServerRendered, serializeScope } from "$core/ssr";
 export { getStore, registerStore } from "$core/store";
+export {
+  applyOverrides,
+  easings,
+  getEasing,
+  getRegisteredTransitions,
+  getTransition,
+  hasTransition,
+  parseTransitionValue,
+  prefersReducedMotion,
+  registerTransition,
+  unregisterTransition,
+} from "$core/transitions";
 export { persistPlugin, registerStorageAdapter } from "$plugins/persist";
 export { scrollPlugin } from "$plugins/scroll";
+export { surgePlugin } from "$plugins/surge";
 export { urlPlugin } from "$plugins/url";
 export type {
   ArcFunction,
@@ -39,6 +52,7 @@ export type {
   HydrateResult,
   IsReactive,
   ParsedHttpConfig,
+  ParsedTransition,
   PinRegistry,
   PluginContext,
   PluginHandler,
@@ -49,6 +63,8 @@ export type {
   ScopeMetadata,
   SerializedScope,
   Signal,
+  TransitionPhase,
+  TransitionPreset,
   UidFunction,
   UnwrapReactive,
 } from "$types/volt";

@@ -18,10 +18,13 @@ export default defineConfig({
       },
       {
         text: "Core Concepts",
-        items: [{ text: "State Management", link: "/state" }, { text: "Bindings", link: "/bindings" }, {
-          text: "Expressions",
-          link: "/expressions",
-        }, { text: "SSR & Lifecycle", link: "/lifecycle" }],
+        items: [
+          { text: "State Management", link: "/state" },
+          { text: "Bindings", link: "/bindings" },
+          { text: "Expressions", link: "/expressions" },
+          { text: "SSR & Lifecycle", link: "/lifecycle" },
+          { text: "Animations & Transitions", link: "/animations" },
+        ],
       },
       { text: "Tutorials", items: [{ text: "Counter", link: "/usage/counter" }] },
       {

@@ -4,7 +4,7 @@
  * Provides HTTP request/response handling with DOM swapping capabilities for server-rendered HTML fragments and JSON responses.
  */
 
-import type { Optional } from "$types/helpers";
+import type { Nullable, Optional } from "$types/helpers";
 import type {
   BindingContext,
   HttpMethod,
@@ -18,6 +18,16 @@ import type {
 } from "$types/volt";
 import { evaluate } from "./evaluator";
 import { sleep } from "./shared";
+
+type IndicatorStrategy = "display" | "class";
+
+type CapturedState = {
+  focusPath: number[] | null;
+  scrollPositions: Map<number[], { top: number; left: number }>;
+  inputValues: Map<number[], string | boolean>;
+};
+
+const indicatorStrategies = new WeakMap<Element, IndicatorStrategy>();
 
 /**
  * Make an HTTP request and return the parsed response
@@ -62,12 +72,6 @@ export async function request(conf: RequestConfig): Promise<HttpResponse> {
   }
 }
 
-type CapturedState = {
-  focusPath: number[] | null;
-  scrollPositions: Map<number[], { top: number; left: number }>;
-  inputValues: Map<number[], string | boolean>;
-};
-
 /**
  * Capture state that should be preserved during DOM swap
  */
@@ -80,7 +84,7 @@ function captureState(root: Element): CapturedState {
   }
 
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT);
-  let currentNode: Node | null = walker.currentNode;
+  let currentNode: Nullable<Node> = walker.currentNode;
 
   while (currentNode) {
     const el = currentNode as Element;
@@ -111,13 +115,13 @@ function captureState(root: Element): CapturedState {
  */
 function getElementPath(el: Element, root: Element): number[] {
   const path: number[] = [];
-  let current: Element | null = el;
+  let current: Nullable<Element> = el;
 
   while (current && current !== root) {
-    const parent: Element | null = current.parentElement;
+    const parent: Nullable<Element> = current.parentElement;
     if (!parent) break;
 
-    const index = Array.from(parent.children).indexOf(current);
+    const index = [...parent.children].indexOf(current);
     if (index === -1) break;
 
     path.unshift(index);
@@ -127,14 +131,11 @@ function getElementPath(el: Element, root: Element): number[] {
   return path;
 }
 
-/**
- * Get element by path from root
- */
-function getElementByPath(path: number[], root: Element): Element | null {
+function getElementByPath(path: number[], root: Element): Nullable<Element> {
   let current: Element = root;
 
   for (const index of path) {
-    const children = Array.from(current.children);
+    const children = [...current.children];
     if (index >= children.length) return null;
     current = children[index];
   }
@@ -142,9 +143,6 @@ function getElementByPath(path: number[], root: Element): Element | null {
   return current;
 }
 
-/**
- * Restore preserved state after DOM swap
- */
 function restoreState(root: Element, state: CapturedState): void {
   if (state.focusPath) {
     const element = getElementByPath(state.focusPath, root);
@@ -328,9 +326,6 @@ export function parseHttpConfig(el: Element, scope: Scope): ParsedHttpConfig {
   return { trigger, target, swap, headers, retry, indicator };
 }
 
-/**
- * Get the default trigger event for an element
- */
 function getDefaultTrigger(el: Element): string {
   if (el instanceof HTMLFormElement) {
     return "submit";
@@ -348,7 +343,7 @@ function getDefaultTrigger(el: Element): string {
  * @param indicator - Optional indicator selector
  */
 export function setLoadingState(el: Element, indicator?: string): void {
-  el.setAttribute("data-volt-loading", "true");
+  (el as HTMLElement).dataset.voltLoading = "true";
 
   if (indicator) {
     showIndicator(indicator);
@@ -368,7 +363,7 @@ export function setLoadingState(el: Element, indicator?: string): void {
  * @param indicator - Optional indicator selector
  */
 export function setErrorState(el: Element, msg: string, indicator?: string): void {
-  el.setAttribute("data-volt-error", msg);
+  (el as HTMLElement).dataset.voltError = msg;
 
   if (indicator) {
     hideIndicator(indicator);
@@ -389,9 +384,9 @@ export function setErrorState(el: Element, msg: string, indicator?: string): voi
  * @param indicator - Optional indicator selector
  */
 export function clearStates(el: Element, indicator?: string): void {
-  el.removeAttribute("data-volt-loading");
-  el.removeAttribute("data-volt-error");
-  el.removeAttribute("data-volt-retry-attempt");
+  delete (el as HTMLElement).dataset.voltLoading;
+  delete (el as HTMLElement).dataset.voltError;
+  delete (el as HTMLElement).dataset.voltRetryAttempt;
 
   if (indicator) {
     hideIndicator(indicator);
@@ -399,10 +394,6 @@ export function clearStates(el: Element, indicator?: string): void {
 
   el.dispatchEvent(new CustomEvent("volt:success", { detail: { element: el }, bubbles: true, cancelable: false }));
 }
-
-type IndicatorStrategy = "display" | "class";
-
-const indicatorStrategies = new WeakMap<Element, IndicatorStrategy>();
 
 /**
  * Detect the appropriate visibility strategy for an indicator element
@@ -418,14 +409,14 @@ function detectIndicatorStrategy(el: Element): IndicatorStrategy {
 
   const htmlElement = el as HTMLElement;
   const inlineDisplay = htmlElement.style.display;
-  const computedDisplay = window.getComputedStyle(htmlElement).display;
+  const computedDisplay = globalThis.getComputedStyle(htmlElement).display;
 
   if (inlineDisplay === "none" || computedDisplay === "none") {
     indicatorStrategies.set(el, "display");
     return "display";
   }
 
-  const hasHiddenClass = Array.from(el.classList).some((cls) => cls.toLowerCase().includes("hidden"));
+  const hasHiddenClass = [...el.classList].some((cls) => cls.toLowerCase().includes("hidden"));
   if (hasHiddenClass) {
     indicatorStrategies.set(el, "class");
     return "class";
@@ -445,7 +436,7 @@ function showIndicatorElement(el: Element): void {
   if (strategy === "display") {
     htmlElement.style.display = "";
   } else {
-    const hiddenClass = Array.from(el.classList).find((cls) => cls.toLowerCase().includes("hidden")) || "hidden";
+    const hiddenClass = [...el.classList].find((cls) => cls.toLowerCase().includes("hidden")) || "hidden";
     el.classList.remove(hiddenClass);
   }
 }
@@ -460,7 +451,7 @@ function hideIndicatorElement(el: Element): void {
   if (strategy === "display") {
     htmlElement.style.display = "none";
   } else {
-    const hiddenClass = Array.from(el.classList).find((cls) => cls.toLowerCase().includes("hidden")) || "hidden";
+    const hiddenClass = [...el.classList].find((cls) => cls.toLowerCase().includes("hidden")) || "hidden";
     el.classList.add(hiddenClass);
   }
 }
@@ -597,8 +588,8 @@ async function performRequest(
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     try {
       if (attempt > 0) {
-        target.setAttribute("data-volt-retry-attempt", String(attempt));
-        target.setAttribute("data-volt-loading", "retrying");
+        (target as HTMLElement).dataset.voltRetryAttempt = String(attempt);
+        (target as HTMLElement).dataset.voltLoading = "retrying";
         target.dispatchEvent(
           new CustomEvent("volt:retry", { detail: { element: target, attempt }, bubbles: true, cancelable: false }),
         );
@@ -678,10 +669,8 @@ function bindHttpMethod(ctx: BindingContext | PluginContext, method: HttpMethod,
 
     let body: Optional<string | FormData>;
 
-    if (method !== "GET" && method !== "DELETE") {
-      if (ctx.element instanceof HTMLFormElement) {
-        body = serializeForm(ctx.element);
-      }
+    if (method !== "GET" && method !== "DELETE" && ctx.element instanceof HTMLFormElement) {
+      body = serializeForm(ctx.element);
     }
 
     await performRequest(ctx.element, method, resolvedUrl, config, body);
