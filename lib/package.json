@@ -27,7 +27,7 @@
     "build:css": "postcss src/styles/index.css -o dist/voltx.css",
     "build:css:min": "postcss src/styles/index.css -o dist/voltx.min.css --env production",
     "build:finalize": "node scripts/build-finalize.js",
-    "build:jsr": "pnpm build:clean && pnpm build:types && pnpm build:lib && pnpm build:lib:min && pnpm build:finalize",
+    "build:jsr": "pnpm build",
     "preview": "vite preview",
     "test": "vitest",
     "test:run": "vitest run",
