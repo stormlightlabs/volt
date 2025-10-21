@@ -184,6 +184,7 @@ export const div: CreateFn<"div"> = (attrs?, ...children) => el("div", attrs, ..
 export const span: CreateFn<"span"> = (attrs?, ...children) => el("span", attrs, ...children);
 export const small: CreateFn<"small"> = (attrs?, ...children) => el("small", attrs, ...children);
 export const article: CreateFn<"article"> = (attrs?, ...children) => el("article", attrs, ...children);
+export const aside: CreateFn<"aside"> = (attrs?, ...children) => el("aside", attrs, ...children);
 export const section: CreateFn<"section"> = (attrs?, ...children) => el("section", attrs, ...children);
 export const header: CreateFn<"header"> = (attrs?, ...children) => el("header", attrs, ...children);
 export const footer: CreateFn<"footer"> = (attrs?, ...children) => el("footer", attrs, ...children);

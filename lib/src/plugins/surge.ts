@@ -5,6 +5,7 @@
 
 import { sleep } from "$core/shared";
 import { applyOverrides, getEasing, parseTransitionValue, prefersReducedMotion } from "$core/transitions";
+import { withViewTransition } from "$core/view-transitions";
 import type { Optional } from "$types/helpers";
 import type { PluginContext, Signal, TransitionPhase } from "$types/volt";
 
@@ -14,18 +15,6 @@ type SurgeConfig = {
   signalPath?: string;
   useViewTransitions: boolean;
 };
-
-function supportsViewTransitions(): boolean {
-  return typeof document !== "undefined" && "startViewTransition" in document;
-}
-
-function withViewTransition(callback: () => void): void {
-  if (supportsViewTransitions() && !prefersReducedMotion()) {
-    (document as Document & { startViewTransition: (callback: () => void) => void }).startViewTransition(callback);
-  } else {
-    callback();
-  }
-}
 
 function applyStyles(element: HTMLElement, styles: Record<string, string | number>): void {
   for (const [property, value] of Object.entries(styles)) {
@@ -98,7 +87,7 @@ async function execEnter(element: HTMLElement, phase: TransitionPhase, useViewTr
       if (phase.to) {
         applyStyles(element, phase.to);
       }
-    });
+    }, false);
   } else {
     if (phase.to) {
       applyStyles(element, phase.to);
@@ -166,7 +155,7 @@ async function execLeave(element: HTMLElement, phase: TransitionPhase, useViewTr
       if (phase.to) {
         applyStyles(element, phase.to);
       }
-    });
+    }, false);
   } else {
     if (phase.to) {
       applyStyles(element, phase.to);

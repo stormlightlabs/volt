@@ -17,6 +17,7 @@
 | v0.2.0  |   ✓   | [Reactive Attributes & Event Modifiers](#reactive-attributes--event-modifiers)   |
 | v0.3.0  |   ✓   | [Global State](#global-state)                                                    |
 | v0.4.0  |       | [Animation & Transitions](#animation--transitions)                               |
+|         |       | [History API Routing Plugin](#history-api-routing-plugin)                        |
 | v0.5.0  |       | [Persistence & Offline](#persistence--offline)                                   |
 |         |       | [Background Requests & Reactive Polling](#background-requests--reactive-polling) |
 | v0.6.0  |       | [Navigation & History Management](#navigation--history-management)               |
@@ -173,6 +174,17 @@ _NOTE_: `data-x-*` is now `data-volt-*`
             - Preloading of linked resources on hover or idle
     - `data-volt-url` for declarative history updates
         - View Transition API integration for animated route changes
+
+### History API Routing Plugin
+
+**Goal:** Deliver a first-class path-based router that leverages the History API while staying signal-driven.
+**Outcome:** Volt apps can opt into clean URLs (no hash) with back/forward support, nested segments, and SSR-friendly hydration.
+**Deliverables:**
+    - `data-volt-url="history:signal"` mode with path + search preservation and optional base path configuration
+    - Route parsing utilities for dynamic params (e.g. `/blog/:slug`) and programmatic redirects
+    - Scroll restoration hooks and focus management aligned with `navigation` and `popstate` events
+    - Integration tests covering pushState navigation, deep links, and server-rendered bootstraps
+    - Documentation updates in `docs/usage/routing.md` contrasting hash vs. history strategies
 
 ### Inspector & Developer Tools
 

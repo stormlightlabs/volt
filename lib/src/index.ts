@@ -35,11 +35,26 @@ export {
   registerTransition,
   unregisterTransition,
 } from "$core/transitions";
+export {
+  namedViewTransition,
+  startViewTransition,
+  supportsViewTransitions,
+  withViewTransition,
+} from "$core/view-transitions";
 export { persistPlugin, registerStorageAdapter } from "$plugins/persist";
 export { scrollPlugin } from "$plugins/scroll";
+export {
+  getAnimation,
+  getRegisteredAnimations,
+  hasAnimation,
+  registerAnimation,
+  shiftPlugin,
+  unregisterAnimation,
+} from "$plugins/shift";
 export { surgePlugin } from "$plugins/surge";
 export { urlPlugin } from "$plugins/url";
 export type {
+  AnimationPreset,
   ArcFunction,
   AsyncEffectFunction,
   AsyncEffectOptions,
@@ -67,4 +82,5 @@ export type {
   TransitionPreset,
   UidFunction,
   UnwrapReactive,
+  ViewTransitionOptions,
 } from "$types/volt";

@@ -497,71 +497,56 @@ export type ParsedTransition = {
 };
 
 /**
- * Configuration for a single transition phase (enter or leave)
+ * Animation preset for CSS keyframe animations
  */
-export type TransitionPhase = {
+export type AnimationPreset = {
   /**
-   * Initial CSS properties (applied immediately)
+   * Array of keyframes for the animation
    */
-  from?: Record<string, string | number>;
+  keyframes: Keyframe[];
 
   /**
-   * Target CSS properties (animated to)
+   * Duration in milliseconds (default: varies by preset)
    */
-  to?: Record<string, string | number>;
+  duration: number;
 
   /**
-   * Duration in milliseconds (default: 300)
+   * Number of iterations (use Infinity for infinite)
    */
-  duration?: number;
+  iterations: number;
 
   /**
-   * Delay in milliseconds (default: 0)
+   * CSS timing function (default: "ease")
    */
-  delay?: number;
-
-  /**
-   * CSS easing function (default: 'ease')
-   */
-  easing?: string;
-
-  /**
-   * CSS classes to apply during this phase
-   */
-  classes?: string[];
+  timing: string;
 };
 
 /**
- * Complete transition preset with enter and leave phases
+ * Options for configuring a view transition
  */
-export type TransitionPreset = {
+export type ViewTransitionOptions = {
   /**
-   * Configuration for enter transition
+   * Named view transition for specific element(s)
+   * Maps to view-transition-name CSS property
    */
-  enter: TransitionPhase;
+  name?: string;
 
   /**
-   * Configuration for leave transition
+   * Elements to apply named transitions to
+   * Each element will get a unique view-transition-name
    */
-  leave: TransitionPhase;
-};
-
-/**
- * Parsed transition value with preset and modifiers
- */
-export type ParsedTransition = {
-  /**
-   * The transition preset to use
-   */
-  preset: TransitionPreset;
+  elements?: HTMLElement[];
 
   /**
-   * Override duration from preset syntax (e.g., "fade.500")
+   * Skip transition if prefers-reduced-motion is enabled
+   * @default true
    */
-  duration?: number;
+  respectReducedMotion?: boolean;
 
   /**
-   * Override delay from preset syntax (e.g., "fade.500.100")
+   * Force CSS fallback even if View Transitions API is supported
+   * Useful for testing or debugging
+   * @default false
    */
-  delay?: number;
+  forceFallback?: boolean;
 };

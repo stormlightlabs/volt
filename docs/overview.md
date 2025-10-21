@@ -2,7 +2,7 @@
 outline: deep
 ---
 
-# Framework Overview
+# Overview
 
 VoltX is a lightweight, hypermedia based reactive framework for building declarative UIs.
 
@@ -43,10 +43,8 @@ It combines HTML-driven behavior via `data-volt-*` attributes with signal-based 
 
 ## Browser Support
 
-Modern browsers with support for:
+Modern browsers (Chrome 90+, Firefox 88+, Safari 14+) with support for:
 
 - ES modules
 - Proxy objects
 - CSS custom properties
-
-Chrome 90+, Firefox 88+, Safari 14+
