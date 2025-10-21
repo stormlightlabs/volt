@@ -80,8 +80,6 @@ _NOTE_: `data-x-*` is now `data-volt-*`
 **Outcome:** Volt.js supports rich declarative behaviors and event semantics built entirely on standard DOM APIs.
 **Summary:** Introduced expressive attribute patterns and event modifiers for precise DOM and input control, for fine-grained declarative behavior entirely through standard DOM APIs.
 
-## To-Do
-
 ### Global State
 
 **Goal:** Implement store/context pattern
@@ -101,6 +99,8 @@ _NOTE_: `data-x-*` is now `data-volt-*`
         - Example: `data-volt-on-click="$pins.username.focus()"`
     - `$arc(event, detail?)` - Dispatches a native CustomEvent from the current element.
         - Example: `data-volt-on-click="$arc('user:save', { id })"`
+
+## To-Do
 
 ### Animation & Transitions
 

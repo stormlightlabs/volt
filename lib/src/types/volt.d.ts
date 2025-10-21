@@ -425,3 +425,143 @@ export type ArcFunction = (eventName: string, detail?: unknown) => void;
  * Function signature for $probe() - reactive observer
  */
 export type ProbeFunction = (expression: string, callback: (value: unknown) => void) => CleanupFunction;
+
+/**
+ * Configuration for a single transition phase (enter or leave)
+ */
+export type TransitionPhase = {
+  /**
+   * Initial CSS properties (applied immediately)
+   */
+  from?: Record<string, string | number>;
+
+  /**
+   * Target CSS properties (animated to)
+   */
+  to?: Record<string, string | number>;
+
+  /**
+   * Duration in milliseconds (default: 300)
+   */
+  duration?: number;
+
+  /**
+   * Delay in milliseconds (default: 0)
+   */
+  delay?: number;
+
+  /**
+   * CSS easing function (default: 'ease')
+   */
+  easing?: string;
+
+  /**
+   * CSS classes to apply during this phase
+   */
+  classes?: string[];
+};
+
+/**
+ * Complete transition preset with enter and leave phases
+ */
+export type TransitionPreset = {
+  /**
+   * Configuration for enter transition
+   */
+  enter: TransitionPhase;
+
+  /**
+   * Configuration for leave transition
+   */
+  leave: TransitionPhase;
+};
+
+/**
+ * Parsed transition value with preset and modifiers
+ */
+export type ParsedTransition = {
+  /**
+   * The transition preset to use
+   */
+  preset: TransitionPreset;
+
+  /**
+   * Override duration from preset syntax (e.g., "fade.500")
+   */
+  duration?: number;
+
+  /**
+   * Override delay from preset syntax (e.g., "fade.500.100")
+   */
+  delay?: number;
+};
+
+/**
+ * Configuration for a single transition phase (enter or leave)
+ */
+export type TransitionPhase = {
+  /**
+   * Initial CSS properties (applied immediately)
+   */
+  from?: Record<string, string | number>;
+
+  /**
+   * Target CSS properties (animated to)
+   */
+  to?: Record<string, string | number>;
+
+  /**
+   * Duration in milliseconds (default: 300)
+   */
+  duration?: number;
+
+  /**
+   * Delay in milliseconds (default: 0)
+   */
+  delay?: number;
+
+  /**
+   * CSS easing function (default: 'ease')
+   */
+  easing?: string;
+
+  /**
+   * CSS classes to apply during this phase
+   */
+  classes?: string[];
+};
+
+/**
+ * Complete transition preset with enter and leave phases
+ */
+export type TransitionPreset = {
+  /**
+   * Configuration for enter transition
+   */
+  enter: TransitionPhase;
+
+  /**
+   * Configuration for leave transition
+   */
+  leave: TransitionPhase;
+};
+
+/**
+ * Parsed transition value with preset and modifiers
+ */
+export type ParsedTransition = {
+  /**
+   * The transition preset to use
+   */
+  preset: TransitionPreset;
+
+  /**
+   * Override duration from preset syntax (e.g., "fade.500")
+   */
+  duration?: number;
+
+  /**
+   * Override delay from preset syntax (e.g., "fade.500.100")
+   */
+  delay?: number;
+};
