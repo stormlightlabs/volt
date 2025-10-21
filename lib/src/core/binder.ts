@@ -17,7 +17,6 @@ import type {
 import { BOOLEAN_ATTRS } from "./constants";
 import { getVoltAttrs, parseClassBinding, setHTML, setText, toggleClass, walkDOM } from "./dom";
 import { evaluate } from "./evaluator";
-import { bindDelete, bindGet, bindPatch, bindPost, bindPut } from "./http";
 import { execGlobalHooks, notifyBindingCreated, notifyElementMounted, notifyElementUnmounted } from "./lifecycle";
 import { debounce, getModifierValue, hasModifier, parseModifiers, throttle } from "./modifiers";
 import { getPlugin } from "./plugin";
@@ -25,6 +24,27 @@ import { createScopeMetadata, getPin, registerPin } from "./scope-metadata";
 import { createArc, createProbe, createPulse, createUid } from "./scope-vars";
 import { findScopedSignal, isNil, updateAndRegister } from "./shared";
 import { getStore } from "./store";
+
+/**
+ * Directive registry for custom bindings
+ *
+ * Allows modules (like HTTP) to register directive handlers that can be tree-shaken when not imported.
+ */
+type DirectiveHandler = (ctx: BindingContext, value: string, modifiers?: Modifier[]) => void;
+
+const directiveRegistry = new Map<string, DirectiveHandler>();
+
+/**
+ * Register a custom directive handler
+ *
+ * Used by optional modules (HTTP, plugins) to register directive handlers that can be tree-shaken when the module is not imported.
+ *
+ * @param name - Directive name (without data-volt- prefix)
+ * @param handler - Handler function that processes the directive
+ */
+export function registerDirective(name: string, handler: DirectiveHandler): void {
+  directiveRegistry.set(name, handler);
+}
 
 /**
  * Mount Volt.js on a root element and its descendants and binds all data-volt-* attributes to the provided scope.
@@ -189,27 +209,15 @@ function bindAttribute(ctx: BindingContext, name: string, value: string): void {
     case "else": {
       break;
     }
-    case "get": {
-      bindGet(ctx, value);
-      break;
-    }
-    case "post": {
-      bindPost(ctx, value);
-      break;
-    }
-    case "put": {
-      bindPut(ctx, value);
-      break;
-    }
-    case "patch": {
-      bindPatch(ctx, value);
-      break;
-    }
-    case "delete": {
-      bindDelete(ctx, value);
-      break;
-    }
     default: {
+      // Check directive registry first (for HTTP and other optional directives)
+      const directiveHandler = directiveRegistry.get(baseName);
+      if (directiveHandler) {
+        directiveHandler(ctx, value, modifiers);
+        return;
+      }
+
+      // Then check plugin registry
       const plugin = getPlugin(baseName);
       if (plugin) {
         execPlugin(plugin, ctx, value, baseName);
@@ -426,7 +434,7 @@ function bindEvent(ctx: BindingContext, eventName: string, expr: string, modifie
       const statements = extractStatements(expr);
       let result: unknown;
       for (const stmt of statements) {
-        result = evaluate(stmt, eventScope);
+        result = evaluate(stmt, eventScope, { unwrapSignals: false });
       }
 
       if (typeof result === "function") {
@@ -650,7 +658,7 @@ function bindInit(ctx: BindingContext, expr: string): void {
   try {
     const statements = extractStatements(expr);
     for (const stmt of statements) {
-      evaluate(stmt, ctx.scope);
+      evaluate(stmt, ctx.scope, { unwrapSignals: false });
     }
   } catch (error) {
     console.error("Error in data-volt-init:", error);
@@ -958,7 +966,7 @@ function createPluginCtx(ctx: BindingContext): PluginContext {
       ctx.cleanups.push(fn);
     },
     findSignal: (path) => findScopedSignal(ctx.scope, path),
-    evaluate: (expr) => evaluate(expr, ctx.scope),
+    evaluate: (expr, options) => evaluate(expr, ctx.scope, options),
     lifecycle,
   };
 }

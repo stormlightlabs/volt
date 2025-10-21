@@ -2,6 +2,8 @@ export type CleanupFunction = () => void;
 
 export type Scope = Record<string, unknown>;
 
+export type EvaluateOpts = { unwrapSignals?: boolean };
+
 /**
  * Context object available to all bindings
  */
@@ -38,7 +40,7 @@ export interface PluginContext {
    * Evaluate an expression against the scope.
    * Handles simple property paths, literals, and signal unwrapping.
    */
-  evaluate(expression: string): unknown;
+  evaluate(expression: string, options?: EvaluateOpts): unknown;
 
   /**
    * Lifecycle hooks for plugin-specific mount/unmount behavior

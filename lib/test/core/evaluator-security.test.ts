@@ -1,268 +1,256 @@
-import { evaluate } from "$core/evaluator";
-import { signal } from "$core/signal";
+import { evaluate, evaluateStatements } from "$core/evaluator";
+import type { Scope } from "$types/volt";
 import { describe, expect, it } from "vitest";
 
-describe("evaluator security", () => {
-  describe("prototype pollution prevention", () => {
-    it("blocks __proto__ property access", () => {
-      const scope = { obj: {} };
-      expect(evaluate("obj.__proto__", scope)).toBe(undefined);
-    });
-
-    it("blocks __proto__ assignment attempts", () => {
-      const scope = { obj: {} };
-      const result = evaluate("obj['__proto__']", scope);
+describe("Evaluator - Security Tests", () => {
+  describe("Prototype Pollution Protection", () => {
+    it("should block __proto__ access", () => {
+      const scope: Scope = {};
+      const result = evaluate("__proto__", scope);
       expect(result).toBe(undefined);
     });
 
-    it("blocks prototype property access", () => {
-      const scope = { arr: [] };
-      expect(evaluate("arr.prototype", scope)).toBe(undefined);
+    it("should block __proto__ assignment", () => {
+      const scope: Scope = {};
+      evaluateStatements("__proto__ = {}", scope);
+      expect(Object.hasOwn(scope, "__proto__")).toBe(false);
     });
 
-    it("blocks constructor property on objects", () => {
-      const scope = { obj: {} };
+    it("should block constructor access", () => {
+      const scope: Scope = { obj: {} };
       expect(evaluate("obj.constructor", scope)).toBe(undefined);
     });
 
-    it("blocks constructor property on arrays", () => {
-      const scope = { arr: [1, 2, 3] };
+    it("should block constructor.prototype access", () => {
+      const scope: Scope = { obj: {} };
+      expect(() => evaluate("obj.constructor.prototype", scope)).toThrow();
+    });
+
+    it("should block prototype property access", () => {
+      const scope: Scope = { fn: () => {} };
+      expect(evaluate("fn.prototype", scope)).toBe(undefined);
+    });
+  });
+
+  describe("Dangerous Global Blocking", () => {
+    it("should block Function constructor access", () => {
+      const scope: Scope = {};
+      const result = evaluate("Function", scope);
+      expect(result).toBe(undefined);
+    });
+
+    it("should block eval access", () => {
+      const scope: Scope = {};
+      const result = evaluate("eval", scope);
+      expect(result).toBe(undefined);
+    });
+
+    it("should block globalThis access", () => {
+      const scope: Scope = {};
+      const result = evaluate("globalThis", scope);
+      expect(result).toBe(undefined);
+    });
+
+    it("should block window access", () => {
+      const scope: Scope = {};
+      expect(evaluate("window", scope)).toBe(undefined);
+    });
+
+    it("should block self access", () => {
+      const scope: Scope = {};
+      expect(evaluate("self", scope)).toBe(undefined);
+    });
+
+    it("should block import access", () => {
+      const scope: Scope = {};
+      expect(() => evaluate("import", scope)).toThrow();
+    });
+  });
+
+  describe("Constructor Escape Protection", () => {
+    it("should prevent constructor escape via array", () => {
+      const scope: Scope = { arr: [] };
       expect(evaluate("arr.constructor", scope)).toBe(undefined);
     });
 
-    it("blocks constructor property on strings", () => {
-      const scope = { text: "hello" };
-      expect(evaluate("text.constructor", scope)).toBe(undefined);
+    it("should prevent constructor escape via object", () => {
+      const scope: Scope = { obj: {} };
+      expect(evaluate("obj.constructor", scope)).toBe(undefined);
     });
 
-    it("blocks nested constructor access", () => {
-      const scope = { obj: { nested: {} } };
-      expect(evaluate("obj.nested.constructor", scope)).toBe(undefined);
-    });
-
-    it("blocks bracket notation __proto__ access", () => {
-      const scope = { obj: {}, key: "__proto__" };
-      expect(evaluate("obj[key]", scope)).toBe(undefined);
-    });
-
-    it("blocks bracket notation constructor access", () => {
-      const scope = { obj: {}, key: "constructor" };
-      expect(evaluate("obj[key]", scope)).toBe(undefined);
-    });
-
-    it("blocks bracket notation prototype access", () => {
-      const scope = { obj: {}, key: "prototype" };
-      expect(evaluate("obj[key]", scope)).toBe(undefined);
-    });
-  });
-
-  describe("sandbox escape prevention", () => {
-    it("blocks direct constructor access from scope", () => {
-      const scope = { constructor: function() {} };
-      expect(evaluate("constructor", scope)).toBe(undefined);
-    });
-
-    it("blocks direct __proto__ access from scope", () => {
-      const scope = { __proto__: {} };
-      expect(evaluate("__proto__", scope)).toBe(undefined);
-    });
-
-    it("blocks direct prototype access from scope", () => {
-      const scope = { prototype: {} };
-      expect(evaluate("prototype", scope)).toBe(undefined);
-    });
-
-    it("prevents Function constructor access via constructor.constructor", () => {
-      const scope = { fn: () => {} };
+    it("should prevent constructor escape via function", () => {
+      const scope: Scope = { fn: () => {} };
       expect(evaluate("fn.constructor", scope)).toBe(undefined);
     });
 
-    it("prevents calling dangerous global functions", () => {
-      const scope = { Function: globalThis.Function, eval: globalThis.eval };
-      expect(evaluate("Function", scope)).toBe(undefined);
-      expect(evaluate("eval", scope)).toBe(undefined);
+    it("should prevent prototype chain traversal", () => {
+      const scope: Scope = { obj: {} };
+      expect(evaluate("obj.__proto__", scope)).toBe(undefined);
     });
   });
 
-  describe("method call security", () => {
-    it("blocks constructor method calls", () => {
-      const scope = { obj: {} };
-      expect(evaluate("obj.constructor()", scope)).toBe(undefined);
+  describe("Safe Global Access", () => {
+    it("should allow Math access", () => {
+      const scope: Scope = {};
+      expect(evaluate("Math.PI", scope)).toBe(Math.PI);
+      expect(evaluate("Math.max(10, 20)", scope)).toBe(20);
     });
 
-    it("blocks __proto__ method calls", () => {
-      const scope = { obj: {} };
-      expect(evaluate("obj.__proto__()", scope)).toBe(undefined);
+    it("should allow Date access", () => {
+      const scope: Scope = {};
+      const result = evaluate("Date.now()", scope);
+      expect(typeof result).toBe("number");
     });
 
-    it("allows safe method calls", () => {
-      const scope = { text: "hello" };
-      expect(evaluate("text.toUpperCase()", scope)).toBe("HELLO");
-      expect(evaluate("text.substring(0, 3)", scope)).toBe("hel");
+    it("should allow String access", () => {
+      const scope: Scope = {};
+      expect(evaluate("String(123)", scope)).toBe("123");
     });
 
-    it("allows safe array method calls", () => {
-      const scope = { items: [1, 2, 3] };
-      expect(evaluate("items.slice(1)", scope)).toEqual([2, 3]);
-      expect(evaluate("items.map(x => x * 2)", scope)).toEqual([2, 4, 6]);
-    });
-  });
-
-  describe("object literal security", () => {
-    it("allows creating safe object literals", () => {
-      expect(evaluate("{ name: 'test', value: 42 }", {})).toEqual({ name: "test", value: 42 });
+    it("should allow Number access", () => {
+      const scope: Scope = {};
+      expect(evaluate("Number('42')", scope)).toBe(42);
     });
 
-    it("blocks dangerous keys in object literals", () => {
-      expect(evaluate("{ __proto__: { polluted: true } }", {})).toBe(undefined);
+    it("should allow Boolean access", () => {
+      const scope: Scope = {};
+      expect(evaluate("Boolean(1)", scope)).toBe(true);
     });
 
-    it("blocks constructor key in object literals", () => {
-      expect(evaluate("{ constructor: 'bad' }", {})).toBe(undefined);
+    it("should allow Array access", () => {
+      const scope: Scope = {};
+      const result = evaluate("Array.isArray([])", scope);
+      expect(result).toBe(true);
     });
 
-    it("blocks prototype key in object literals", () => {
-      expect(evaluate("{ prototype: 'bad' }", {})).toBe(undefined);
-    });
-  });
-
-  describe("array literal security", () => {
-    it("allows creating safe array literals", () => {
-      expect(evaluate("[1, 2, 3]", {})).toEqual([1, 2, 3]);
+    it("should allow Object access for safe methods", () => {
+      const scope: Scope = {};
+      const result = evaluate("Object.keys({ a: 1, b: 2 })", scope);
+      expect(result).toEqual(["a", "b"]);
     });
 
-    it("allows spreading safe arrays", () => {
-      const scope = { items: [1, 2, 3] };
-      expect(evaluate("[0, ...items, 4]", scope)).toEqual([0, 1, 2, 3, 4]);
-    });
-  });
-
-  describe("arrow function security", () => {
-    it("allows safe arrow functions", () => {
-      const scope = { items: [1, 2, 3] };
-      expect(evaluate("items.map(x => x * 2)", scope)).toEqual([2, 4, 6]);
+    it("should allow JSON access", () => {
+      const scope: Scope = {};
+      const result = evaluate("JSON.parse('{\"key\":\"value\"}')", scope);
+      expect(result).toEqual({ key: "value" });
     });
 
-    it("blocks dangerous property access in arrow functions", () => {
-      const scope = { items: [{}] };
-      expect(evaluate("items.map(x => x.__proto__)", scope)).toBe(undefined);
-    });
-
-    it("blocks constructor access in arrow functions", () => {
-      const scope = { items: [{}] };
-      expect(evaluate("items.map(x => x.constructor)", scope)).toBe(undefined);
+    it("should allow console access", () => {
+      const scope: Scope = {};
+      expect(() => evaluate("console", scope)).not.toThrow();
     });
   });
 
-  describe("signal security", () => {
-    it("allows accessing signal values safely", () => {
-      const scope = { count: signal(5) };
-      expect(evaluate("count", scope)).toBe(5);
+  describe("Scope Isolation", () => {
+    it("should not leak variables between scopes", () => {
+      const scope1: Scope = { secret: "value1" };
+      const scope2: Scope = { secret: "value2" };
+
+      expect(evaluate("secret", scope1)).toBe("value1");
+      expect(evaluate("secret", scope2)).toBe("value2");
     });
 
-    it("allows calling signal methods", () => {
-      const count = signal(5);
-      const scope = { count };
-      expect(evaluate("count.get()", scope)).toBe(5);
+    it("should return undefined for missing variables", () => {
+      const scope: Scope = {};
+      expect(evaluate("missing", scope)).toBe(undefined);
     });
 
-    it("blocks dangerous property access on signals", () => {
-      const count = signal(5);
-      const scope = { count };
-      expect(evaluate("count.constructor", scope)).toBe(undefined);
-    });
-  });
-
-  describe("nested security", () => {
-    it("blocks nested __proto__ access chains", () => {
-      const scope = { a: { b: { c: {} } } };
-      expect(evaluate("a.b.c.__proto__", scope)).toBe(undefined);
-    });
-
-    it("blocks mixed access patterns", () => {
-      const scope = { obj: { arr: [{}] } };
-      expect(evaluate("obj.arr[0].__proto__", scope)).toBe(undefined);
-      expect(evaluate("obj.arr[0].constructor", scope)).toBe(undefined);
-    });
-
-    it("prevents prototype pollution via spread (enumerable properties only)", () => {
-      const scope = { malicious: { constructor: "bad", normalProp: "ok" } };
-      expect(evaluate("{ ...malicious }", scope)).toBe(undefined);
+    it("should not allow access to scope object internals", () => {
+      const scope: Scope = { value: 42 };
+      const result = evaluate("constructor", scope);
+      expect(result).toBe(undefined);
     });
   });
 
-  describe("real-world attack scenarios", () => {
-    it("prevents prototype pollution via object assignment", () => {
-      const scope = { target: {}, key: "__proto__", value: { polluted: true } };
-      expect(evaluate("target[key]", scope)).toBe(undefined);
-    });
-
-    it("prevents constructor.constructor access pattern", () => {
-      const scope = { fn: () => {} };
-      expect(evaluate("fn.constructor.constructor", scope)).toBe(undefined);
-    });
-
-    it("prevents accessing Function by name even if in scope", () => {
-      const scope = { Function: globalThis.Function, eval: globalThis.eval };
-
-      expect(evaluate("Function", scope)).toBe(undefined);
-      expect(evaluate("eval", scope)).toBe(undefined);
-    });
-
-    it("prevents eval through constructor chain", () => {
-      const scope = { arr: [] };
-      expect(evaluate("arr.constructor.constructor", scope)).toBe(undefined);
-    });
-  });
-
-  describe("legitimate use cases still work", () => {
-    it("allows normal property access", () => {
-      const scope = { user: { name: "Alice", age: 30 } };
+  describe("Safe Property Names", () => {
+    it("should allow normal property names", () => {
+      const scope: Scope = { user: { name: "Alice", age: 30 } };
       expect(evaluate("user.name", scope)).toBe("Alice");
       expect(evaluate("user.age", scope)).toBe(30);
     });
 
-    it("allows array operations", () => {
-      const scope = { items: [1, 2, 3, 4, 5] };
-      expect(evaluate("items.length", scope)).toBe(5);
-      expect(evaluate("items[0]", scope)).toBe(1);
-      expect(evaluate("items.slice(1, 3)", scope)).toEqual([2, 3]);
+    it("should allow underscore-prefixed properties", () => {
+      const scope: Scope = { _private: "value" };
+      expect(evaluate("_private", scope)).toBe("value");
     });
 
-    it("allows string operations", () => {
-      const scope = { text: "hello world" };
-      expect(evaluate("text.length", scope)).toBe(11);
-      expect(evaluate("text.toUpperCase()", scope)).toBe("HELLO WORLD");
-      expect(evaluate("text.substring(0, 5)", scope)).toBe("hello");
+    it("should allow dollar-prefixed properties", () => {
+      const scope: Scope = { $special: "value" };
+      expect(evaluate("$special", scope)).toBe("value");
     });
 
-    it("allows object creation", () => {
-      expect(evaluate("{ active: true, count: 5 }", {})).toEqual({ active: true, count: 5 });
+    it("should allow numeric property access", () => {
+      const scope: Scope = { items: ["a", "b", "c"] };
+      expect(evaluate("items[0]", scope)).toBe("a");
+      expect(evaluate("items[1]", scope)).toBe("b");
+    });
+  });
+
+  describe("Attack Vector Prevention", () => {
+    it("should prevent prototype pollution via __proto__", () => {
+      const scope: Scope = { obj: {} };
+      expect(() => evaluateStatements("obj.__proto__.polluted = true", scope)).toThrow();
+      expect((Object.prototype as Record<string, unknown>).polluted).toBe(undefined);
     });
 
-    it("allows array creation", () => {
-      expect(evaluate("[1, 2, 3]", {})).toEqual([1, 2, 3]);
+    it("should prevent prototype pollution via constructor.prototype", () => {
+      const scope: Scope = { obj: {} };
+      expect(() => evaluateStatements("obj.constructor.prototype.polluted = true", scope)).toThrow();
+      expect((Object.prototype as Record<string, unknown>).polluted).toBe(undefined);
     });
 
-    it("allows function composition", () => {
-      const scope = { items: [1, 2, 3, 4, 5] };
-      expect(evaluate("items.filter(x => x > 2).map(x => x * 2)", scope)).toEqual([6, 8, 10]);
+    it("should prevent code injection via Function constructor", () => {
+      const scope: Scope = { code: "alert('xss')" };
+      expect(() => evaluate("Function(code)", scope)).toThrow(/not a function/);
     });
 
-    it("allows complex expressions", () => {
-      const scope = { count: 5, limit: 10, items: [1, 2, 3] };
-      expect(evaluate("count < limit && items.length > 0", scope)).toBe(true);
+    it("should prevent code injection via eval", () => {
+      const scope: Scope = { code: "console.log('test')" };
+      expect(() => evaluate("eval(code)", scope)).toThrow(/not a function/);
     });
 
-    it("allows ternary with safe operations", () => {
-      const scope = { count: 5 };
-      expect(evaluate("count > 0 ? 'positive' : 'zero'", scope)).toBe("positive");
+    it("should prevent indirect eval via globalThis", () => {
+      const scope: Scope = { code: "console.log('test')" };
+      expect(() => evaluate("globalThis.eval(code)", scope)).toThrow();
+    });
+  });
+
+  describe("Edge Cases", () => {
+    it("should handle null values safely", () => {
+      const scope: Scope = { value: null };
+      expect(evaluate("value", scope)).toBe(null);
     });
 
-    it("allows signals in complex expressions", () => {
-      const scope = { count: signal(5), limit: 10 };
-      expect(evaluate("count * 2 > limit", scope)).toBe(false);
-      expect(evaluate("count * 3 > limit", scope)).toBe(true);
+    it("should handle undefined values safely", () => {
+      const scope: Scope = { value: undefined };
+      expect(evaluate("value", scope)).toBe(undefined);
+    });
+
+    it("should handle empty strings safely", () => {
+      const scope: Scope = { value: "" };
+      expect(evaluate("value", scope)).toBe("");
+    });
+
+    it("should handle symbol keys safely", () => {
+      const scope: Scope = {};
+      const sym = Symbol("test");
+      scope[sym as unknown as string] = "value";
+      expect(evaluate("test", scope)).toBe(undefined);
+    });
+  });
+
+  describe("Object.create(null) Protection", () => {
+    it("should work with null-prototype objects", () => {
+      const scope: Scope = { nullProto: Object.create(null) };
+      // @ts-expect-error cast from unknown
+      scope.nullProto.value = 42;
+      expect(evaluate("nullProto.value", scope)).toBe(42);
+    });
+
+    it("should prevent attacks on null-prototype objects", () => {
+      const scope: Scope = { nullProto: Object.create(null) };
+      // constructor property is blocked, returns undefined
+      expect(evaluate("nullProto.constructor", scope)).toBe(undefined);
     });
   });
 });

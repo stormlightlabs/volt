@@ -14,12 +14,16 @@ export const BOOLEAN_ATTRS = [
 
 export const DANGEROUS_PROPERTIES = ["__proto__", "prototype", "constructor"];
 
+/**
+ * Dangerous globals that should be blocked from expressions
+ *
+ * NOTE: The scope proxy's has trap returns true for ALL properties to prevent the 'with' statement from falling back to outer scope, giving us complete control
+ */
 export const DANGEROUS_GLOBALS = [
-  "Function",
-  "eval",
-  "globalThis",
   "window",
+  "self",
   "global",
+  "globalThis",
   "process",
   "require",
   "import",
