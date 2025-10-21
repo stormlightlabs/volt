@@ -2,7 +2,7 @@
  * Binder system for mounting and managing Volt.js bindings
  */
 
-import type { Optional } from "$types/helpers";
+import type { Nullable, Optional } from "$types/helpers";
 import type {
   BindingContext,
   CleanupFunction,
@@ -15,12 +15,15 @@ import type {
 } from "$types/volt";
 import { BOOLEAN_ATTRS } from "./constants";
 import { getVoltAttrs, parseClassBinding, setHTML, setText, toggleClass, walkDOM } from "./dom";
-import { evaluate, extractDeps } from "./evaluator";
+import { evaluate } from "./evaluator";
 import { bindDelete, bindGet, bindPatch, bindPost, bindPut } from "./http";
 import { execGlobalHooks, notifyBindingCreated, notifyElementMounted, notifyElementUnmounted } from "./lifecycle";
 import { debounce, getModifierValue, hasModifier, parseModifiers, throttle } from "./modifiers";
 import { getPlugin } from "./plugin";
-import { findScopedSignal, isNil } from "./shared";
+import { createScopeMetadata, getPin, registerPin } from "./scope-metadata";
+import { createArc, createProbe, createPulse, createUid } from "./scope-vars";
+import { findScopedSignal, isNil, updateAndRegister } from "./shared";
+import { getStore } from "./store";
 
 /**
  * Mount Volt.js on a root element and its descendants and binds all data-volt-* attributes to the provided scope.
@@ -30,12 +33,13 @@ import { findScopedSignal, isNil } from "./shared";
  * @returns Cleanup function to unmount and dispose all bindings.
  */
 export function mount(root: Element, scope: Scope): CleanupFunction {
+  injectSpecialVars(scope, root);
   execGlobalHooks("beforeMount", root, scope);
 
   const allElements = walkDOM(root);
 
   const elements = allElements.filter((element) => {
-    let current: Element | null = element;
+    let current: Nullable<Element> = element;
     while (current) {
       if (Object.hasOwn((current as HTMLElement).dataset, "voltSkip")) {
         return false;
@@ -168,6 +172,14 @@ function bindAttribute(ctx: BindingContext, name: string, value: string): void {
       bindModel(ctx, value, modifiers);
       break;
     }
+    case "pin": {
+      bindPin(ctx, value);
+      break;
+    }
+    case "init": {
+      bindInit(ctx, value);
+      break;
+    }
     case "for": {
       bindFor(ctx, value);
       break;
@@ -222,27 +234,8 @@ function bindNode(kind: "text" | "html") {
         setHTML(ctx.element, String(value ?? ""));
       }
     };
-    update();
-
-    const deps = extractDeps(expr, ctx.scope);
-    for (const dep of deps) {
-      const unsubscribe = dep.subscribe(update);
-      ctx.cleanups.push(unsubscribe);
-    }
+    updateAndRegister(ctx, update, expr);
   };
-}
-
-/**
- * Helper function to execute an update function and subscribe to all signal dependencies.
- * Used by bindings that need reactive updates (class, show, style, for, if).
- */
-function updateAndUnsub(ctx: BindingContext, update: () => void, expr: string) {
-  update();
-  const deps = extractDeps(expr, ctx.scope);
-  for (const dep of deps) {
-    const unsubscribe = dep.subscribe(update);
-    ctx.cleanups.push(unsubscribe);
-  }
 }
 
 /**
@@ -269,7 +262,7 @@ function bindClass(ctx: BindingContext, expr: string): void {
     prevClasses = classes;
   };
 
-  updateAndUnsub(ctx, update, expr);
+  updateAndRegister(ctx, update, expr);
 }
 
 /**
@@ -291,7 +284,7 @@ function bindShow(ctx: BindingContext, expr: string): void {
     }
   };
 
-  updateAndUnsub(ctx, update, expr);
+  updateAndRegister(ctx, update, expr);
 }
 
 /**
@@ -325,7 +318,49 @@ function bindStyle(ctx: BindingContext, expr: string): void {
     }
   };
 
-  updateAndUnsub(ctx, update, expr);
+  updateAndRegister(ctx, update, expr);
+}
+
+function extractStatements(expr: string) {
+  const statements: string[] = [];
+  let current = "";
+  let depth = 0;
+  let inString: string | null = null;
+
+  for (const [i, char] of [...expr].entries()) {
+    const prev = i > 0 ? expr[i - 1] : "";
+
+    if ((char === "\"" || char === "'") && prev !== "\\") {
+      if (inString === char) {
+        inString = null;
+      } else if (inString === null) {
+        inString = char;
+      }
+    }
+
+    if (inString === null) {
+      if (char === "(" || char === "{" || char === "[") {
+        depth++;
+      } else if (char === ")" || char === "}" || char === "]") {
+        depth--;
+      }
+    }
+
+    if (char === ";" && depth === 0 && inString === null) {
+      if (current.trim()) {
+        statements.push(current.trim());
+      }
+      current = "";
+    } else {
+      current += char;
+    }
+  }
+
+  if (current.trim()) {
+    statements.push(current.trim());
+  }
+
+  return statements;
 }
 
 /**
@@ -348,7 +383,12 @@ function bindEvent(ctx: BindingContext, eventName: string, expr: string, modifie
     const eventScope: Scope = { ...ctx.scope, $el: ctx.element, $event: event };
 
     try {
-      const result = evaluate(expr, eventScope);
+      const statements = extractStatements(expr);
+      let result: unknown;
+      for (const stmt of statements) {
+        result = evaluate(stmt, eventScope);
+      }
+
       if (typeof result === "function") {
         result(event);
       }
@@ -560,13 +600,35 @@ function bindAttr(ctx: BindingContext, attrName: string, expr: string, modifiers
     }
   };
 
-  update();
+  updateAndRegister(ctx, update, expr);
+}
 
-  const deps = extractDeps(expr, ctx.scope);
-  for (const dep of deps) {
-    const unsubscribe = dep.subscribe(update);
-    ctx.cleanups.push(unsubscribe);
+/**
+ * Bind data-volt-init to run initialization code once when the element is mounted.
+ */
+function bindInit(ctx: BindingContext, expr: string): void {
+  try {
+    const statements = extractStatements(expr);
+    for (const stmt of statements) {
+      evaluate(stmt, ctx.scope);
+    }
+  } catch (error) {
+    console.error("Error in data-volt-init:", error);
   }
+}
+
+/**
+ * Bind data-volt-pin to register an element reference in the scope's pin registry.
+ * Makes the element accessible via $pins.name ($pins[name]) in expressions and event handlers.
+ *
+ * @example
+ * ```html
+ * <input data-volt-pin="username" />
+ * <button data-volt-on-click="$pins.username.focus()">Focus Input</button>
+ * ```
+ */
+function bindPin(ctx: BindingContext, name: string): void {
+  registerPin(ctx.scope, name, ctx.element);
 }
 
 /**
@@ -629,7 +691,7 @@ function bindFor(ctx: BindingContext, expr: string): void {
     }
   };
 
-  updateAndUnsub(ctx, render, expr);
+  updateAndRegister(ctx, render, expr);
 
   ctx.cleanups.push(() => {
     for (const cleanup of renderedCleanups) {
@@ -707,7 +769,7 @@ function bindIf(ctx: BindingContext, expr: string): void {
     }
   };
 
-  updateAndUnsub(ctx, render, expr);
+  updateAndRegister(ctx, render, expr);
 
   ctx.cleanups.push(() => {
     if (currentCleanup) {
@@ -798,4 +860,39 @@ function createPluginCtx(ctx: BindingContext): PluginContext {
     evaluate: (expr) => evaluate(expr, ctx.scope),
     lifecycle,
   };
+}
+
+/**
+ * Inject special variables ($store, $origin, $scope, $pins, $pulse, $uid, $arc, $probe)
+ * into the scope for this root element.
+ *
+ * Creates scope metadata and makes runtime utilities available in expressions.
+ * We create a Proxy for $pins that dynamically reads from metadata to ensure pins registered later are immediately accessible
+ */
+function injectSpecialVars(scope: Scope, root: Element): void {
+  createScopeMetadata(scope, root);
+
+  scope.$store = getStore();
+  scope.$pulse = createPulse();
+  scope.$origin = root;
+  scope.$scope = scope;
+
+  scope.$pins = new Proxy({}, {
+    get(_target, prop: string) {
+      if (typeof prop === "string") {
+        return getPin(scope, prop);
+      }
+      return void 0;
+    },
+    has(_target, prop: string) {
+      if (typeof prop === "string") {
+        return getPin(scope, prop) !== undefined;
+      }
+      return false;
+    },
+  });
+
+  scope.$uid = createUid(scope);
+  scope.$arc = createArc(root);
+  scope.$probe = createProbe(scope);
 }

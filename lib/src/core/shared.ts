@@ -1,5 +1,10 @@
+/**
+ * @packageDocumentation Shared module
+ *
+ * functions exported from this module should only depend on types and other helpers
+ */
 import type { None, Optional } from "$types/helpers";
-import type { Dep, Scope, Signal } from "$types/volt";
+import type { BindingContext, Dep, Scope, Signal } from "$types/volt";
 
 export function kebabToCamel(str: string): string {
   return str.replaceAll(/-([a-z])/g, (_, letter) => letter.toUpperCase());
@@ -68,4 +73,84 @@ export function getComputedAttributes(el: Element): Map<string, string> {
  */
 export function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/**
+ * Extract all signal dependencies from an expression by finding identifiers that correspond to signals in the scope.
+ *
+ * This function handles both simple property paths (e.g., "todo.title") and complex expressions (e.g., "email.length > 0 && emailValid").
+ * It also handles special $store.get() and $store.set() calls by extracting the key and finding the underlying signal.
+ *
+ * @param expr - The expression to analyze
+ * @param scope - The scope containing potential signal dependencies
+ * @returns Array of signals found in the expression
+ */
+export function extractDeps(expr: string, scope: Scope): Array<Dep> {
+  const deps: Array<Dep> = [];
+  const seen = new Set<string>();
+  const storeCalls = expr.matchAll(/\$store\.(get|set|has)\s*\(\s*['"]([^'"]+)['"]\s*(?:,|\))/g);
+
+  for (const match of storeCalls) {
+    const key = match[2];
+    const storeKey = `$store.${key}`;
+
+    if (seen.has(storeKey)) {
+      continue;
+    }
+
+    seen.add(storeKey);
+
+    const store = scope.$store;
+    if (store && typeof store === "object" && "_signals" in store) {
+      const storeSignals = store._signals as Map<string, Signal<unknown>>;
+      const signal = storeSignals.get(key);
+      if (signal && !deps.includes(signal)) {
+        deps.push(signal);
+      }
+    }
+  }
+
+  const matches = expr.matchAll(/\b([a-zA-Z_$][\w$]*(?:\.[a-zA-Z_$][\w$]*)*)\b/g);
+
+  for (const match of matches) {
+    const path = match[1];
+
+    if (["true", "false", "null", "undefined"].includes(path)) {
+      continue;
+    }
+
+    if (seen.has(path)) {
+      continue;
+    }
+
+    seen.add(path);
+
+    const signal = findScopedSignal(scope, path);
+    if (signal) {
+      deps.push(signal);
+      continue;
+    }
+
+    const parts = path.split(".");
+    const topLevel = parts[0];
+    const value = scope[topLevel];
+    if (isSignal(value) && !deps.includes(value)) {
+      deps.push(value);
+    }
+  }
+
+  return deps;
+}
+
+/**
+ * Helper function to execute an update function and subscribe to all signal dependencies.
+ * Used by bindings that need reactive updates (class, show, style, for, if) to register cleanup functions.
+ */
+export function updateAndRegister(ctx: BindingContext, update: () => void, expr: string) {
+  update();
+  const deps = extractDeps(expr, ctx.scope);
+  for (const dep of deps) {
+    const unsubscribe = dep.subscribe(update);
+    ctx.cleanups.push(unsubscribe);
+  }
 }

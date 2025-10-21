@@ -1,5 +1,5 @@
 import { mount } from "$core/binder";
-import { extractDeps } from "$core/evaluator";
+import { extractDeps } from "$core/shared";
 import { signal } from "$core/signal";
 import { describe, expect, it } from "vitest";
 

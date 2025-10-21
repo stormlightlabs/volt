@@ -53,8 +53,11 @@ describe("lifecycle hooks", () => {
 
         mount(root, { message });
 
+        expect(receivedRoot).toBeDefined();
         expect(receivedRoot).toBe(root);
-        expect(receivedScope).toEqual({ message });
+        expect(receivedScope!.message).toBe(message);
+        expect(receivedScope!.$store).toBeDefined();
+        expect(receivedScope!.$arc).toBeDefined();
       });
 
       it("can register multiple hooks", () => {

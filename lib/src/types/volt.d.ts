@@ -342,3 +342,86 @@ export type Modifier = { name: string; value?: number };
  * Result of parsing an attribute name with modifiers
  */
 export type ParsedAttribute = { baseName: string; modifiers: Modifier[] };
+
+/**
+ * Registry mapping pin names to DOM elements within a scope
+ */
+export type PinRegistry = Map<string, Element>;
+
+/**
+ * Metadata associated with a reactive scope.
+ * Stored externally via WeakMap to avoid polluting scope object.
+ */
+export type ScopeMetadata = {
+  /**
+   * The root element that owns this scope
+   */
+  origin: Element;
+
+  /**
+   * Registry of pinned elements (data-volt-pin)
+   */
+  pins: PinRegistry;
+
+  /**
+   * Counter for generating unique IDs within this scope
+   */
+  uidCounter: number;
+
+  /**
+   * Optional parent scope reference (for debugging/inspection)
+   */
+  parent?: Scope;
+};
+
+/**
+ * Global reactive store interface.
+ * Holds signals accessible across all scopes via $store.
+ */
+export interface GlobalStore {
+  /**
+   * Internal signal registry
+   */
+  readonly _signals: Map<string, Signal<unknown>>;
+
+  /**
+   * Get a signal value from the store
+   */
+  get<T = unknown>(key: string): T | undefined;
+
+  /**
+   * Set a signal value in the store.
+   * Creates a new signal if the key doesn't exist.
+   */
+  set<T = unknown>(key: string, value: T): void;
+
+  /**
+   * Check if a key exists in the store
+   */
+  has(key: string): boolean;
+
+  /**
+   * Access signals directly (for advanced use)
+   */
+  [key: string]: unknown;
+}
+
+/**
+ * Function signature for $pulse() - microtask scheduler
+ */
+export type PulseFunction = (callback: () => void) => void;
+
+/**
+ * Function signature for $uid() - unique ID generator
+ */
+export type UidFunction = (prefix?: string) => string;
+
+/**
+ * Function signature for $arc() - CustomEvent dispatcher
+ */
+export type ArcFunction = (eventName: string, detail?: unknown) => void;
+
+/**
+ * Function signature for $probe() - reactive observer
+ */
+export type ProbeFunction = (expression: string, callback: (value: unknown) => void) => CleanupFunction;

@@ -11,10 +11,6 @@
   padding: 0;
 }
 
-/**
- * Document root configuration
- * Sets base font size for rem calculations
- */
 html {
   font-size: var(--font-size-base);
   -webkit-text-size-adjust: 100%;
@@ -23,10 +19,6 @@ html {
   text-rendering: optimizeLegibility;
 }
 
-/**
- * Body element - Primary container
- * Sets default typography and colors for the entire document
- */
 body {
   font-family: var(--font-sans);
   font-size: 1rem;
@@ -75,21 +67,7 @@ body {
   }
 }
 
-/**
- * Mobile sidenotes - Inline with subtle styling
- */
-@media (max-width: 767px) {
-  p small {
-    display: block;
-    margin-top: var(--space-sm);
-    margin-bottom: var(--space-sm);
-    padding: var(--space-sm);
-    background-color: var(--color-bg-alt);
-    border-left: 2px solid var(--color-accent);
-    border-radius: var(--radius-sm);
-    font-size: 0.9rem;
-  }
-}
+
 
 article, section {
   margin-bottom: var(--space-3xl);
@@ -190,6 +168,8 @@ nav li {
   }
 }
 
+
+
 @media (max-width: 768px) {
   :root {
     --font-size-base: 16px;
@@ -213,6 +193,20 @@ nav li {
   nav ul {
     flex-direction: column;
     gap: var(--space-sm);
+  }
+
+  /**
+   * Mobile sidenotes - Inline with subtle styling
+   */
+  p small {
+    display: block;
+    margin-top: var(--space-sm);
+    margin-bottom: var(--space-sm);
+    padding: var(--space-sm);
+    background-color: var(--color-bg-alt);
+    border-left: 2px solid var(--color-accent);
+    border-radius: var(--radius-sm);
+    font-size: 0.9rem;
   }
 }
 

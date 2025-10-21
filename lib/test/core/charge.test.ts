@@ -147,7 +147,16 @@ describe("charge", () => {
       const result = charge();
 
       expect(result.roots).toHaveLength(1);
-      expect(result.roots[0].scope).toEqual({});
+
+      const scope = result.roots[0].scope;
+      expect(scope.$store).toBeDefined();
+      expect(scope.$arc).toBeDefined();
+      expect(scope.$origin).toBeDefined();
+      expect(scope.$pins).toBeDefined();
+      expect(scope.$probe).toBeDefined();
+      expect(scope.$pulse).toBeDefined();
+      expect(scope.$scope).toBe(scope);
+      expect(scope.$uid).toBeDefined();
 
       result.cleanup();
     });

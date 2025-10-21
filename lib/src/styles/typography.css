@@ -1,5 +1,7 @@
 /* ========================================================================== */
 /* Typography & Inline Elements                                               */
+/*                                                                            */
+/* See variables.css for fonts.                                               */
 /* ========================================================================== */
 
 /**
@@ -9,6 +11,7 @@
  */
 h1, h2, h3, h4, h5, h6 {
   font-weight: 700;
+  font-family: var(--font-display);
   line-height: var(--line-height-tight);
   color: var(--color-text);
   margin-top: var(--space-2xl);

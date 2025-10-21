@@ -5,9 +5,9 @@
  * Includes sandboxing to prevent prototype pollution and sandbox escape attacks.
  */
 
-import type { Dep, Scope } from "$types/volt";
+import type { Scope } from "$types/volt";
 import { DANGEROUS_GLOBALS, DANGEROUS_PROPERTIES, SAFE_GLOBALS } from "./constants";
-import { findScopedSignal, isNil, isSignal } from "./shared";
+import { isNil, isSignal } from "./shared";
 
 const dangerousProps = new Set(DANGEROUS_PROPERTIES);
 const safeGlobals = new Set(SAFE_GLOBALS);
@@ -870,50 +870,4 @@ export function evaluate(expr: string, scope: Scope): unknown {
     console.error(`Error evaluating expression "${expr}":`, error);
     return undefined;
   }
-}
-
-/**
- * Extract all signal dependencies from an expression by finding identifiers that correspond to signals in the scope.
- *
- * This function handles both simple property paths (e.g., "todo.title") and complex expressions (e.g., "email.length > 0 && emailValid").
- *
- * @param expr - The expression to analyze
- * @param scope - The scope containing potential signal dependencies
- * @returns Array of signals found in the expression
- */
-export function extractDeps(expr: string, scope: Scope): Array<Dep> {
-  const deps: Array<Dep> = [];
-  const seen = new Set<string>();
-
-  const identifierRegex = /\b([a-zA-Z_$][\w$]*(?:\.[a-zA-Z_$][\w$]*)*)\b/g;
-  const matches = expr.matchAll(identifierRegex);
-
-  for (const match of matches) {
-    const path = match[1];
-
-    if (["true", "false", "null", "undefined"].includes(path)) {
-      continue;
-    }
-
-    if (seen.has(path)) {
-      continue;
-    }
-
-    seen.add(path);
-
-    const signal = findScopedSignal(scope, path);
-    if (signal) {
-      deps.push(signal);
-      continue;
-    }
-
-    const parts = path.split(".");
-    const topLevel = parts[0];
-    const value = scope[topLevel];
-    if (isSignal(value) && !deps.includes(value)) {
-      deps.push(value);
-    }
-  }
-
-  return deps;
 }
