@@ -35,6 +35,12 @@ export {
   registerTransition,
   unregisterTransition,
 } from "$core/transitions";
+export {
+  namedViewTransition,
+  startViewTransition,
+  supportsViewTransitions,
+  withViewTransition,
+} from "$core/view-transitions";
 export { persistPlugin, registerStorageAdapter } from "$plugins/persist";
 export { scrollPlugin } from "$plugins/scroll";
 export {
@@ -76,4 +82,5 @@ export type {
   TransitionPreset,
   UidFunction,
   UnwrapReactive,
+  ViewTransitionOptions,
 } from "$types/volt";

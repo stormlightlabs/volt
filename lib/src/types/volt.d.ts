@@ -590,3 +590,33 @@ export type AnimationPreset = {
    */
   timing: string;
 };
+
+/**
+ * Options for configuring a view transition
+ */
+export type ViewTransitionOptions = {
+  /**
+   * Named view transition for specific element(s)
+   * Maps to view-transition-name CSS property
+   */
+  name?: string;
+
+  /**
+   * Elements to apply named transitions to
+   * Each element will get a unique view-transition-name
+   */
+  elements?: HTMLElement[];
+
+  /**
+   * Skip transition if prefers-reduced-motion is enabled
+   * @default true
+   */
+  respectReducedMotion?: boolean;
+
+  /**
+   * Force CSS fallback even if View Transitions API is supported
+   * Useful for testing or debugging
+   * @default false
+   */
+  forceFallback?: boolean;
+};
