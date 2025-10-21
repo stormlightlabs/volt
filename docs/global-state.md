@@ -1,6 +1,7 @@
 # Global State
 
-VoltX provides built-in global state management through special variables and the global store. These features enable sharing state across components, accessing metadata, and coordinating behavior without external dependencies.
+VoltX provides built-in global state management through special variables and a globally available store.
+These features enable sharing state across components, accessing metadata, and coordinating behavior without external dependencies.
 
 ## Overview
 
@@ -210,7 +211,6 @@ Run initialization code once when an element is mounted.
 <div data-volt
      data-volt-state='{"initialized": false}'
      data-volt-init="initialized.set(true)">
-
   <p data-volt-text="initialized"></p>
   <!-- Displays: true -->
 </div>
@@ -222,7 +222,6 @@ Run initialization code once when an element is mounted.
 <div data-volt
      data-volt-state='{"count": 0, "log": []}'
      data-volt-init="$probe('count', v => log.push(v))">
-
   <button data-volt-on-click="count.set(count.get() + 1)">Increment</button>
   <p data-volt-text="log.join(', ')"></p>
   <!-- Displays: "0, 1, 2, ..." -->
@@ -236,7 +235,6 @@ Run initialization code once when an element is mounted.
      id="main"
      data-volt-state='{"rootId": ""}'
      data-volt-init="rootId.set($origin.id)">
-
   <p data-volt-text="rootId"></p>
   <!-- Displays: "main" -->
 </div>
@@ -419,7 +417,7 @@ Always clean up `$probe` observers when no longer needed:
 <!-- Add todo form -->
 <div data-volt data-volt-state='{"newTodo": ""}'>
   <input data-volt-model="newTodo" data-volt-pin="todoInput" />
-  <button data-volt-on-click="$store.get('todos').push({ text: newTodo.get(), done: false }); newTodo.set(''); $pins.todoInput.focus()">
+  <button data-volt-on-click="$store.set('todos', [...$store.get('todos'), { text: newTodo.get(), done: false }]); newTodo.set(''); $pins.todoInput.focus()">
     Add
   </button>
 </div>

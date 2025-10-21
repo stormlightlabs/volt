@@ -18,11 +18,10 @@ hero:
       link: /api-examples
 
 features:
-  - title: Feature A
-    details: Lorem ipsum dolor sit amet, consectetur adipiscing elit
-  - title: Feature B
-    details: Lorem ipsum dolor sit amet, consectetur adipiscing elit
-  - title: Feature C
-    details: Lorem ipsum dolor sit amet, consectetur adipiscing elit
+  - title: Reactive
+    details: Signal-driven rendering keeps your markup in sync with data.
+  - title: Hypermedia Powered
+    details: Built-in hypermedia helpers stream link and form updates across HTTP and WebSocket transports.
+  - title: Expandable
+    details: A modular plugin system lets you ship custom bindings, transports, and diagnostics
 ---
-
