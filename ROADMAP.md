@@ -15,7 +15,7 @@
 |         |   ✓   | [Proxy-Based Reactivity Enhancements](#proxy-based-reactivity-enhancements)      |
 | v0.1.0  |   ✓   | [Markup Based Reactivity](#markup-based-reactivity)                              |
 | v0.2.0  |   ✓   | [Reactive Attributes & Event Modifiers](#reactive-attributes--event-modifiers)   |
-| v0.3.0  |       | [Global State](#global-state)                                                    |
+| v0.3.0  |   ✓   | [Global State](#global-state)                                                    |
 | v0.4.0  |       | [Animation & Transitions](#animation--transitions)                               |
 | v0.5.0  |       | [Persistence & Offline](#persistence--offline)                                   |
 |         |       | [Background Requests & Reactive Polling](#background-requests--reactive-polling) |
