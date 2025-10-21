@@ -28,7 +28,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       - name: Build
-        run: pnpm build
+        run: pnpm build:jsr
         working-directory: lib
       - name: Publish to JSR
         run: npx jsr publish
