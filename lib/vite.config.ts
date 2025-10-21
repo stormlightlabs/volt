@@ -21,19 +21,34 @@ const test: ViteUserConfig["test"] = {
   },
 };
 
-const buildOptions = (mode: string): BuildEnvironmentOptions => ({
-  minify: mode === "lib" ? "oxc" : true,
-  ...(mode === "lib"
-    ? {
-      lib: {
-        entry: { voltx: path.resolve(__dirname, "src/index.ts"), debug: path.resolve(__dirname, "src/debug.ts") },
-        name: "VoltX",
-        formats: ["es"],
-      },
-      rolldownOptions: { output: { assetFileNames: "voltx.[ext]", minify: true } },
-    }
-    : {}),
-});
+const buildOptions = (mode: string): BuildEnvironmentOptions => {
+  const isLibBuild = mode === "lib" || mode === "lib:min";
+  const shouldMinify = mode === "lib:min";
+
+  return {
+    minify: shouldMinify ? "oxc" : false,
+    ...(isLibBuild
+      ? {
+        lib: {
+          entry: { voltx: path.resolve(__dirname, "src/index.ts"), debug: path.resolve(__dirname, "src/debug.ts") },
+          name: "VoltX",
+          formats: ["es"],
+          fileName: (format, entryName) => {
+            const suffix = shouldMinify ? ".min.js" : ".js";
+            return `${entryName}${suffix}`;
+          },
+        },
+        rolldownOptions: {
+          output: { assetFileNames: "voltx.[ext]", manualChunks: undefined, preserveModules: false },
+          onwarn(warning, warn) {
+            if (warning.code === "UNUSED_EXTERNAL_IMPORT") return;
+            warn(warning);
+          },
+        },
+      }
+      : {}),
+  };
+};
 
 export default defineConfig(({ mode }) => ({
   resolve: {
@@ -46,7 +61,10 @@ export default defineConfig(({ mode }) => ({
       "$vebug": path.resolve(__dirname, "./src/debug.ts"),
     },
   },
-  build: buildOptions(mode),
+  build: {
+    ...buildOptions(mode),
+    emptyOutDir: false, // Don't clear dist/ to preserve TypeScript declarations
+  },
   test,
   plugins: [],
 }));

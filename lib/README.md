@@ -61,7 +61,7 @@ import 'voltx.js/css';
 Or include via CDN:
 
 ```html
-<link rel="stylesheet" href="https://unpkg.com/voltx.js/dist/volt.css">
+<link rel="stylesheet" href="https://unpkg.com/voltx.js/dist/voltx.css">
 ```
 
 ## Documentation
