@@ -10,6 +10,5 @@
     "$debug": "./src/debug.ts",
     "$vebug": "./src/debug.ts",
     "$volt": "./src/index.ts"
-  },
-  "publish": { "include": ["dist", "README.md", "LICENSE"] }
+  }
 }
