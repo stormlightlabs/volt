@@ -3,5 +3,5 @@
   "version": "0.3.0",
   "license": "MIT",
   "exports": { ".": "./src/index.ts", "./debug": "./src/debug.ts", "./css": "./dist/volt.css" },
-  "publish": { "include": ["src", "dist", "README.md", "LICENSE"] }
+  "publish": { "include": ["dist", "README.md", "LICENSE"] }
 }

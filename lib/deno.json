@@ -1,7 +1,8 @@
 {
   "name": "@voltx/core",
   "version": "0.3.0",
-  "exports": "./src/index.ts",
+  "license": "MIT",
+  "exports": { ".": "./src/index.ts", "./debug": "./src/debug.ts", "./css": "./dist/voltx.css" },
   "imports": {
     "$core/": "./src/core/",
     "$plugins/": "./src/plugins/",
@@ -9,5 +10,6 @@
     "$debug": "./src/debug.ts",
     "$vebug": "./src/debug.ts",
     "$volt": "./src/index.ts"
-  }
+  },
+  "publish": { "include": ["dist", "README.md", "LICENSE"] }
 }
