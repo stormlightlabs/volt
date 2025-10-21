@@ -1,4 +1,4 @@
-# Building a Counter
+# Counter (Example)
 
 This tutorial walks through building a simple counter application to demonstrate VoltX.js fundamentals: reactive state, event handling, computed values, and declarative markup.
 

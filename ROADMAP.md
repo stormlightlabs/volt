@@ -16,9 +16,9 @@
 | v0.1.0  |   ✓   | [Markup Based Reactivity](#markup-based-reactivity)                              |
 | v0.2.0  |   ✓   | [Reactive Attributes & Event Modifiers](#reactive-attributes--event-modifiers)   |
 | v0.3.0  |   ✓   | [Global State](#global-state)                                                    |
-| v0.4.0  |       | [Animation & Transitions](#animation--transitions)                               |
-| v0.5.0. |       | [History API Routing Plugin](#history-api-routing-plugin)                        |
-|         |       | [Refactor](#evaluator--binder-hardening)                                         |
+| v0.4.0  |   ✓   | [Animation & Transitions](#animation--transitions)                               |
+| v0.5.0  |       | [History API Routing Plugin](#history-api-routing-plugin)                        |
+|         |   ✓   | [Refactor](#evaluator--binder-hardening)                                         |
 |         |       | [Persistence & Offline](#persistence--offline)                                   |
 |         |       | [Background Requests & Reactive Polling](#background-requests--reactive-polling) |
 | v0.6.0  |       | [Navigation & History Management](#navigation--history-management)               |
@@ -86,36 +86,15 @@ _NOTE_: `data-x-*` is now `data-volt-*`
 
 **Goal:** Implement store/context pattern
 **Outcome:** Volt.js provides intuitive global state management
-**Deliverables:**
-    - `$origin` - Reference to the root element of the active reactive scope.
-    - `$scope` - Reference to the current reactive scope object (signals + context).
-    - `$pulse()` - Defers execution to the next microtask tick after DOM updates.
-        - Example: `data-volt-on-click="$count++; $pulse(() => console.log('updated'))"`
-    - `$store` - Accesses global reactive state registered with Volt’s global store.
-        - Example: `data-volt-text="$store.theme"`
-    - `$uid(name?)` - Generates a unique, deterministic ID string within the current scope.
-        - Example: `data-volt-id="$uid('field')"`
-    - `$probe(expr, fn)` - Imperatively observes a reactive signal or expression within the current scope.
-        - Example: `data-volt-init="$probe('count', v => console.log(v))"`
-    - `$pins` - Scoped element references via `data-volt-pin="name"`. Provides an object mapping ref/pin names to DOM nodes.
-        - Example: `data-volt-on-click="$pins.username.focus()"`
-    - `$arc(event, detail?)` - Dispatches a native CustomEvent from the current element.
-        - Example: `data-volt-on-click="$arc('user:save', { id })"`
-
-## To-Do
+**Summary:** The scope injects helpers like `$origin`, `$scope`, `$pulse`, `$store`, `$uid`, `$probe`, `$pins`, and `$arc`, giving templates access to global state, microtask scheduling, deterministic IDs, element refs, and custom event dispatch without leaving declarative markup.
 
 ### Animation & Transitions
 
 **Goal:** Add animation primitives for smooth UI transitions with Alpine/Datastar parity.
 **Outcome:** Volt.js enables declarative animations and view transitions alongside reactivity.
-**Deliverables:**
-    - `data-volt-surge` directive with enter/leave transitions
-        - Transition modifiers (duration, delay, opacity, scale, etc.)
-        - View Transitions API integration (when available)
-        - CSS-based transition helpers
-    - `data-volt-shift` plugin for keyframe animations
-        - Timing utilities and easing functions
-    - Integration with `data-volt-if` and `data-volt-show` for automatic transitions
+**Summary:** The surge directive ships fade/slide/scale/blur presets with duration and delay overrides, per-phase enter/leave control, and easing helpers, while the shift plugin applies reusable keyframe animations—both composable with `data-volt-if`/`data-volt-show` as showcased in the animations demo.
+
+## To-Do
 
 ### Streaming & Patch Engine
 
@@ -218,10 +197,7 @@ _NOTE_: `data-x-*` is now `data-volt-*`
 
 ### Evaluator & Binder Hardening
 
-- [ ] Replace the hand-rolled parser in `lib/src/core/evaluator.ts` with a cached `new Function` compiler that runs in `'use strict'`, only receives explicitly whitelisted globals, and keeps hazardous constructors out of scope.
-- [ ] Introduce a `createScopeProxy` helper that wraps user scopes in an `Object.create(null)` proxy, blocks prototype pollution vectors (`constructor`, `__proto__`, `globalThis`), unwraps signals on read, and freezes the injected `$` helpers before exposing them to expressions.
-- [ ] Slim `lib/src/core/binder.ts` into a directive registry so only structural directives ship in core; have optional pieces (HTTP actions, surge transitions, etc.) self-register through plugins to enable tree shaking.
-- [ ] Run expressions and plugin hooks against the hardened proxy scope, surface evaluation errors back to callers instead of swallowing them, and cover the guardrails with Vitest cases that assert unsafe access is rejected.
+All expression evaluation now flows through a cached `new Function` compiler guarded by a hardened scope proxy, with the binder slimmed into a directive registry so plugins self-register while tests verify the sandboxed error surfaces.
 
 ## Examples
 
@@ -267,11 +243,3 @@ These will live in an example repo.
 - System Monitor - CPU/memory graphs, process list, real-time updates
 - Database Client - Table browser, query editor, result grid, export
 - Media Player - File browser, playlists, controls, metadata display
-
-## Docs
-
-- [ ] Document `charge()` bootstrap flow and declarative state/computed attributes (`data-volt-state`, `data-volt-computed:*`).
-- [ ] Add async effect guide covering abort signals, debounce/throttle, retries, and `onError` handling.
-- [ ] Write lifecycle instrumentation docs for `registerGlobalHook`, `registerElementHook`, `getElementBindings`, and plugin `context.lifecycle` callbacks.
-- [ ] Explain `data-volt-bind:*` semantics, especially boolean attribute handling and dependency subscription behavior.
-- [ ] Refresh README and overview content to reflect the current module layout.

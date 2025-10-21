@@ -1,4 +1,4 @@
-# State Management
+# Reactivity
 
 VoltX uses signal-based reactivity for state management. State changes automatically trigger DOM updates without virtual DOM diffing or reconciliation.
 
@@ -6,7 +6,8 @@ VoltX uses signal-based reactivity for state management. State changes automatic
 
 ### Signals
 
-Signals are the foundation of reactive state. A signal holds a single value that can be read, written, and observed for changes.
+Signals are the foundation of reactive state.
+A signal holds a single value that can be read, written, and observed for changes.
 
 Create signals using the `signal()` function, which returns an object with three methods:
 
@@ -14,13 +15,15 @@ Create signals using the `signal()` function, which returns an object with three
 - `set(newValue)` updates the value and notifies subscribers
 - `subscribe(callback)` registers a listener for changes
 
-Signals use strict equality (`===`) to determine if a value has changed. Setting a signal to its current value will not trigger notifications.
+Signals use strict equality (`===`) to determine if a value has changed.
+Setting a signal to its current value will not trigger notifications.
 
 ### Computed Values
 
 Computed signals derive their values from other signals. They automatically track dependencies and recalculate only when those dependencies change.
 
-The `computed()` function takes a calculation function and a dependency array. The framework ensures computed values stay synchronized with their sources.
+The `computed()` function takes a calculation function and a dependency array.
+The framework ensures computed values stay synchronized with their sources.
 
 Computed values are read-only and should not produce side effects. They exist purely to transform or combine other state.
 
@@ -34,7 +37,7 @@ Common uses include:
 - Logging or analytics
 - Coordinating multiple signals
 
-For asynchronous operations, use `asyncEffect()` which handles cleanup of pending operations when dependencies change or the effect is disposed.
+For asynchronous operations, use `asyncEffect()` (see [asyncEffect](./usage/async-effect)) which handles cleanup of pending operations when dependencies change or the effect is disposed.
 
 ## Declarative State
 
@@ -46,11 +49,13 @@ State is declared as inline JSON on any element with the `data-volt` attribute:
 <div data-volt data-volt-state='{"count": 0, "items": []}'>
 ```
 
-The framework automatically converts these values into reactive signals. Nested objects and arrays become reactive, and property access in expressions automatically unwraps signal values.
+The framework automatically converts these values into reactive signals.
+Nested objects and arrays become reactive, and property access in expressions automatically unwraps signal values.
 
 ### Computed Values in Markup
 
-Derive values declaratively using `data-volt-computed:name` attributes. The name becomes a signal in the scope, and the attribute value is the computation expression:
+Derive values declaratively using `data-volt-computed:name` attributes.
+The name becomes a signal in the scope, and the attribute value is the computation expression:
 
 ```html
 <div data-volt
@@ -58,7 +63,7 @@ Derive values declaratively using `data-volt-computed:name` attributes. The name
      data-volt-computed:doubled="count * 2">
 ```
 
-Computed values defined this way follow the same rules as programmatic computed signalsthey track dependencies and update automatically.
+Computed values defined this way follow the same rules as programmatic computed signals: they track dependencies and update automatically.
 
 ## Programmatic State
 
@@ -73,13 +78,15 @@ This approach gives you full control over signal creation, composition, and life
 
 ## Scope and Access
 
-Each mounted element creates a scope containing its signals and computed values. Bindings access signals by property path relative to their scope.
+Each mounted element creates a scope containing its signals and computed values.
+Bindings access signals by property path relative to their scope.
 
 When using declarative state, the scope is built automatically from `data-volt-state` and `data-volt-computed:*` attributes.
 
 When using programmatic mounting, the scope is the object passed as the second argument to `mount()`.
 
-Bindings can access nested properties, and the evaluator automatically unwraps signal values. Event handlers receive special scope additions: `$el` for the element and `$event` for the event object.
+Bindings can access nested properties, and the evaluator automatically unwraps signal values.
+Event handlers receive special scope additions: `$el` for the element and `$event` for the event object.
 
 ## Signal Methods in Expressions
 
@@ -93,7 +100,8 @@ The `.set()` method is commonly used in `data-volt-on-*` event bindings to updat
 
 ## State Persistence
 
-Signals can be synchronized with browser storage using the built-in persist plugin. See the plugin documentation for details on localStorage, sessionStorage, and IndexedDB integration.
+Signals can be synchronized with browser storage using the built-in persist plugin.
+See the plugin documentation (coming soon!) for details on localStorage, sessionStorage, and IndexedDB integration.
 
 ## State Serialization
 

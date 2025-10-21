@@ -45,7 +45,7 @@ export default defineConfig({
           { text: "Animations & Transitions", link: "/animations" },
         ],
       },
-      { text: "Tutorials", collapsed: false, items: u.scanDir("usage", "/usage") },
+      { text: "Usage", collapsed: false, items: u.scanDir("usage", "/usage") },
       {
         text: "CSS",
         collapsed: false,
