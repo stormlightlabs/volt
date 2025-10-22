@@ -8,17 +8,23 @@ import type { PluginContext, Signal } from "$types/volt";
 /**
  * Scroll plugin handler to manage various scroll-related behaviors.
  *
- * Syntax: data-volt-scroll="mode:signalPath"
+ * Syntax: data-volt-scroll="mode:signalPath" or data-volt-scroll="mode"
  * Modes:
  *   - restore:signalPath - Save/restore scroll position
  *   - scrollTo:signalPath - Scroll to element when signal changes
  *   - spy:signalPath - Update signal when element is visible
  *   - smooth:signalPath - Enable smooth scrolling behavior
+ *   - history - Integrate with navigation history (auto save/restore on navigation)
  */
 export function scrollPlugin(ctx: PluginContext, value: string): void {
+  if (value === "history") {
+    handleScrollHistory(ctx);
+    return;
+  }
+
   const parts = value.split(":");
   if (parts.length !== 2) {
-    console.error(`Invalid scroll binding: "${value}". Expected format: "mode:signalPath"`);
+    console.error(`Invalid scroll binding: "${value}". Expected format: "mode:signalPath" or "history"`);
     return;
   }
 
@@ -155,5 +161,39 @@ function handleSmoothScroll(ctx: PluginContext, signalPath: string): void {
   ctx.addCleanup(() => {
     unsubscribe();
     element.style.scrollBehavior = "";
+  });
+}
+
+/**
+ * Integrate scroll position with browser history
+ * Automatically saves and restores scroll position on navigation
+ * Works with volt:navigate and volt:popstate events
+ */
+function handleScrollHistory(ctx: PluginContext): void {
+  const element = ctx.element as HTMLElement;
+  const scrollPositions = new Map<string, number>();
+
+  const handleNavigate = () => {
+    const key = `${globalThis.location.pathname}${globalThis.location.search}`;
+    scrollPositions.set(key, element.scrollTop);
+  };
+
+  const handlePopstate = () => {
+    const key = `${globalThis.location.pathname}${globalThis.location.search}`;
+    const savedPosition = scrollPositions.get(key);
+
+    if (savedPosition !== undefined) {
+      requestAnimationFrame(() => {
+        element.scrollTop = savedPosition;
+      });
+    }
+  };
+
+  globalThis.addEventListener("volt:navigate", handleNavigate);
+  globalThis.addEventListener("volt:popstate", handlePopstate);
+
+  ctx.addCleanup(() => {
+    globalThis.removeEventListener("volt:navigate", handleNavigate);
+    globalThis.removeEventListener("volt:popstate", handlePopstate);
   });
 }

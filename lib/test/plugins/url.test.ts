@@ -275,6 +275,275 @@ describe("url plugin", () => {
     });
   });
 
+  describe("history mode", () => {
+    it("reads current pathname and search into signal on mount", () => {
+      globalThis.history.replaceState({}, "", "/products?category=electronics");
+
+      const element = document.createElement("div");
+      element.dataset.voltUrl = "history:route";
+
+      const route = signal("");
+      mount(element, { route });
+
+      expect(route.get()).toBe("/products?category=electronics");
+    });
+
+    it("initializes to root path when on root", () => {
+      globalThis.history.replaceState({}, "", "/");
+
+      const element = document.createElement("div");
+      element.dataset.voltUrl = "history:route";
+
+      const route = signal("");
+      mount(element, { route });
+
+      expect(route.get()).toBe("/");
+    });
+
+    it("updates URL when signal changes", () => {
+      globalThis.history.replaceState({}, "", "/");
+
+      const element = document.createElement("div");
+      element.dataset.voltUrl = "history:route";
+
+      const route = signal("");
+      mount(element, { route });
+
+      route.set("/dashboard");
+
+      expect(globalThis.location.pathname).toBe("/dashboard");
+    });
+
+    it("preserves search params when updating path", () => {
+      globalThis.history.replaceState({}, "", "/");
+
+      const element = document.createElement("div");
+      element.dataset.voltUrl = "history:route";
+
+      const route = signal("");
+      mount(element, { route });
+
+      route.set("/search?q=test&page=2");
+
+      expect(globalThis.location.pathname).toBe("/search");
+      expect(globalThis.location.search).toBe("?q=test&page=2");
+    });
+
+    it("handles base path configuration", () => {
+      globalThis.history.replaceState({}, "", "/app/dashboard");
+
+      const element = document.createElement("div");
+      element.dataset.voltUrl = "history:route:/app";
+
+      const route = signal("");
+      mount(element, { route });
+
+      expect(route.get()).toBe("/dashboard");
+    });
+
+    it("prepends base path when updating URL", () => {
+      globalThis.history.replaceState({}, "", "/app");
+
+      const element = document.createElement("div");
+      element.dataset.voltUrl = "history:route:/app";
+
+      const route = signal("");
+      mount(element, { route });
+
+      route.set("/settings");
+
+      expect(globalThis.location.pathname).toBe("/app/settings");
+    });
+
+    it("handles base path with trailing slash", () => {
+      globalThis.history.replaceState({}, "", "/myapp/profile");
+
+      const element = document.createElement("div");
+      element.dataset.voltUrl = "history:route:/myapp";
+
+      const route = signal("");
+      mount(element, { route });
+
+      expect(route.get()).toBe("/profile");
+    });
+
+    it("returns root when on base path", () => {
+      globalThis.history.replaceState({}, "", "/app");
+
+      const element = document.createElement("div");
+      element.dataset.voltUrl = "history:route:/app";
+
+      const route = signal("");
+      mount(element, { route });
+
+      expect(route.get()).toBe("/");
+    });
+
+    it("dispatches volt:navigate event when signal changes", () => {
+      const navigateHandler = vi.fn();
+      globalThis.addEventListener("volt:navigate", navigateHandler);
+
+      const element = document.createElement("div");
+      element.dataset.voltUrl = "history:route";
+
+      const route = signal("/");
+      mount(element, { route });
+
+      route.set("/about");
+
+      expect(navigateHandler).toHaveBeenCalled();
+      const event = navigateHandler.mock.calls[0][0] as CustomEvent;
+      expect(event.detail.url).toBe("/about");
+      expect(event.detail.route).toBe("/about");
+
+      globalThis.removeEventListener("volt:navigate", navigateHandler);
+    });
+
+    it("handles popstate events from browser navigation", () => {
+      globalThis.history.replaceState({}, "", "/page1");
+
+      const element = document.createElement("div");
+      element.dataset.voltUrl = "history:route";
+
+      const route = signal("");
+      mount(element, { route });
+
+      expect(route.get()).toBe("/page1");
+
+      globalThis.history.replaceState({}, "", "/page2");
+      globalThis.dispatchEvent(new PopStateEvent("popstate"));
+
+      expect(route.get()).toBe("/page2");
+    });
+
+    it("dispatches volt:popstate event on back/forward navigation", () => {
+      const popstateHandler = vi.fn();
+      globalThis.addEventListener("volt:popstate", popstateHandler);
+
+      const element = document.createElement("div");
+      element.dataset.voltUrl = "history:route";
+
+      const route = signal("/");
+      mount(element, { route });
+
+      globalThis.history.replaceState({}, "", "/other");
+      globalThis.dispatchEvent(new PopStateEvent("popstate"));
+
+      expect(popstateHandler).toHaveBeenCalled();
+      const event = popstateHandler.mock.calls[0][0] as CustomEvent;
+      expect(event.detail.route).toBe("/other");
+
+      globalThis.removeEventListener("volt:popstate", popstateHandler);
+    });
+
+    it("syncs with volt:navigate events from navigate plugin", () => {
+      const element = document.createElement("div");
+      element.dataset.voltUrl = "history:route";
+
+      const route = signal("/");
+      mount(element, { route });
+
+      globalThis.history.pushState({}, "", "/external-nav");
+      globalThis.dispatchEvent(new CustomEvent("volt:navigate", { detail: { url: "/external-nav" } }));
+      expect(route.get()).toBe("/external-nav");
+    });
+
+    it("does not update URL when already at target route", () => {
+      globalThis.history.replaceState({}, "", "/current");
+
+      const pushStateSpy = vi.spyOn(globalThis.history, "pushState");
+
+      const element = document.createElement("div");
+      element.dataset.voltUrl = "history:route";
+
+      const route = signal("");
+      mount(element, { route });
+
+      pushStateSpy.mockClear();
+
+      route.set("/current");
+
+      expect(pushStateSpy).not.toHaveBeenCalled();
+
+      pushStateSpy.mockRestore();
+    });
+
+    it("prevents infinite loops between signal and URL updates", () => {
+      const element = document.createElement("div");
+      element.dataset.voltUrl = "history:route";
+
+      const route = signal("/");
+      const subscribeSpy = vi.fn();
+      route.subscribe(subscribeSpy);
+
+      mount(element, { route });
+
+      subscribeSpy.mockClear();
+
+      route.set("/test");
+
+      globalThis.dispatchEvent(new PopStateEvent("popstate"));
+
+      expect(subscribeSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it("cleans up listeners on unmount", () => {
+      globalThis.history.replaceState({}, "", "/initial");
+
+      const element = document.createElement("div");
+      element.dataset.voltUrl = "history:route";
+
+      const route = signal("");
+      const cleanup = mount(element, { route });
+
+      expect(route.get()).toBe("/initial");
+
+      cleanup();
+
+      globalThis.history.replaceState({}, "", "/changed");
+      globalThis.dispatchEvent(new PopStateEvent("popstate"));
+
+      expect(route.get()).toBe("/initial");
+    });
+
+    it("handles complex routes with multiple path segments", () => {
+      globalThis.history.replaceState({}, "", "/blog/2024/introducing-volt");
+
+      const element = document.createElement("div");
+      element.dataset.voltUrl = "history:route";
+
+      const route = signal("");
+      mount(element, { route });
+
+      expect(route.get()).toBe("/blog/2024/introducing-volt");
+    });
+
+    it("handles routes with query parameters", () => {
+      globalThis.history.replaceState({}, "", "/search?q=reactive&lang=ts");
+
+      const element = document.createElement("div");
+      element.dataset.voltUrl = "history:route";
+
+      const route = signal("");
+      mount(element, { route });
+
+      expect(route.get()).toBe("/search?q=reactive&lang=ts");
+    });
+
+    it("logs error when signal not found", () => {
+      const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+      const element = document.createElement("div");
+      element.dataset.voltUrl = "history:nonexistent";
+
+      mount(element, {});
+
+      expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining("Signal \"nonexistent\" not found"));
+
+      errorSpy.mockRestore();
+    });
+  });
+
   describe("error handling", () => {
     it("logs error for invalid binding format", () => {
       const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});

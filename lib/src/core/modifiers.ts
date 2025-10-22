@@ -43,6 +43,9 @@ export function parseModifiers(attrName: string): ParsedAttribute {
     "number",
     "trim",
     "lazy",
+    "replace",
+    "prefetch",
+    "notransition",
   ]);
 
   let i = 1;

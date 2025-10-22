@@ -17,13 +17,16 @@
 | v0.2.0  |   ✓   | [Reactive Attributes & Event Modifiers](#reactive-attributes--event-modifiers)   |
 | v0.3.0  |   ✓   | [Global State](#global-state)                                                    |
 | v0.4.0  |   ✓   | [Animation & Transitions](#animation--transitions)                               |
-| v0.5.0  |       | [History API Routing Plugin](#history-api-routing-plugin)                        |
-|         |       | [Navigation & History Management](#navigation--history-management)               |
+| v0.5.0  |   ✓   | [Navigation & History API Routing](#navigation--history-api-routing)             |
 |         |   ✓   | [Refactor](#evaluator--binder-hardening)                                         |
-| v0.6.0  |       | [Background Requests & Reactive Polling](#background-requests--reactive-polling) |
-| v0.7.0  |       | [Streaming & Patch Engine](#streaming--patch-engine)                             |
-| v0.8.0  |       | PWA Capabilities                                                                 |
-|         |       | [Persistence & Offline](#persistence--offline)                                   |
+|         |       | Update demo to be a multi page application with routing plugin                   |
+| v0.5.1  |       | Support `voltx-` & `vx-` attributes: recommend `vx-`                             |
+| v0.5.2  |       | Switch to `data-voltx`                                                           |
+| v0.5.3  |       | [Background Requests & Reactive Polling](#background-requests--reactive-polling) |
+| v0.5.4  |       | [Streaming & Patch Engine](#streaming--patch-engine)                             |
+| v0.5.5  |       | PWA Capabilities                                                                 |
+| v0.5.6  |       | [Persistence & Offline](#persistence--offline)                                   |
+|         |       |                                                                                  |
 | v0.9.0  |       | [Inspector & Developer Tools](#inspector--developer-tools)                       |
 | v1.0.0  |       | [Stable Release](#stable-release)                                                |
 
@@ -58,8 +61,8 @@ _NOTE_: `data-x-*` is now `data-volt-*`
 ### Backend Integration & HTTP Actions
 
 **Goal:** Provide backend integration with declarative HTTP requests and responses.
-**Outcome:** Volt.js can make backend requests and update the DOM
-**Summary:** Declarative HTTP directives (data-volt-get|post|put|patch|delete) with swap strategies, loading indicators, error handling, and form serialization integrate Volt.js seamlessly with backend APIs.
+**Outcome:** VoltX.js can make backend requests and update the DOM
+**Summary:** Declarative HTTP directives (data-volt-get|post|put|patch|delete) with swap strategies, loading indicators, error handling, and form serialization integrate VoltX.js seamlessly with backend APIs.
 
 ### Markup Based Reactivity
 
@@ -75,28 +78,34 @@ _NOTE_: `data-x-*` is now `data-volt-*`
 
 ### Reactive Attributes & Event Modifiers
 
-**Goal:** Extend Volt.js with expressive attribute patterns and event options for fine-grained control.
-**Outcome:** Volt.js supports rich declarative behaviors and event semantics built entirely on standard DOM APIs.
+**Goal:** Extend VoltX.js with expressive attribute patterns and event options for fine-grained control.
+**Outcome:** VoltX.js supports rich declarative behaviors and event semantics built entirely on standard DOM APIs.
 **Summary:** Introduced expressive attribute patterns and event modifiers for precise DOM and input control, for fine-grained declarative behavior entirely through standard DOM APIs.
 
 ### Global State
 
 **Goal:** Implement store/context pattern
-**Outcome:** Volt.js provides intuitive global state management
+**Outcome:** VoltX.js provides intuitive global state management
 **Summary:** The scope injects helpers like `$origin`, `$scope`, `$pulse`, `$store`, `$uid`, `$probe`, `$pins`, and `$arc`, giving templates access to global state, microtask scheduling, deterministic IDs, element refs, and custom event dispatch without leaving declarative markup.
 
 ### Animation & Transitions
 
 **Goal:** Add animation primitives for smooth UI transitions with Alpine/Datastar parity.
-**Outcome:** Volt.js enables declarative animations and view transitions alongside reactivity.
+**Outcome:** VoltX.js enables declarative animations and view transitions alongside reactivity.
 **Summary:** The surge directive ships fade/slide/scale/blur presets with duration and delay overrides, per-phase enter/leave control, and easing helpers, while the shift plugin applies reusable keyframe animations—both composable with `data-volt-if`/`data-volt-show` as showcased in the animations demo.
+
+### Navigation & History API Routing
+
+**Goal:** Provide seamless client-side navigation with a first-class History API router.
+**Outcome:** VoltX.js delivers accessible, stateful navigation with clean URLs and signal-driven routing.
+**Summary:** Added seamless client-side navigation through a History API–powered router, enabling declarative routing with `data-volt-navigate` and `data-volt-url`, reactive URL synchronization, smooth transitions, scroll and focus restoration, dynamic route parsing, and full integration with signals and the View Transition API for accessible, stateful navigation and clean URLs.
 
 ## To-Do
 
 ### Streaming & Patch Engine
 
 **Goal:** Enable real-time updates via SSE/WebSocket streaming with intelligent DOM patching.
-**Outcome:** Volt.js can receive and apply live updates from the server
+**Outcome:** VoltX.js can receive and apply live updates from the server
 **Deliverables:**
     - Server-Sent Events (SSE) integration
     - `data-volt-flow` attribute for SSE endpoints
@@ -109,7 +118,7 @@ _NOTE_: `data-x-*` is now `data-volt-*`
 ### Persistence & Offline
 
 **Goal:** Introduce persistent storage and offline-first behaviors.
-**Outcome:** Resilient state persistence and offline replay built into Volt.js.
+**Outcome:** Resilient state persistence and offline replay built into VoltX.js.
 **Deliverables:**
     - ✓ Persistent signals (localStorage, sessionStorage, indexedDb)
     - ✓ Storage plugin (`data-volt-persist`)
@@ -126,8 +135,8 @@ _NOTE_: `data-x-*` is now `data-volt-*`
 
 ### Background Requests & Reactive Polling
 
-**Goal:** Enable declarative background data fetching and periodic updates within the Volt.js runtime.
-**Outcome:** Volt.js elements can fetch or refresh data automatically based on time, visibility, or reactive conditions.
+**Goal:** Enable declarative background data fetching and periodic updates within the VoltX.js runtime.
+**Outcome:** VoltX.js elements can fetch or refresh data automatically based on time, visibility, or reactive conditions.
 **Deliverables:**
     - `data-volt-visible` for fetching when an element enters the viewport (`IntersectionObserver`)
     - `data-volt-fetch` attribute for declarative background requests
@@ -137,36 +146,10 @@ _NOTE_: `data-x-*` is now `data-volt-*`
         - Integration hooks for loading and pending states
     - Background task scheduler with priority management
 
-### Navigation & History Management
-
-**Goal:** Introduce seamless client-side navigation and stateful history control using web standards.
-**Outcome:** Volt.js provides enhanced navigation behavior with minimal overhead and full accessibility support.
-**Deliverables:**
-    - `data-volt-navigate` for intercepting link and form actions
-        - Integration with the History API (`pushState`, `replaceState`, `popState`)
-        - Reactive synchronization of route and signal state
-        - Smooth page and fragment transitions coordinated with Volt’s signal system
-        - Native back/forward button support
-        - Scroll position persistence and restoration
-            - Preloading of linked resources on hover or idle
-    - `data-volt-url` for declarative history updates
-        - View Transition API integration for animated route changes
-
-### History API Routing Plugin
-
-**Goal:** Deliver a first-class path-based router that leverages the History API while staying signal-driven.
-**Outcome:** Volt apps can opt into clean URLs (no hash) with back/forward support, nested segments, and SSR-friendly hydration.
-**Deliverables:**
-    - `data-volt-url="history:signal"` mode with path + search preservation and optional base path configuration
-    - Route parsing utilities for dynamic params (e.g. `/blog/:slug`) and programmatic redirects
-    - Scroll restoration hooks and focus management aligned with `navigation` and `popstate` events
-    - Integration tests covering pushState navigation, deep links, and server-rendered bootstraps
-    - Documentation updates in `docs/usage/routing.md` contrasting hash vs. history strategies
-
 ### Inspector & Developer Tools
 
 **Goal:** Improve developer experience and runtime introspection.
-**Outcome:** First-class developer ergonomics; Volt.js is enjoyable to debug and extend.
+**Outcome:** First-class developer ergonomics; VoltX.js is enjoyable to debug and extend.
 **Deliverables:**
     - Developer overlay for inspecting signals, subscriptions, and effects
     - Dev logging toggle (`Volt.debug = true`)
@@ -180,7 +163,7 @@ _NOTE_: `data-x-*` is now `data-volt-*`
 ### Stable Release
 
 **Goal:** Prepare & ship the stable release
-**Outcome:** Volt.js 1.0 is stable, documented, performant, and ready for production.
+**Outcome:** VoltX.js 1.0 is stable, documented, performant, and ready for production.
 **Deliverables:**
     - ✓ Documentation site (VitePress)
     - Full API reference with examples
