@@ -53,7 +53,7 @@ export {
   supportsViewTransitions,
   withViewTransition,
 } from "$core/view-transitions";
-export { goBack, goForward, initNavigationListener, navigate, navigatePlugin, redirect } from "$plugins/navigate";
+export { goBack, goForward, initNavigationListener, navigate, redirect } from "$plugins/navigate";
 export { persistPlugin, registerStorageAdapter } from "$plugins/persist";
 export { scrollPlugin } from "$plugins/scroll";
 export {

@@ -1,18 +1,23 @@
 /**
- * Demo module for showcasing Volt.js features and volt.css styling
+ * Demo module for showcasing VoltX.js features and volt.css styling
  *
  * This module creates the entire demo structure programmatically using DOM APIs,
- * demonstrating how to build complex UIs with Volt.js.
+ * then uses charge() to mount it declaratively.
  */
 
+import { charge } from "$core/charge";
+import { isSignal } from "$core/shared";
+import { initNavigationListener } from "$plugins/navigate";
 import { persistPlugin } from "$plugins/persist";
 import { scrollPlugin } from "$plugins/scroll";
 import { shiftPlugin } from "$plugins/shift";
 import { surgePlugin } from "$plugins/surge";
 import { urlPlugin } from "$plugins/url";
-import { computed, effect, mount, registerPlugin, signal } from "$volt";
+import type { Signal } from "$types/volt";
+import { registerPlugin } from "$volt";
 import { createAnimationsSection } from "./sections/animations";
 import { createFormsSection } from "./sections/forms";
+import { createHomeSection } from "./sections/home";
 import { createInteractivitySection } from "./sections/interactivity";
 import { createPluginsSection } from "./sections/plugins";
 import { createReactivitySection } from "./sections/reactivity";
@@ -25,210 +30,125 @@ registerPlugin("url", urlPlugin);
 registerPlugin("surge", surgePlugin);
 registerPlugin("shift", shiftPlugin);
 
-const message = signal("Welcome to the Volt.js Demo");
-const count = signal(0);
-const doubled = computed(() => count.get() * 2);
+/**
+ * Helper functions for DOM operations that can't be expressed declaratively
+ * These are added to window.$helpers so they can be called from data-volt-on-* attributes
+ */
+const helpers = {
+  openDialog(id: string) {
+    const dialog = document.querySelector(`#${id}`) as HTMLDialogElement;
+    if (dialog) {
+      dialog.showModal();
+    }
+  },
 
-const formData = signal({ name: "", email: "", bio: "", country: "us", newsletter: false, plan: "free" });
+  closeDialog(id: string) {
+    const dialog = document.querySelector(`#${id}`) as HTMLDialogElement;
+    if (dialog) {
+      dialog.close();
+    }
+  },
 
-const todos = signal([{ id: 1, text: "Learn Volt.js", done: false }, { id: 2, text: "Build an app", done: false }, {
-  id: 3,
-  text: "Ship to production",
-  done: false,
-}]);
+  scrollToTop() {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  },
 
-const newTodoText = signal("");
-let todoIdCounter = 4;
+  scrollToSection(id: string) {
+    const element = document.querySelector(`#${id}`);
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth" });
+    }
+  },
 
-const showAdvanced = signal(false);
-
-const isActive = signal(true);
-const isHighlighted = signal(false);
-
-const dialogMessage = signal("");
-const dialogInput = signal("");
-
-const persistedCount = signal(0);
-const scrollPosition = signal(0);
-const urlParam = signal("");
-
-const showFade = signal(false);
-const showSlideDown = signal(false);
-const showScale = signal(false);
-const showBlur = signal(false);
-const showSlowFade = signal(false);
-const showDelayedSlide = signal(false);
-const showGranular = signal(false);
-const showCombined = signal(false);
-const triggerBounce = signal(0);
-const triggerShake = signal(0);
-const triggerFlash = signal(0);
-const triggerTripleBounce = signal(0);
-const triggerLongShake = signal(0);
-
-const activeTodos = computed(() => todos.get().filter((todo) => !todo.done));
-const completedTodos = computed(() => todos.get().filter((todo) => todo.done));
-
-effect(() => {
-  console.log("Count changed:", count.get());
-});
-
-const increment = () => {
-  count.set(count.get() + 1);
+  handleFormSubmit(event: Event) {
+    event.preventDefault();
+    const form = event.target as HTMLFormElement;
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData.entries());
+    console.log("Form submitted:", data);
+    alert("Form submitted! Check console for data.");
+  },
 };
 
-const decrement = () => {
-  count.set(count.get() - 1);
-};
-
-const reset = () => {
-  count.set(0);
-};
-
-const updateMessage = () => {
-  message.set(`Count is now ${count.get()}`);
-};
-
-const openDialog = () => {
-  const dialog = document.querySelector("#demo-dialog") as HTMLDialogElement;
-  if (dialog) {
-    dialogMessage.set("");
-    dialogInput.set("");
-    dialog.showModal();
-  }
-};
-
-const closeDialog = () => {
-  const dialog = document.querySelector("#demo-dialog") as HTMLDialogElement;
-  if (dialog) {
-    dialog.close();
-  }
-};
-
-const submitDialog = (event: Event) => {
-  event.preventDefault();
-  dialogMessage.set(`You entered: ${dialogInput.get()}`);
-  setTimeout(closeDialog, 2000);
-};
-
-const addTodo = () => {
-  const text = newTodoText.get().trim();
-  if (text) {
-    todos.set([...todos.get(), { id: todoIdCounter++, text, done: false }]);
-    newTodoText.set("");
-  }
-};
-
-const toggleTodo = (id: number) => {
-  todos.set(todos.get().map((todo) => todo.id === id ? { ...todo, done: !todo.done } : todo));
-};
-
-const removeTodo = (id: number) => {
-  todos.set(todos.get().filter((todo) => todo.id !== id));
-};
-
-const handleFormSubmit = (event: Event) => {
-  event.preventDefault();
-  console.log("Form submitted:", formData.get());
-  alert(`Form submitted! Check console for data.`);
-};
-
-const toggleAdvanced = () => {
-  showAdvanced.set(!showAdvanced.get());
-};
-
-const toggleActive = () => {
-  isActive.set(!isActive.get());
-};
-
-const toggleHighlight = () => {
-  isHighlighted.set(!isHighlighted.get());
-};
-
-const scrollToTop = () => {
-  window.scrollTo({ top: 0, behavior: "smooth" });
-};
-
-const scrollToSection = (id: string) => {
-  const element = document.querySelector(`#${id}`);
-  if (element) {
-    element.scrollIntoView({ behavior: "smooth" });
-  }
-};
-
-export const demoScope = {
-  message,
-  count,
-  doubled,
-  formData,
-  todos,
-  newTodoText,
-  activeTodos,
-  completedTodos,
-  showAdvanced,
-  isActive,
-  isHighlighted,
-  dialogMessage,
-  dialogInput,
-  persistedCount,
-  scrollPosition,
-  urlParam,
-  showFade,
-  showSlideDown,
-  showScale,
-  showBlur,
-  showSlowFade,
-  showDelayedSlide,
-  showGranular,
-  showCombined,
-  triggerBounce,
-  triggerShake,
-  triggerFlash,
-  triggerTripleBounce,
-  triggerLongShake,
-  increment,
-  decrement,
-  reset,
-  updateMessage,
-  openDialog,
-  closeDialog,
-  submitDialog,
-  addTodo,
-  toggleTodo,
-  removeTodo,
-  handleFormSubmit,
-  toggleAdvanced,
-  toggleActive,
-  toggleHighlight,
-  scrollToTop,
-  scrollToSection,
-};
+(globalThis as any).$helpers = helpers;
 
 const buildNav = () =>
   dom.nav(
     null,
-    dom.a({ href: "#typography" }, "Typography"),
+    dom.a({ "data-volt-navigate": "", href: "/" }, "Home"),
     " | ",
-    dom.a({ href: "#interactivity" }, "Interactivity"),
+    dom.a({ "data-volt-navigate": "", href: "/typography" }, "Typography"),
     " | ",
-    dom.a({ href: "#forms" }, "Forms"),
+    dom.a({ "data-volt-navigate": "", href: "/interactivity" }, "Interactivity"),
     " | ",
-    dom.a({ href: "#reactivity" }, "Reactivity"),
+    dom.a({ "data-volt-navigate": "", href: "/forms" }, "Forms"),
     " | ",
-    dom.a({ href: "#plugins" }, "Plugins"),
+    dom.a({ "data-volt-navigate": "", href: "/reactivity" }, "Reactivity"),
     " | ",
-    dom.a({ href: "#animations" }, "Animations"),
+    dom.a({ "data-volt-navigate": "", href: "/plugins" }, "Plugins"),
+    " | ",
+    dom.a({ "data-volt-navigate": "", href: "/animations" }, "Animations"),
   );
 
+/**
+ * Get the current page from the URL pathname
+ */
+function getCurrentPageFromPath(): string {
+  const path = globalThis.location.pathname;
+  if (path === "/" || path === "") return "home";
+  return path.slice(1); // Remove leading slash
+}
+
 function buildDemoStructure(): HTMLElement {
+  const initialState = {
+    currentPage: getCurrentPageFromPath(),
+    message: "Welcome to the VoltX.js Demo",
+    count: 0,
+    formData: { name: "", email: "", bio: "", country: "us", newsletter: false, plan: "free" },
+    todos: [{ id: 1, text: "Learn VoltX.js", done: false }, { id: 2, text: "Build an app", done: false }, {
+      id: 3,
+      text: "Ship to production",
+      done: false,
+    }],
+    newTodoText: "",
+    todoIdCounter: 4,
+    showAdvanced: false,
+    isActive: true,
+    isHighlighted: false,
+    dialogMessage: "",
+    dialogInput: "",
+    persistedCount: 0,
+    scrollPosition: 0,
+    urlParam: "",
+    showFade: false,
+    showSlideDown: false,
+    showScale: false,
+    showBlur: false,
+    showSlowFade: false,
+    showDelayedSlide: false,
+    showGranular: false,
+    showCombined: false,
+    triggerBounce: 0,
+    triggerShake: 0,
+    triggerFlash: 0,
+    triggerTripleBounce: 0,
+    triggerLongShake: 0,
+  };
+
   return dom.div(
-    null,
+    {
+      "data-volt": "",
+      "data-volt-state": JSON.stringify(initialState),
+      "data-volt-computed:doubled": "count * 2",
+      "data-volt-computed:activeTodos": "todos.filter(t => !t.done)",
+      "data-volt-computed:completedTodos": "todos.filter(t => t.done)",
+    },
     dom.header(
       null,
       dom.h1({ "data-volt-text": "message" }, "Loading..."),
       dom.p(
         null,
-        "A comprehensive demo showcasing Volt.js reactive framework and Volt CSS classless styling.",
+        "A comprehensive demo showcasing VoltX.js reactive framework and Volt CSS classless styling.",
         dom.small(
           null,
           "This demo demonstrates both the framework's reactive capabilities and the elegant, semantic styling of Volt CSS. No CSS classes needed!",
@@ -239,24 +159,25 @@ function buildDemoStructure(): HTMLElement {
     dom.el(
       "main",
       null,
-      createTypographySection(),
-      createInteractivitySection(),
-      createFormsSection(),
-      createReactivitySection(),
-      createPluginsSection(),
-      createAnimationsSection(),
+      dom.div({ "data-volt-if": "currentPage === 'home'" }, createHomeSection()),
+      dom.div({ "data-volt-if": "currentPage === 'typography'" }, createTypographySection()),
+      dom.div({ "data-volt-if": "currentPage === 'interactivity'" }, createInteractivitySection()),
+      dom.div({ "data-volt-if": "currentPage === 'forms'" }, createFormsSection()),
+      dom.div({ "data-volt-if": "currentPage === 'reactivity'" }, createReactivitySection()),
+      dom.div({ "data-volt-if": "currentPage === 'plugins'" }, createPluginsSection()),
+      dom.div({ "data-volt-if": "currentPage === 'animations'" }, createAnimationsSection()),
     ),
     dom.footer(
       null,
       dom.p(
         null,
         "Built with ",
-        dom.a({ href: "https://github.com/stormlightlabs/volt" }, "Volt.js"),
+        dom.a({ href: "https://github.com/stormlightlabs/volt" }, "VoltX.js"),
         " - A lightweight, reactive hypermedia framework",
       ),
       dom.p(
         null,
-        "This demo showcases both Volt.js reactive features and Volt CSS classless styling. View source to see how everything works!",
+        "This demo showcases both VoltX.js reactive features and Volt CSS classless styling. View source to see how everything works!",
       ),
     ),
   );
@@ -272,9 +193,52 @@ export function setupDemo() {
   const demoStructure = buildDemoStructure();
   app.append(demoStructure);
 
-  mount(app, demoScope);
+  const chargeResult = charge();
+  const cleanupNav = initNavigationListener();
 
-  window.addEventListener("scroll", () => {
-    scrollPosition.set(window.scrollY);
-  });
+  const rootScope = chargeResult.roots[0]?.scope;
+  if (!rootScope) {
+    console.error("Failed to get root scope from charge result");
+    return;
+  }
+
+  const handleNavigate = (event: Event) => {
+    const customEvent = event as CustomEvent;
+    const url = customEvent.detail?.url || globalThis.location.pathname;
+    const page = url === "/" || url === "" ? "home" : url.slice(1);
+
+    const currentPageSignal = rootScope.currentPage as Signal<string>;
+    if (currentPageSignal && isSignal(currentPageSignal)) {
+      currentPageSignal.set(page);
+    }
+
+    window.scrollTo({ top: 0, behavior: "instant" });
+  };
+
+  const handlePopstate = () => {
+    const page = getCurrentPageFromPath();
+    const currentPageSignal = rootScope.currentPage as Signal<string>;
+    if (currentPageSignal && isSignal(currentPageSignal)) {
+      currentPageSignal.set(page);
+    }
+  };
+
+  const handleScroll = () => {
+    const scrollPositionSignal = rootScope.scrollPosition as Signal<number>;
+    if (scrollPositionSignal && isSignal(scrollPositionSignal)) {
+      scrollPositionSignal.set(window.scrollY);
+    }
+  };
+
+  globalThis.addEventListener("volt:navigate", handleNavigate);
+  globalThis.addEventListener("volt:popstate", handlePopstate);
+  window.addEventListener("scroll", handleScroll);
+
+  return () => {
+    chargeResult.cleanup();
+    cleanupNav();
+    globalThis.removeEventListener("volt:navigate", handleNavigate);
+    globalThis.removeEventListener("volt:popstate", handlePopstate);
+    window.removeEventListener("scroll", handleScroll);
+  };
 }

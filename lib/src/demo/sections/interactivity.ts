@@ -23,8 +23,8 @@ export function createInteractivitySection(): HTMLElement {
         ),
         " VoltX CSS styles it elegantly, and VoltX.js handles the interaction.",
       ),
-      dom.button({ "data-volt-on-click": "openDialog" }, "Open Dialog"),
-      dom.p({ "data-volt-if": "dialogMessage.get()", "data-volt-text": "dialogMessage" }),
+      dom.button({ "data-volt-on-click": "$helpers.openDialog('demo-dialog'); dialogMessage.set(''); dialogInput.set('')" }, "Open Dialog"),
+      dom.p({ "data-volt-if": "dialogMessage", "data-volt-text": "dialogMessage" }),
       dom.dialog(
         { id: "demo-dialog" },
         dom.article(
@@ -32,10 +32,13 @@ export function createInteractivitySection(): HTMLElement {
           dom.header(
             null,
             dom.h3(null, "Dialog Demo"),
-            dom.button({ "data-volt-on-click": "closeDialog", "aria-label": "Close" }, "×"),
+            dom.button({ "data-volt-on-click": "$helpers.closeDialog('demo-dialog')", "aria-label": "Close" }, "×"),
           ),
           dom.form(
-            { "data-volt-on-submit": "submitDialog" },
+            {
+              id: "demo-dialog-form",
+              "data-volt-on-submit": "$event.preventDefault(); dialogMessage.set('You entered: ' + dialogInput); setTimeout(() => $helpers.closeDialog('demo-dialog'), 2000)",
+            },
             ...dom.labelFor("Enter something:", {
               type: "text",
               id: "dialog-input",
@@ -43,12 +46,11 @@ export function createInteractivitySection(): HTMLElement {
               placeholder: "Type here...",
               required: true,
             }),
-            // FIXME: this needs to be the modal footer
-            dom.footer(
-              null,
-              dom.button({ type: "button", "data-volt-on-click": "closeDialog" }, "Cancel"),
-              dom.button({ type: "submit" }, "Submit"),
-            ),
+          ),
+          dom.footer(
+            null,
+            dom.button({ type: "button", "data-volt-on-click": "$helpers.closeDialog('demo-dialog')" }, "Cancel"),
+            dom.button({ type: "submit", form: "demo-dialog-form" }, "Submit"),
           ),
         ),
       ),
@@ -65,10 +67,35 @@ export function createInteractivitySection(): HTMLElement {
       ),
       dom.div(
         { style: "display: flex; gap: 0.5rem; flex-wrap: wrap;" },
-        ...dom.buttons([["Increment", "increment"], ["Decrement", "decrement"], ["Reset", "reset"], [
-          "Update Header",
-          "updateMessage",
-        ]]),
+        ...dom.buttons([
+          ["Increment", "count.set(count + 1)"],
+          ["Decrement", "count.set(count - 1)"],
+          ["Reset", "count.set(0)"],
+          ["Update Header", "message.set('Count is now ' + count)"],
+        ]),
+      ),
+    ),
+    // TODO: Eventually move tooltips to a dedicated CSS section/page
+    dom.section(
+      null,
+      dom.h3(null, "Tooltips"),
+      dom.p(null, "VoltX CSS includes pure-CSS tooltips with zero JavaScript. Try hovering over these examples:"),
+      dom.p(
+        null,
+        dom.abbr({ "data-vx-tooltip": "Tooltips appear on top by default", "data-placement": "top" }, "Top"),
+        " · ",
+        dom.abbr({ "data-vx-tooltip": "Tooltips can appear on the right", "data-placement": "right" }, "Right"),
+        " · ",
+        dom.abbr({ "data-vx-tooltip": "Tooltips can appear on the bottom", "data-placement": "bottom" }, "Bottom"),
+        " · ",
+        dom.abbr({ "data-vx-tooltip": "Tooltips can appear on the left", "data-placement": "left" }, "Left"),
+      ),
+      dom.p(
+        null,
+        dom.small(
+          null,
+          "Tooltips use the data-vx-tooltip attribute and are styled with pure CSS. They automatically hide on mobile devices.",
+        ),
       ),
     ),
   );

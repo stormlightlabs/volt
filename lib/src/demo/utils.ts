@@ -221,4 +221,5 @@ export const summary: CreateFn<"summary"> = (attrs?, ...children) => el("summary
 export const strong: CreateFn<"strong"> = (attrs?, ...children) => el("strong", attrs, ...children);
 export const em: CreateFn<"em"> = (attrs?, ...children) => el("em", attrs, ...children);
 export const del: CreateFn<"del"> = (attrs?, ...children) => el("del", attrs, ...children);
+export const abbr: CreateFn<"abbr"> = (attrs?, ...children) => el("abbr", attrs, ...children);
 export const hr: CreateFn<"hr"> = (attrs?) => el("hr", attrs);

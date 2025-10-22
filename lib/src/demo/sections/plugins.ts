@@ -23,7 +23,7 @@ export function createPluginsSection(): HTMLElement {
       dom.p(null, "Persisted Count: ", dom.strong({ "data-volt-text": "persistedCount" }, "0")),
       dom.div(
         { "data-volt-persist:persistedCount": "localStorage" },
-        dom.button({ "data-volt-on-click": "persistedCount.set(persistedCount.get() + 1)" }, "Increment Persisted"),
+        dom.button({ "data-volt-on-click": "persistedCount.set(persistedCount + 1)" }, "Increment Persisted"),
         " ",
         dom.button({ "data-volt-on-click": "persistedCount.set(0)" }, "Reset Persisted"),
       ),
@@ -42,15 +42,15 @@ export function createPluginsSection(): HTMLElement {
       dom.p(
         null,
         "Current Scroll Position: ",
-        dom.strong({ "data-volt-text": "Math.round(scrollPosition.get())" }, "0"),
+        dom.strong({ "data-volt-text": "Math.round(scrollPosition)" }, "0"),
         "px",
       ),
       dom.div(
         { style: "display: flex; gap: 0.5rem; flex-wrap: wrap;" },
-        dom.button({ "data-volt-on-click": "scrollToTop" }, "Scroll to Top"),
-        dom.button({ "data-volt-on-click": "scrollToSection('typography')" }, "Go to Typography"),
-        dom.button({ "data-volt-on-click": "scrollToSection('forms')" }, "Go to Forms"),
-        dom.button({ "data-volt-on-click": "scrollToSection('plugins')" }, "Go to Plugins"),
+        dom.button({ "data-volt-on-click": "$helpers.scrollToTop()" }, "Scroll to Top"),
+        dom.button({ "data-volt-on-click": "$helpers.scrollToSection('typography')" }, "Go to Typography"),
+        dom.button({ "data-volt-on-click": "$helpers.scrollToSection('forms')" }, "Go to Forms"),
+        dom.button({ "data-volt-on-click": "$helpers.scrollToSection('plugins')" }, "Go to Plugins"),
       ),
     ),
     dom.section(
@@ -65,7 +65,6 @@ export function createPluginsSection(): HTMLElement {
         ),
       ),
       dom.div(
-        // FIXME: this needs to be constrained in the stylesheet to allow for the sidenotes
         { "data-volt-url:urlParam": "query", "style": "max-width: var(--content-width);" },
         ...dom.labelFor("URL Parameter (synced with ?urlParam=...)", {
           type: "text",
@@ -73,7 +72,7 @@ export function createPluginsSection(): HTMLElement {
           "data-volt-model": "urlParam",
           placeholder: "Type to update URL...",
         }),
-        dom.p(null, "Current value: ", dom.strong({ "data-volt-text": "urlParam.get() || '(empty)'" }, "Loading...")),
+        dom.p(null, "Current value: ", dom.strong({ "data-volt-text": "urlParam || '(empty)'" }, "Loading...")),
       ),
     ),
   );

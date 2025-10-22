@@ -23,7 +23,7 @@ export function createFormsSection(): HTMLElement {
         ),
       ),
       dom.form(
-        { "data-volt-on-submit": "handleFormSubmit" },
+        { "data-volt-on-submit": "$helpers.handleFormSubmit($event)" },
         dom.fieldset(
           null,
           dom.legend(null, "User Information"),
