@@ -17,13 +17,14 @@
 | v0.2.0  |   ✓   | [Reactive Attributes & Event Modifiers](#reactive-attributes--event-modifiers)   |
 | v0.3.0  |   ✓   | [Global State](#global-state)                                                    |
 | v0.4.0  |   ✓   | [Animation & Transitions](#animation--transitions)                               |
-| v0.5.0  |       | [History API Routing Plugin](#history-api-routing-plugin)                        |
-|         |       | [Navigation & History Management](#navigation--history-management)               |
+| v0.5.0  |       | [Navigation & History API Routing](#navigation--history-api-routing)             |
 |         |   ✓   | [Refactor](#evaluator--binder-hardening)                                         |
-| v0.6.0  |       | [Background Requests & Reactive Polling](#background-requests--reactive-polling) |
-| v0.7.0  |       | [Streaming & Patch Engine](#streaming--patch-engine)                             |
-| v0.8.0  |       | PWA Capabilities                                                                 |
-|         |       | [Persistence & Offline](#persistence--offline)                                   |
+|         |       | Update demo to be a multi page application with routing plugin                   |
+| v0.5.1  |       | [Background Requests & Reactive Polling](#background-requests--reactive-polling) |
+| v0.5.2  |       | [Streaming & Patch Engine](#streaming--patch-engine)                             |
+| v0.5.3  |       | PWA Capabilities                                                                 |
+| v0.5.4  |       | [Persistence & Offline](#persistence--offline)                                   |
+|         |       |                                                                                  |
 | v0.9.0  |       | [Inspector & Developer Tools](#inspector--developer-tools)                       |
 | v1.0.0  |       | [Stable Release](#stable-release)                                                |
 
@@ -137,10 +138,10 @@ _NOTE_: `data-x-*` is now `data-volt-*`
         - Integration hooks for loading and pending states
     - Background task scheduler with priority management
 
-### Navigation & History Management
+### Navigation & History API Routing
 
-**Goal:** Introduce seamless client-side navigation and stateful history control using web standards.
-**Outcome:** Volt.js provides enhanced navigation behavior with minimal overhead and full accessibility support.
+**Goal:** Provide seamless client-side navigation with a first-class History API router.
+**Outcome:** Volt.js delivers accessible, stateful navigation with clean URLs and signal-driven routing.
 **Deliverables:**
     - `data-volt-navigate` for intercepting link and form actions
         - Integration with the History API (`pushState`, `replaceState`, `popState`)
@@ -149,15 +150,8 @@ _NOTE_: `data-x-*` is now `data-volt-*`
         - Native back/forward button support
         - Scroll position persistence and restoration
             - Preloading of linked resources on hover or idle
-    - `data-volt-url` for declarative history updates
+    - `data-volt-url` for declarative history updates, including a `"history:signal"` mode with path + search preservation and optional base path configuration
         - View Transition API integration for animated route changes
-
-### History API Routing Plugin
-
-**Goal:** Deliver a first-class path-based router that leverages the History API while staying signal-driven.
-**Outcome:** Volt apps can opt into clean URLs (no hash) with back/forward support, nested segments, and SSR-friendly hydration.
-**Deliverables:**
-    - `data-volt-url="history:signal"` mode with path + search preservation and optional base path configuration
     - Route parsing utilities for dynamic params (e.g. `/blog/:slug`) and programmatic redirects
     - Scroll restoration hooks and focus management aligned with `navigation` and `popstate` events
     - Integration tests covering pushState navigation, deep links, and server-rendered bootstraps

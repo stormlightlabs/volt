@@ -9,22 +9,23 @@ import type { PluginContext, Signal } from "$types/volt";
 
 /**
  * URL plugin handler.
- * Synchronizes signal values with URL parameters and hash.
+ * Synchronizes signal values with URL parameters, hash, and full history state.
  *
- * Syntax: data-volt-url="mode:signalPath"
+ * Syntax: data-volt-url="mode:signalPath" or data-volt-url="mode:signalPath:basePath"
  * Modes:
  *   - read:signalPath - Read URL param into signal on mount (one-way)
  *   - sync:signalPath - Bidirectional sync between signal and URL param
  *   - hash:signalPath - Sync with hash portion for routing
+ *   - history:signalPath[:basePath] - Sync with full path + search (History API routing)
  */
 export function urlPlugin(ctx: PluginContext, value: string): void {
   const parts = value.split(":");
-  if (parts.length !== 2) {
-    console.error(`Invalid url binding: "${value}". Expected format: "mode:signalPath"`);
+  if (parts.length < 2) {
+    console.error(`Invalid url binding: "${value}". Expected format: "mode:signalPath[:basePath]"`);
     return;
   }
 
-  const [mode, signalPath] = parts.map((p) => p.trim());
+  const [mode, signalPath, basePath] = parts.map((p) => p.trim());
 
   switch (mode) {
     case "read": {
@@ -37,6 +38,10 @@ export function urlPlugin(ctx: PluginContext, value: string): void {
     }
     case "hash": {
       handleHashRouting(ctx, signalPath);
+      break;
+    }
+    case "history": {
+      handleHistoryRouting(ctx, signalPath, basePath);
       break;
     }
     default: {
@@ -214,4 +219,75 @@ function deserializeValue(value: string): unknown {
   } catch {
     return value;
   }
+}
+
+/**
+ * Sync signal with full path + search params for History API routing.
+ * Bidirectional sync between signal and window.location.pathname + search.
+ *
+ * @param ctx - Plugin context
+ * @param signalPath - Signal path to sync
+ * @param basePath - Optional base path to strip from routes (e.g., "/app")
+ */
+function handleHistoryRouting(ctx: PluginContext, signalPath: string, basePath?: string): void {
+  const signal = ctx.findSignal(signalPath);
+  if (!signal) {
+    console.error(`Signal "${signalPath}" not found for history routing`);
+    return;
+  }
+
+  const base = basePath || "";
+  const getCurrentRoute = (): string => {
+    const fullPath = globalThis.location.pathname + globalThis.location.search;
+    if (base && fullPath.startsWith(base)) {
+      return fullPath.slice(base.length) || "/";
+    }
+    return fullPath;
+  };
+
+  const currentRoute = getCurrentRoute();
+  if (currentRoute) {
+    (signal as Signal<string>).set(currentRoute);
+  }
+
+  let isUpdatingFromHistory = false;
+
+  const updateUrl = (value: unknown) => {
+    if (isUpdatingFromHistory) return;
+
+    const route = String(value ?? "/");
+    const fullPath = base ? `${base}${route}` : route;
+
+    if (globalThis.location.pathname + globalThis.location.search !== fullPath) {
+      globalThis.history.pushState({}, "", fullPath);
+      globalThis.dispatchEvent(
+        new CustomEvent("volt:navigate", { detail: { url: fullPath, route }, bubbles: true, cancelable: false }),
+      );
+    }
+  };
+
+  const handlePopState = () => {
+    isUpdatingFromHistory = true;
+    const route = getCurrentRoute();
+    (signal as Signal<string>).set(route);
+    globalThis.dispatchEvent(new CustomEvent("volt:popstate", { detail: { route }, bubbles: true, cancelable: false }));
+    isUpdatingFromHistory = false;
+  };
+
+  const handleNavigate = () => {
+    isUpdatingFromHistory = true;
+    const route = getCurrentRoute();
+    (signal as Signal<string>).set(route);
+    isUpdatingFromHistory = false;
+  };
+
+  const unsubscribe = signal.subscribe(updateUrl);
+  globalThis.addEventListener("popstate", handlePopState);
+  globalThis.addEventListener("volt:navigate", handleNavigate);
+
+  ctx.addCleanup(() => {
+    unsubscribe();
+    globalThis.removeEventListener("popstate", handlePopState);
+    globalThis.removeEventListener("volt:navigate", handleNavigate);
+  });
 }
