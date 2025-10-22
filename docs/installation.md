@@ -139,7 +139,7 @@ For SSR applications, use the `hydrate()` function instead of `charge()` to pres
 </script>
 ```
 
-See the [Server-Side Rendering & Lifecycle](./usage/lifecycle) documentation for complete SSR patterns and hydration strategies.
+See the [Server-Side Rendering guide](./usage/ssr) for complete hydration patterns and lifecycle coordination tips.
 
 ## Plugin Setup
 

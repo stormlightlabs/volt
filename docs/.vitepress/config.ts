@@ -45,11 +45,10 @@ export default defineConfig({
           { text: "Animations & Transitions", link: "/animations" },
         ],
       },
-      { text: "Usage", collapsed: false, items: u.scanDir("usage", "/usage") },
       {
         text: "CSS",
         collapsed: false,
-        items: [{ text: "Volt CSS", link: "/css/volt-css" }, { text: "Reference", link: "/css/semantics" }],
+        items: [{ text: "VoltX CSS", link: "/css/volt-css" }, { text: "Reference", link: "/css/semantics" }],
         docFooterText: "Auto-generated CSS Docs",
       },
       { text: "Specs", collapsed: true, items: u.scanDir("spec", "/spec") },

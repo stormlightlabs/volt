@@ -1,178 +1,95 @@
-# Server-Side Rendering & Lifecycle
+# Lifecycle Hooks
 
-Server-Side Rendering (SSR) with VoltX enables you to render initial HTML on the server and seamlessly hydrate it on the client without re-rendering or flash of unstyled content.
+Volt's runtime exposes lifecycle hooks so you can observe mounts, run cleanup logic, and coordinate plugins without re-implementing binding internals. Hooks run consistently for both SSR hydration and client-only mounts.
 
-## When to use SSR
+## Lifecycle Layers
 
-- Content-heavy pages that benefit from SEO
-- Applications requiring fast initial render
-- Progressive web apps with offline capabilities
-- When you need to support users with JavaScript disabled
+- **Global hooks** fire for every mount/unmount operation and are ideal for analytics, logging, or cross-cutting concerns.
+- **Element hooks** attach to a single DOM element and let you react to that element entering or leaving the document.
+- **Plugin hooks** are available while authoring custom bindings and let you scope mount/unmount work to a plugin instance.
 
-## When to use client-side rendering (CSR)
+## Global Hooks
 
-- Highly interactive single-page applications
-- Applications behind authentication (no SEO needed)
-- Rapid prototyping and development
-- When server-side rendering adds unnecessary complexity
+Register global hooks with `registerGlobalHook(name, callback)`. The available events are:
 
-## Concepts
+| Event                      | Position                                                                                             |
+| -------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `beforeMount(root, scope)` | Runs right before bindings initialize                                                                |
+|                            | This is the place to patch the scope or read serialized state                                        |
+| `afterMount(root, scope)`  | Runs after VoltX has attached bindings and lifecycle state                                           |
+| `beforeUnmount(root)`      | Runs before a root is torn down, giving you time to flush pending work                               |
+| `afterUnmount(root)`       | Runs after cleanup finishes                                                                          |
+|                            | Use this to release global resources                                                                 |
 
-### Server-Side: Rendering Initial HTML
+```ts
+import { registerGlobalHook } from "@volt/volt";
 
-The server generates HTML with `data-volt` attributes and embedded state. Volt only requires:
+const unregister = registerGlobalHook("afterMount", (root, scope) => {
+  console.debug("[volt] mounted", root.id, scope);
+});
 
-1. HTML elements with `data-volt-*` attributes
-2. A `<script>` tag containing serialized state as JSON
-
-### Client-Side: Hydration
-
-Instead of re-rendering the DOM, VoltX.js "hydrates" the existing server-rendered HTML by:
-
-1. Reading the embedded state from the `<script>` tag
-2. Recreating reactive signals from the serialized values
-3. Attaching event listeners and bindings to existing DOM nodes
-4. Preserving the existing DOM structure without modifications
-
-## State Serialization
-
-### Server-Side Pattern
-
-Embed initial state in a `<script>` tag with a specific ID pattern:
-
-```html
-<div id="app" data-volt>
-  <script type="application/json" id="volt-state-app">
-    {"count": 0, "username": "alice"}
-  </script>
-
-  <p data-volt-text="count">0</p>
-  <p data-volt-text="username">alice</p>
-</div>
+unregister();
 ```
 
-- Script tag must have `type="application/json"`
-- ID must follow pattern: `volt-state-{element-id}`
-- Root element must have an `id` attribute
-- State must be valid JSON
+### Working with the Scope Object
 
-### Client-Side Deserialization
+`beforeMount` and `afterMount` receive the reactive scope for the root element so you can read signal values or stash helpers on the scope.
+Avoid mutating DOM inside these hooks-leave DOM updates to bindings/plugins to prevent hydration mismatches.
 
-Use the `hydrate()` function instead of `charge()` to hydrate all `[data-volt]` roots on the page. Volt will:
+### Managing Global Hooks
 
-1. Find all elements matching the root selector (default: `[data-volt]`)
-2. Check for embedded state in `<script>` tags
-3. Deserialize JSON to reactive signals
-4. Mount bindings without re-rendering
-5. Mark elements as hydrated to prevent double-hydration
+- Use `unregisterGlobalHook` when the callback is no longer needed.
+- Call `clearGlobalHooks("beforeMount")` or `clearAllGlobalHooks()` in test teardown code to avoid cross-test leakage.
+- Prefer one central module to register global hooks so they are easy to audit.
 
-## Avoiding Flash of Unstyled Content (FOUC)
+## Element Hooks
 
-### CSS-Based Hiding
+When you need per-element notifications, register element hooks:
 
-Hide content until VoltX.js hydrates:
+```ts
+import { registerElementHook, isElementMounted } from "@volt/volt";
 
-```html
-<style>
-  [data-volt]:not([data-volt-hydrated]) {
-    visibility: hidden;
-  }
+const panel = document.querySelector("[data-volt-panel]");
 
-  [data-volt][data-volt-hydrated] {
-    visibility: visible;
-  }
-</style>
+registerElementHook(panel!, "mount", () => {
+  console.log("panel is live");
+});
 
-<div id="app" data-volt>
-  <!-- Content is hidden until hydrated -->
-</div>
+registerElementHook(panel!, "unmount", () => {
+  console.log("panel removed, dispose timers");
+});
+
+if (isElementMounted(panel!)) {
+  // Safe to touch DOM or read bindings immediately.
+}
 ```
 
-### Strategy 2: Loading Indicator
+Element hooks automatically dispose after the element unmounts. Use `getElementBindings(element)` when debugging to see which binding directives are attached to a node.
 
-Show a loading state during hydration:
+## Plugin Lifecycle Hooks
 
-```html
-<style>
-  .loading-overlay {
-    position: fixed;
-    inset: 0;
-    background: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
+Custom plugins receive lifecycle helpers on the plugin context:
 
-  [data-volt-hydrated] ~ .loading-overlay {
-    display: none;
-  }
-</style>
+```ts
+import type { PluginContext } from "@volt/volt";
 
-<div id="app" data-volt>
-  <!-- App content -->
-</div>
-<div class="loading-overlay">Loading...</div>
+export function focusPlugin(ctx: PluginContext) {
+  const el = ctx.element as HTMLElement;
 
-<script>
-  document.addEventListener('DOMContentLoaded', () => {
-    Volt.hydrate();
-  });
-</script>
+  ctx.lifecycle.onMount(() => el.focus());
+  ctx.lifecycle.onUnmount(() => el.blur());
+}
 ```
 
-### Progressive Enhancement
+- `ctx.lifecycle.onMount` and `ctx.lifecycle.onUnmount` let you coordinate DOM state with the binding's lifetime.
+- Use `ctx.lifecycle.beforeBinding` and `ctx.lifecycle.afterBinding` to measure binding creation or guard against duplicate initialization.
+- Always combine lifecycle hooks with `ctx.addCleanup` if you create subscriptions that outlive a single mount cycle.
 
-Render fully functional HTML that works without JavaScript, then enhance with interactivity:
+## Best Practices
 
-```html
-<!-- Form works without JavaScript -->
-<form id="contact" method="POST" action="/submit" data-volt>
-  <script type="application/json" id="volt-state-contact">
-    {"submitted": false}
-  </script>
+- Keep hook callbacks side-effect free whenever possible; defer heavy work to asynchronous tasks.
+- Never mutate the DOM tree that VoltX currently manages from `beforeMount`; wait for `afterMount` or plugin hooks instead.
+- When adding analytics or telemetry, remember to remove hooks on navigation or single-page route changes to avoid duplicate events.
+- In tests, seed hooks inside the test body and tear them down with the disposer returned from `registerGlobalHook` to preserve isolation.
 
-  <input type="email" name="email" required>
-
-  <!-- Enhanced with VoltX.js for client-side validation -->
-  <p data-volt-if="submitted" data-volt-text="'Thank you!'"></p>
-
-  <button type="submit">Submit</button>
-</form>
-```
-
-Can you believe FOUC is an [actual](https://en.wikipedia.org/wiki/Flash_of_unstyled_content) acronym?
-
-## Guidelines/Best Practices
-
-### When to Use SSR vs CSR
-
-**Use SSR for:**
-
-- Any page requiring SEO
-
-**Use CSR for:**
-
-- Complex, interactive and/or real-time applications
-
-### State Management
-
-**Do:**
-
-- Keep server-rendered state minimal (only essential data)
-- Use computed signals for derived values (don't serialize them)
-- Validate and sanitize state on the server
-- Use consistent data structures between server and client
-
-**Don't:**
-
-- Serialize functions or complex objects
-- Include sensitive data in client-side state
-- Serialize computed signals (they're recalculated on hydration)
-- Embed large datasets (fetch them after hydration instead)
-
-### Security
-
-- Escape user-generated content in server-rendered HTML
-- Validate state data before serialization
-- Use Content Security Policy (CSP) headers
-- Sanitize JSON to prevent XSS attacks
+For server-rendered workflows and hydration patterns, refer to [ssr](./ssr).
