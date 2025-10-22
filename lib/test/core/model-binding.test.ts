@@ -573,3 +573,315 @@ describe("data-volt-else binding", () => {
     expect(container.querySelector("span")?.textContent).toBe("Updated");
   });
 });
+
+describe("nested property binding in data-volt-model", () => {
+  describe("single-level nesting", () => {
+    it("binds to nested property in signal with object value", () => {
+      const container = document.createElement("div");
+      container.innerHTML = `<input type="text" data-volt-model="user.name" />`;
+
+      const user = signal({ name: "Alice", age: 30 });
+      mount(container, { user });
+
+      const input = container.querySelector("input")!;
+      expect(input.value).toBe("Alice");
+    });
+
+    it("updates input when nested property in signal changes", () => {
+      const container = document.createElement("div");
+      container.innerHTML = `<input type="text" data-volt-model="person.email" />`;
+
+      const person = signal({ email: "alice@example.com", verified: false });
+      mount(container, { person });
+
+      const input = container.querySelector("input")!;
+      expect(input.value).toBe("alice@example.com");
+
+      person.set({ email: "bob@example.com", verified: true });
+      expect(input.value).toBe("bob@example.com");
+    });
+
+    it("updates nested property when input changes", () => {
+      const container = document.createElement("div");
+      container.innerHTML = `<input type="text" data-volt-model="profile.username" />`;
+
+      const profile = signal({ username: "alice123", bio: "Developer" });
+      mount(container, { profile });
+
+      const input = container.querySelector("input")!;
+      input.value = "alice456";
+      input.dispatchEvent(new Event("input"));
+
+      expect(profile.get().username).toBe("alice456");
+      expect(profile.get().bio).toBe("Developer");
+    });
+
+    it("maintains immutability when updating nested properties", () => {
+      const container = document.createElement("div");
+      container.innerHTML = `<input type="text" data-volt-model="data.value" />`;
+
+      const data = signal({ value: "original", other: "unchanged" });
+      const originalObject = data.get();
+      mount(container, { data });
+
+      const input = container.querySelector("input")!;
+      input.value = "modified";
+      input.dispatchEvent(new Event("input"));
+
+      const updatedObject = data.get();
+      expect(updatedObject).not.toBe(originalObject);
+      expect(updatedObject.value).toBe("modified");
+      expect(updatedObject.other).toBe("unchanged");
+      expect(originalObject.value).toBe("original");
+    });
+
+    it("handles bidirectional updates with nested properties", () => {
+      const container = document.createElement("div");
+      container.innerHTML = `
+        <input data-volt-model="form.email" />
+        <span data-volt-text="form.email"></span>
+      `;
+
+      const form = signal({ email: "test@example.com", name: "Test" });
+      mount(container, { form });
+
+      const input = container.querySelector("input")!;
+      const span = container.querySelector("span")!;
+
+      expect(input.value).toBe("test@example.com");
+      expect(span.textContent).toBe("test@example.com");
+
+      input.value = "updated@example.com";
+      input.dispatchEvent(new Event("input"));
+
+      expect(form.get().email).toBe("updated@example.com");
+      expect(span.textContent).toBe("updated@example.com");
+    });
+  });
+
+  describe("multiple nested properties", () => {
+    it("binds multiple inputs to different nested properties", () => {
+      const container = document.createElement("div");
+      container.innerHTML = `
+        <input id="name" type="text" data-volt-model="formData.name" />
+        <input id="email" type="email" data-volt-model="formData.email" />
+      `;
+
+      const formData = signal({ name: "Alice", email: "alice@example.com" });
+      mount(container, { formData });
+
+      const nameInput = container.querySelector("#name")! as HTMLInputElement;
+      const emailInput = container.querySelector("#email")! as HTMLInputElement;
+
+      expect(nameInput.value).toBe("Alice");
+      expect(emailInput.value).toBe("alice@example.com");
+
+      nameInput.value = "Bob";
+      nameInput.dispatchEvent(new Event("input"));
+
+      expect(formData.get().name).toBe("Bob");
+      expect(formData.get().email).toBe("alice@example.com");
+
+      emailInput.value = "bob@example.com";
+      emailInput.dispatchEvent(new Event("input"));
+
+      expect(formData.get().name).toBe("Bob");
+      expect(formData.get().email).toBe("bob@example.com");
+    });
+  });
+
+  describe("different form element types", () => {
+    it("binds checkbox to nested boolean property", () => {
+      const container = document.createElement("div");
+      container.innerHTML = `<input type="checkbox" data-volt-model="settings.enabled" />`;
+
+      const settings = signal({ enabled: true, theme: "dark" });
+      mount(container, { settings });
+
+      const checkbox = container.querySelector("input")!;
+      expect(checkbox.checked).toBe(true);
+
+      checkbox.checked = false;
+      checkbox.dispatchEvent(new Event("change"));
+
+      expect(settings.get().enabled).toBe(false);
+      expect(settings.get().theme).toBe("dark");
+    });
+
+    it("binds select to nested property", () => {
+      const container = document.createElement("div");
+      container.innerHTML = `
+        <select data-volt-model="preferences.color">
+          <option value="red">Red</option>
+          <option value="blue">Blue</option>
+          <option value="green">Green</option>
+        </select>
+      `;
+
+      const preferences = signal({ color: "blue", size: "medium" });
+      mount(container, { preferences });
+
+      const select = container.querySelector("select")!;
+      expect(select.value).toBe("blue");
+
+      select.value = "green";
+      select.dispatchEvent(new Event("input"));
+
+      expect(preferences.get().color).toBe("green");
+      expect(preferences.get().size).toBe("medium");
+    });
+
+    it("binds textarea to nested property", () => {
+      const container = document.createElement("div");
+      container.innerHTML = `<textarea data-volt-model="post.content"></textarea>`;
+
+      const post = signal({ content: "Hello world", published: false });
+      mount(container, { post });
+
+      const textarea = container.querySelector("textarea")!;
+      expect(textarea.value).toBe("Hello world");
+
+      textarea.value = "Updated content";
+      textarea.dispatchEvent(new Event("input"));
+
+      expect(post.get().content).toBe("Updated content");
+      expect(post.get().published).toBe(false);
+    });
+
+    it("binds radio buttons to nested property", () => {
+      const container = document.createElement("div");
+      container.innerHTML = `
+        <input type="radio" name="plan" value="free" data-volt-model="subscription.plan" />
+        <input type="radio" name="plan" value="pro" data-volt-model="subscription.plan" />
+        <input type="radio" name="plan" value="enterprise" data-volt-model="subscription.plan" />
+      `;
+
+      const subscription = signal({ plan: "pro", active: true });
+      mount(container, { subscription });
+
+      const radios = container.querySelectorAll("input");
+      expect(radios[0].checked).toBe(false);
+      expect(radios[1].checked).toBe(true);
+      expect(radios[2].checked).toBe(false);
+
+      radios[2].checked = true;
+      radios[2].dispatchEvent(new Event("change"));
+
+      expect(subscription.get().plan).toBe("enterprise");
+      expect(subscription.get().active).toBe(true);
+    });
+  });
+
+  describe("deep nesting", () => {
+    it("binds to deeply nested properties", () => {
+      const container = document.createElement("div");
+      container.innerHTML = `<input type="text" data-volt-model="app.user.profile.displayName" />`;
+
+      const app = signal({
+        user: { profile: { displayName: "Alice", avatar: "/avatar.png" }, settings: { theme: "dark" } },
+      });
+      mount(container, { app });
+
+      const input = container.querySelector("input")!;
+      expect(input.value).toBe("Alice");
+
+      input.value = "Bob";
+      input.dispatchEvent(new Event("input"));
+
+      expect(app.get().user.profile.displayName).toBe("Bob");
+      expect(app.get().user.profile.avatar).toBe("/avatar.png");
+      expect(app.get().user.settings.theme).toBe("dark");
+    });
+
+    it("maintains immutability with deeply nested updates", () => {
+      const container = document.createElement("div");
+      container.innerHTML = `<input type="text" data-volt-model="state.form.fields.email" />`;
+
+      const state = signal({
+        form: { fields: { email: "test@example.com", name: "Test" }, meta: { submitted: false } },
+      });
+
+      const originalState = state.get();
+      const originalForm = originalState.form;
+      const originalFields = originalState.form.fields;
+
+      mount(container, { state });
+
+      const input = container.querySelector("input")!;
+      input.value = "new@example.com";
+      input.dispatchEvent(new Event("input"));
+
+      const newState = state.get();
+      const newForm = newState.form;
+      const newFields = newState.form.fields;
+
+      expect(newState).not.toBe(originalState);
+      expect(newForm).not.toBe(originalForm);
+      expect(newFields).not.toBe(originalFields);
+
+      expect(newFields.email).toBe("new@example.com");
+      expect(newFields.name).toBe("Test");
+      expect(newForm.meta.submitted).toBe(false);
+
+      expect(originalFields.email).toBe("test@example.com");
+    });
+  });
+
+  describe("edge cases", () => {
+    it("handles undefined nested property gracefully", () => {
+      const container = document.createElement("div");
+      container.innerHTML = `<input type="text" data-volt-model="obj.missing" />`;
+
+      const obj = signal({ present: "value" });
+      mount(container, { obj });
+
+      const input = container.querySelector("input")!;
+      expect(input.value).toBe("");
+    });
+
+    it("creates nested property path when updating undefined property", () => {
+      const container = document.createElement("div");
+      container.innerHTML = `<input type="text" data-volt-model="data.newProp" />`;
+
+      const data = signal({ existingProp: "exists" });
+      mount(container, { data });
+
+      const input = container.querySelector("input")!;
+      input.value = "new value";
+      input.dispatchEvent(new Event("input"));
+
+      // @ts-expect-error updating shape of data
+      expect(data.get().newProp).toBe("new value");
+      expect(data.get().existingProp).toBe("exists");
+    });
+
+    it("works with modifiers on nested properties", () => {
+      const container = document.createElement("div");
+      container.innerHTML = `<input type="text" data-volt-model-trim="form.username" />`;
+
+      const form = signal({ username: "", email: "" });
+      mount(container, { form });
+
+      const input = container.querySelector("input")!;
+      input.value = "  alice  ";
+      input.dispatchEvent(new Event("input"));
+
+      expect(form.get().username).toBe("alice");
+    });
+
+    it("works with number modifier on nested properties", () => {
+      const container = document.createElement("div");
+      container.innerHTML = `<input type="text" data-volt-model-number="config.port" />`;
+
+      const config = signal({ port: 8080, host: "localhost" });
+      mount(container, { config });
+
+      const input = container.querySelector("input")!;
+      input.value = "3000";
+      input.dispatchEvent(new Event("input"));
+
+      expect(config.get().port).toBe(3000);
+      expect(typeof config.get().port).toBe("number");
+    });
+  });
+});

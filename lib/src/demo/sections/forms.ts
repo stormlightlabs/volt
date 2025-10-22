@@ -76,7 +76,7 @@ export function createFormsSection(): HTMLElement {
       dom.details(
         null,
         dom.summary(null, "Current Form Data (Live)"),
-        dom.pre(null, dom.code({ "data-volt-text": "JSON.stringify(formData.get(), null, 2)" }, "Loading...")),
+        dom.pre(null, dom.code({ "data-volt-text": "JSON.stringify(formData, null, 2)" }, "Loading...")),
       ),
     ),
   );
