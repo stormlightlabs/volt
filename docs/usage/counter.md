@@ -285,4 +285,5 @@ This counter demonstrates core VoltX.js concepts:
 - [State Management](./state) for advanced signal patterns
 - [Bindings](./bindings) for complete binding reference
 - [Expressions](./expressions) for template syntax details
-- [Lifecycle](./lifecycle) for SSR and hydration
+- [Lifecycle](./lifecycle) for mount/unmount hooks
+- [Server-Side Rendering](./ssr) for hydration strategies

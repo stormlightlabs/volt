@@ -37,7 +37,7 @@ Common uses include:
 - Logging or analytics
 - Coordinating multiple signals
 
-For asynchronous operations, use `asyncEffect()` (see [asyncEffect](./async-effect.md)) which handles cleanup of pending operations when dependencies change or the effect is disposed.
+For asynchronous operations, use `asyncEffect()` (see [asyncEffect](./async-effect)) which handles cleanup of pending operations when dependencies change or the effect is disposed.
 
 ## Declarative State
 
@@ -109,7 +109,7 @@ For server-side rendering, signals can be serialized to JSON and embedded in HTM
 
 Only serialize base signals containing primitive values, arrays, and plain objects. Computed signals are recalculated during hydration and should not be serialized.
 
-See the [Server-Side Rendering & Lifecycle](./lifecycle.md) documentation for complete SSR patterns.
+See the [Server-Side Rendering guide](./ssr) for complete hydration patterns.
 
 ## Guidelines
 
