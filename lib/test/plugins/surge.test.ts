@@ -71,13 +71,13 @@ describe("Surge Plugin", () => {
 
     it("should store enter-specific config", () => {
       surgePlugin(mockContext, "enter:slide-down");
-      const stored = (element as HTMLElement & { _voltSurgeEnter?: unknown })._voltSurgeEnter;
+      const stored = (element as HTMLElement & { _vxSurgeEnter?: unknown })._vxSurgeEnter;
       expect(stored).toBeDefined();
     });
 
     it("should store leave-specific config", () => {
       surgePlugin(mockContext, "leave:fade.300");
-      const stored = (element as HTMLElement & { _voltSurgeLeave?: unknown })._voltSurgeLeave;
+      const stored = (element as HTMLElement & { _vxSurgeLeave?: unknown })._vxSurgeLeave;
       expect(stored).toBeDefined();
     });
   });

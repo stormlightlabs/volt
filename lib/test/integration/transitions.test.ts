@@ -275,7 +275,7 @@ describe("integration: transitions", () => {
   });
 
   describe("Shift animations", () => {
-    it("should apply animation on mount", () => {
+    it("should apply animation on mount", async () => {
       const container = document.createElement("div");
       const testEl = document.createElement("div");
       testEl.dataset.voltShift = "bounce";
@@ -286,8 +286,11 @@ describe("integration: transitions", () => {
 
       mount(container, {});
 
-      expect(element.dataset.voltShiftRuns).toBe("1");
-      expect(element.style.animationName).toMatch(/^volt-shift-/);
+      // Wait for requestAnimationFrame to apply the animation
+      await vi.waitFor(() => {
+        expect(element.dataset.voltShiftRuns).toBe("1");
+        expect(element.style.animationName).toMatch(/^volt-shift-/);
+      });
     });
 
     it("should trigger animation based on signal", () => {
@@ -308,7 +311,7 @@ describe("integration: transitions", () => {
       expect(button.dataset.voltShiftRuns).toBe("1");
     });
 
-    it("should support duration and iteration modifiers", () => {
+    it("should support duration and iteration modifiers", async () => {
       const container = document.createElement("div");
       const testEl = document.createElement("div");
       testEl.dataset.voltShift = "bounce.1000.3";
@@ -319,9 +322,12 @@ describe("integration: transitions", () => {
 
       mount(container, {});
 
-      expect(element.dataset.voltShiftRuns).toBe("1");
-      expect(element.style.animationDuration).toBe("1000ms");
-      expect(element.style.animationIterationCount).toBe("3");
+      // Wait for requestAnimationFrame to apply the animation
+      await vi.waitFor(() => {
+        expect(element.dataset.voltShiftRuns).toBe("1");
+        expect(element.style.animationDuration).toBe("1000ms");
+        expect(element.style.animationIterationCount).toBe("3");
+      });
     });
 
     it("should cleanup signal subscription on unmount", () => {

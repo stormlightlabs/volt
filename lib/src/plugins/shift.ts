@@ -215,6 +215,16 @@ function parseAnimationValue(value: string): Optional<ParsedShiftValue> {
   return result;
 }
 
+function stopAnimation(el: HTMLElement): void {
+  el.style.animation = "";
+  el.style.animationName = "";
+  el.style.animationDuration = "";
+  el.style.animationTimingFunction = "";
+  el.style.animationIterationCount = "";
+  el.style.animationFillMode = "";
+  restoreOriginalDisplay(el);
+}
+
 function applyAnimation(el: HTMLElement, preset: AnimationPreset, duration?: number, iterations?: number): void {
   if (prefersReducedMotion()) {
     return;
@@ -245,13 +255,7 @@ function applyAnimation(el: HTMLElement, preset: AnimationPreset, duration?: num
     const totalDuration = effectiveDuration * effectiveIterations;
     setTimeout(() => {
       if (el.style.animationName === animationName) {
-        el.style.animation = "";
-        el.style.animationName = "";
-        el.style.animationDuration = "";
-        el.style.animationTimingFunction = "";
-        el.style.animationIterationCount = "";
-        el.style.animationFillMode = "";
-        restoreOriginalDisplay(el);
+        stopAnimation(el);
       }
     }, totalDuration);
   }
@@ -315,8 +319,8 @@ function getOrCreateKeyframes(preset: AnimationPreset): Optional<string> {
   return animationName;
 }
 
-function ensureInlineBlockForTransforms(element: HTMLElement, isInfinite: boolean): void {
-  if (element.dataset.voltShiftDisplayManaged) {
+function ensureInlineBlockForTransforms(el: HTMLElement, isInf: boolean): void {
+  if (el.dataset.voltShiftDisplayManaged) {
     return;
   }
 
@@ -324,19 +328,27 @@ function ensureInlineBlockForTransforms(element: HTMLElement, isInfinite: boolea
     return;
   }
 
-  const computedDisplay = getComputedStyle(element).display;
+  if (!el.isConnected) {
+    return;
+  }
+
+  void el.offsetHeight;
+
+  const computedDisplay = getComputedStyle(el).display;
   if (computedDisplay !== "inline") {
     return;
   }
 
-  element.dataset.voltShiftDisplayManaged = isInfinite ? "infinite" : "managed";
-  element.dataset.voltShiftOriginalDisplay = element.style.display ?? "";
-  if (!element.dataset.voltShiftOriginalTransformOrigin) {
-    element.dataset.voltShiftOriginalTransformOrigin = element.style.transformOrigin ?? "";
+  el.dataset.voltShiftDisplayManaged = isInf ? "infinite" : "managed";
+  el.dataset.voltShiftOriginalDisplay = el.style.display ?? "";
+
+  if (!el.dataset.voltShiftOriginalTransformOrigin) {
+    el.dataset.voltShiftOriginalTransformOrigin = el.style.transformOrigin ?? "";
   }
-  element.style.display = "inline-block";
-  if (!element.style.transformOrigin) {
-    element.style.transformOrigin = "center center";
+
+  el.style.display = "inline-block";
+  if (!el.style.transformOrigin) {
+    el.style.transformOrigin = "center center";
   }
 }
 
@@ -401,11 +413,17 @@ export function shiftPlugin(ctx: PluginContext, value: string): void {
       return;
     }
 
+    const effectiveIterations = parsed.iterations ?? preset.iterations;
+    const isInfinite = effectiveIterations === Number.POSITIVE_INFINITY;
     let previousValue = signal.get();
 
     const unsubscribe = signal.subscribe((value) => {
-      if (value !== previousValue && Boolean(value)) {
-        applyAnimation(el, preset, parsed.duration, parsed.iterations);
+      if (value !== previousValue) {
+        if (value) {
+          applyAnimation(el, preset, parsed.duration, parsed.iterations);
+        } else if (isInfinite && el.style.animationName) {
+          stopAnimation(el);
+        }
       }
       previousValue = value;
     });
@@ -414,12 +432,16 @@ export function shiftPlugin(ctx: PluginContext, value: string): void {
 
     if (signal.get()) {
       ctx.lifecycle.onMount(() => {
-        applyAnimation(el, preset, parsed.duration, parsed.iterations);
+        requestAnimationFrame(() => {
+          applyAnimation(el, preset, parsed.duration, parsed.iterations);
+        });
       });
     }
   } else {
     ctx.lifecycle.onMount(() => {
-      applyAnimation(el, preset, parsed.duration, parsed.iterations);
+      requestAnimationFrame(() => {
+        applyAnimation(el, preset, parsed.duration, parsed.iterations);
+      });
     });
   }
 }

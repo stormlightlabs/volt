@@ -108,8 +108,12 @@ export function createAnimationsSection(): HTMLElement {
           "data-volt-shift": "triggerFlash:flash",
         }, "Flash"),
       ),
-      // FIXME: does not spin
-      dom.p(null, "Spinning gear: ", dom.span({ "data-volt-shift": "spin", style: "font-size: 2rem;" }, "⚙️")),
+      dom.p(
+        null,
+        dom.button({ "data-volt-on-click": "spinningGear.set(!spinningGear)" }, "Toggle Spin"),
+        " Spinning gear: ",
+        dom.span({ "data-volt-shift": "spinningGear:spin", style: "font-size: 2rem;" }, "⚙️"),
+      ),
     ),
     dom.section(
       null,

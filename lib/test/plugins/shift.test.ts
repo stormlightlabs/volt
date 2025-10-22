@@ -133,30 +133,38 @@ describe("Shift Plugin", () => {
   });
 
   describe("Basic Animation Application", () => {
-    it("should apply animation on mount", () => {
+    it("should apply animation on mount", async () => {
       shiftPlugin(mockContext, "bounce");
 
-      expect(element.style.animationName).toMatch(/^volt-shift-/);
+      await vi.waitFor(() => {
+        expect(element.style.animationName).toMatch(/^volt-shift-/);
+      });
     });
 
-    it("should use default duration and iterations", () => {
+    it("should use default duration and iterations", async () => {
       shiftPlugin(mockContext, "bounce");
 
-      expect(element.style.animationDuration).toBe("100ms");
-      expect(element.style.animationIterationCount).toBe("1");
+      await vi.waitFor(() => {
+        expect(element.style.animationDuration).toBe("100ms");
+        expect(element.style.animationIterationCount).toBe("1");
+      });
     });
 
-    it("should apply custom duration", () => {
+    it("should apply custom duration", async () => {
       shiftPlugin(mockContext, "bounce.1000");
 
-      expect(element.style.animationDuration).toBe("1000ms");
+      await vi.waitFor(() => {
+        expect(element.style.animationDuration).toBe("1000ms");
+      });
     });
 
-    it("should apply custom duration and iterations", () => {
+    it("should apply custom duration and iterations", async () => {
       shiftPlugin(mockContext, "bounce.500.3");
 
-      expect(element.style.animationDuration).toBe("500ms");
-      expect(element.style.animationIterationCount).toBe("3");
+      await vi.waitFor(() => {
+        expect(element.style.animationDuration).toBe("500ms");
+        expect(element.style.animationIterationCount).toBe("3");
+      });
     });
 
     it("should handle unknown animation preset", () => {
@@ -181,16 +189,18 @@ describe("Shift Plugin", () => {
       consoleSpy.mockRestore();
     });
 
-    it("should work when Web Animations API is unavailable", () => {
+    it("should work when Web Animations API is unavailable", async () => {
       // @ts-expect-error mutate for test
       element.animate = undefined;
 
       shiftPlugin(mockContext, "bounce");
 
-      expect(element.style.animationName).toMatch(/^volt-shift-/);
+      await vi.waitFor(() => {
+        expect(element.style.animationName).toMatch(/^volt-shift-/);
+      });
     });
 
-    it("should normalize inline elements for transform animations", () => {
+    it("should normalize inline elements for transform animations", async () => {
       const span = document.createElement("span");
       span.textContent = "⚙️";
       container.append(span);
@@ -199,10 +209,12 @@ describe("Shift Plugin", () => {
 
       shiftPlugin(context, "spin");
 
-      expect(span.style.display).toBe("inline-block");
-      expect(span.dataset.voltShiftDisplayManaged).toBe("infinite");
-      expect(span.dataset.voltShiftRuns).toBe("1");
-      expect(span.style.transformOrigin).toBe("center center");
+      await vi.waitFor(() => {
+        expect(span.style.display).toBe("inline-block");
+        expect(span.dataset.voltShiftDisplayManaged).toBe("infinite");
+        expect(span.dataset.voltShiftRuns).toBe("1");
+        expect(span.style.transformOrigin).toBe("center center");
+      });
     });
   });
 
@@ -220,26 +232,30 @@ describe("Shift Plugin", () => {
       expect(element.dataset.voltShiftRuns).toBe("1");
     });
 
-    it("should not trigger animation when signal stays truthy", () => {
+    it("should not trigger animation when signal stays truthy", async () => {
       const triggerSignal = signal(true);
       mockContext.findSignal = vi.fn().mockReturnValue(triggerSignal);
 
       shiftPlugin(mockContext, "trigger:bounce");
 
-      expect(element.dataset.voltShiftRuns).toBe("1");
+      await vi.waitFor(() => {
+        expect(element.dataset.voltShiftRuns).toBe("1");
+      });
 
       triggerSignal.set(true);
 
       expect(element.dataset.voltShiftRuns).toBe("1");
     });
 
-    it("should trigger animation on initial mount if signal is truthy", () => {
+    it("should trigger animation on initial mount if signal is truthy", async () => {
       const triggerSignal = signal(true);
       mockContext.findSignal = vi.fn().mockReturnValue(triggerSignal);
 
       shiftPlugin(mockContext, "trigger:bounce");
 
-      expect(element.dataset.voltShiftRuns).toBe("1");
+      await vi.waitFor(() => {
+        expect(element.dataset.voltShiftRuns).toBe("1");
+      });
     });
 
     it("should handle signal not found", () => {
@@ -263,6 +279,56 @@ describe("Shift Plugin", () => {
       expect(element.dataset.voltShiftRuns).toBe("1");
       expect(element.style.animationDuration).toBe("800ms");
       expect(element.style.animationIterationCount).toBe("2");
+    });
+
+    it("should stop infinite animations when signal becomes falsy", async () => {
+      const spinSignal = signal(true);
+      mockContext.findSignal = vi.fn().mockReturnValue(spinSignal);
+
+      shiftPlugin(mockContext, "spin:spin");
+
+      await vi.waitFor(() => {
+        expect(element.style.animationName).toMatch(/^volt-shift-/);
+        expect(element.style.animationIterationCount).toBe("infinite");
+      });
+
+      spinSignal.set(false);
+
+      expect(element.style.animationName).toBe("");
+      expect(element.style.animationIterationCount).toBe("");
+    });
+
+    it("should not stop finite animations when signal becomes falsy", async () => {
+      const triggerSignal = signal(true);
+      mockContext.findSignal = vi.fn().mockReturnValue(triggerSignal);
+
+      shiftPlugin(mockContext, "trigger:bounce");
+
+      await vi.waitFor(() => {
+        expect(element.style.animationName).toMatch(/^volt-shift-/);
+      });
+
+      triggerSignal.set(false);
+
+      expect(element.style.animationName).toMatch(/^volt-shift-/);
+    });
+
+    it("should restart infinite animation when signal toggles", async () => {
+      const spinSignal = signal(true);
+      mockContext.findSignal = vi.fn().mockReturnValue(spinSignal);
+
+      shiftPlugin(mockContext, "spin:spin");
+
+      await vi.waitFor(() => {
+        expect(element.dataset.voltShiftRuns).toBe("1");
+      });
+
+      spinSignal.set(false);
+      expect(element.style.animationName).toBe("");
+
+      spinSignal.set(true);
+
+      expect(element.dataset.voltShiftRuns).toBe("2");
     });
   });
 
@@ -291,18 +357,16 @@ describe("Shift Plugin", () => {
 
   describe("Animation Cleanup", () => {
     it("should clear inline animation after it completes", async () => {
-      vi.useFakeTimers();
-
       shiftPlugin(mockContext, "bounce");
 
-      expect(element.style.animationName).toMatch(/^volt-shift-/);
+      await vi.waitFor(() => {
+        expect(element.style.animationName).toMatch(/^volt-shift-/);
+      });
 
-      await vi.advanceTimersByTimeAsync(120);
+      await new Promise((resolve) => setTimeout(resolve, 150));
 
       expect(element.style.animationName).toBe("");
       expect(element.style.animationFillMode).toBe("");
-
-      vi.useRealTimers();
     });
 
     it("should cleanup signal subscription", () => {

@@ -294,6 +294,51 @@ describe("Evaluator - Functional Tests", () => {
       expect(evaluate("status == 'active'", scope)).toBe(true);
       expect(evaluate("status == 'inactive'", scope)).toBe(false);
     });
+
+    it("should support spreading signals containing arrays", () => {
+      scope.items = signal([2, 3, 4]);
+      const result = evaluate("[1, ...items, 5]", scope);
+      expect(result).toEqual([1, 2, 3, 4, 5]);
+    });
+
+    it("should support spreading signals in complex expressions", () => {
+      scope.todos = signal([{ id: 1, text: "Learn" }, { id: 2, text: "Build" }]);
+      scope.newTodo = { id: 3, text: "Ship" };
+      const result = evaluate("[...todos, newTodo]", scope);
+      expect(result).toEqual([{ id: 1, text: "Learn" }, { id: 2, text: "Build" }, { id: 3, text: "Ship" }]);
+    });
+
+    it("should support iterating over signals containing arrays", () => {
+      scope.items = signal([1, 2, 3]);
+      const result = evaluate("[...items].map(x => x * 2)", scope);
+      expect(result).toEqual([2, 4, 6]);
+    });
+
+    it("should handle spreading non-iterable signals gracefully", () => {
+      scope.count = signal(42);
+      expect(() => evaluate("[...count]", scope)).toThrow();
+    });
+
+    it("should unwrap signals in object literals when unwrapSignals is false", () => {
+      scope.id = signal(42);
+      scope.name = signal("Alice");
+      const result = evaluate("{id: id, name: name}", scope, { unwrapSignals: false });
+      expect(result).toEqual({ id: 42, name: "Alice" });
+    });
+
+    it("should unwrap signals in complex object literals", () => {
+      scope.todoId = signal(3);
+      scope.todoText = signal("New task");
+      scope.todoDone = signal(false);
+      const result = evaluate("{id: todoId, text: todoText, done: todoDone}", scope, { unwrapSignals: false });
+      expect(result).toEqual({ id: 3, text: "New task", done: false });
+    });
+
+    it("should not unwrap method calls in object literals", () => {
+      scope.text = signal("  hello  ");
+      const result = evaluate("{value: text.trim()}", scope, { unwrapSignals: false });
+      expect(result).toEqual({ value: "hello" });
+    });
   });
 
   describe("Expression Caching", () => {
