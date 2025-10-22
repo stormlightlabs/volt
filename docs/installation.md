@@ -139,7 +139,7 @@ For SSR applications, use the `hydrate()` function instead of `charge()` to pres
 </script>
 ```
 
-See the [Server-Side Rendering & Lifecycle](./lifecycle) documentation for complete SSR patterns and hydration strategies.
+See the [Server-Side Rendering & Lifecycle](./usage/lifecycle) documentation for complete SSR patterns and hydration strategies.
 
 ## Plugin Setup
 
@@ -178,6 +178,6 @@ VoltX.js requires modern browsers with support for:
 ## Next Up
 
 - Read the [Framework Overview](./overview) to understand core concepts
-- Learn about [State Management](./state) with signals and computed values
-- Explore available [Bindings](./bindings) for DOM manipulation
-- Check out [Expression Evaluation](./expressions) for template syntax
+- Learn about [State Management](./usage/state) with signals and computed values
+- Explore available [Bindings](./usage/bindings) for DOM manipulation
+- Check out [Expression Evaluation](./usage/expressions) for template syntax

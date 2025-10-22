@@ -18,12 +18,12 @@
 | v0.3.0  |   ✓   | [Global State](#global-state)                                                    |
 | v0.4.0  |   ✓   | [Animation & Transitions](#animation--transitions)                               |
 | v0.5.0  |       | [History API Routing Plugin](#history-api-routing-plugin)                        |
+|         |       | [Navigation & History Management](#navigation--history-management)               |
 |         |   ✓   | [Refactor](#evaluator--binder-hardening)                                         |
-|         |       | [Persistence & Offline](#persistence--offline)                                   |
-|         |       | [Background Requests & Reactive Polling](#background-requests--reactive-polling) |
-| v0.6.0  |       | [Navigation & History Management](#navigation--history-management)               |
+| v0.6.0  |       | [Background Requests & Reactive Polling](#background-requests--reactive-polling) |
 | v0.7.0  |       | [Streaming & Patch Engine](#streaming--patch-engine)                             |
 | v0.8.0  |       | PWA Capabilities                                                                 |
+|         |       | [Persistence & Offline](#persistence--offline)                                   |
 | v0.9.0  |       | [Inspector & Developer Tools](#inspector--developer-tools)                       |
 | v1.0.0  |       | [Stable Release](#stable-release)                                                |
 
@@ -72,9 +72,6 @@ _NOTE_: `data-x-*` is now `data-volt-*`
 **Goal:** Use JavaScript Proxies to improve reactivity ergonomics and automatic dependency tracking.
 **Outcome:** More intuitive API with automatic dependency tracking and optional deep reactivity for objects/arrays.
 **Summary:** Proxy-driven automatic dependency tracking, deep reactive() objects, reactive arrays, lazy signal creation, and debugging utilities improve reactivity ergonomics and performance.
-**Notes:**
-    - Separate reactive() function for objects/arrays to gives users choice
-    - Keep .get()/.set() - explicitness is valuable for understanding reactivity (include in docs)
 
 ### Reactive Attributes & Event Modifiers
 
@@ -189,7 +186,7 @@ _NOTE_: `data-x-*` is now `data-volt-*`
     - Full API reference with examples
     - Create generator in `@voltx/cli` package
     - Finalized plugin registry and CLI (`volt plugins list/init`)
-    - Versioned documentation (stormlightlabs.github.io/volt)
+    - Versioned documentation (<https://stormlightlabs.github.io/volt>)
     - Announcement post and release notes
     - Community contribution guide & governance doc
 
@@ -198,6 +195,8 @@ _NOTE_: `data-x-*` is now `data-volt-*`
 ### Evaluator & Binder Hardening
 
 All expression evaluation now flows through a cached `new Function` compiler guarded by a hardened scope proxy, with the binder slimmed into a directive registry so plugins self-register while tests verify the sandboxed error surfaces.
+
+### Naming
 
 ## Examples
 
@@ -235,7 +234,7 @@ These will live in an example repo.
 
 - Authentication Flows - Login, signup, password reset, email verification (Go, Python, Rust, Node)
 - File Upload with Progress - Chunked uploads, progress bars, validation (Go, Python, Rust, Node)
-- Search with Server-Side Filtering - Debounced search, paginated results (Go, Python,Rust,  Node)
+- Search with Server-Side Filtering - Debounced search, paginated results (Go, Python, Rust,  Node)
 
 ### Desktop Apps
 
