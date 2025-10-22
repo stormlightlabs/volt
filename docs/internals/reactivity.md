@@ -52,14 +52,48 @@ Effects are deliberately eager. They run once on creation so initialisation logi
 
 While this document focuses on signals, most application code interacts with `reactive()` objects.
 These are proxies backed by signals; property reads call `signal.get()`, writes call `signal.set()`.
-See [Proxy Objects](./proxies.md) for a detailed discussion.
+See [Proxy Objects](./proxies) for a detailed discussion.
+
+## Expression Evaluation and Signal Unwrapping
+
+The expression evaluator bridges declarative markup with the reactive core. It compiles attribute expressions into functions that run in a sandboxed scope proxy.
+
+### Auto-Unwrapping Behavior
+
+By default, the evaluator automatically unwraps signals in read contexts (bindings like `data-volt-text`, `data-volt-if`, etc.). This enables natural comparisons and operations:
+
+```html
+<div data-volt data-volt-state='{"page": "home"}'>
+  <!-- page signal is auto-unwrapped, so === comparison works -->
+  <div data-volt-if="page === 'home'">Home Content</div>
+</div>
+```
+
+Without auto-unwrapping, strict equality (`===`) would compare the signal wrapper object to the string `'home'`, always returning false. Auto-unwrapping ensures the comparison uses the signal's value.
+
+### Event Handlers
+
+In event handlers (`data-volt-on-*`) and initialization code (`data-volt-init`), signals are **not** auto-unwrapped. This preserves access to signal methods like `.set()` and `.subscribe()`:
+
+```html
+<button data-volt-on-click="count.set(count.get() + 1)">Increment</button>
+```
+
+### Implementation
+
+The evaluator uses a scope proxy that wraps signal objects differently based on context:
+
+- **Read mode** (`unwrapSignals: true`): Returns the signal's value for transparent comparisons
+- **Write mode** (`unwrapSignals: false`): Returns a wrapped signal with `.get()`, `.set()`, and `.subscribe()` methods
+
+This dual behavior is controlled by the `opts.unwrapSignals` parameter passed to `evaluate()`.
 
 ## Scope Helpers
 
 When a scope is mounted, VoltX injects several helpers that lean on the reactive core:
 
 - `$pulse(cb)` queues `cb` on the microtask queue.
-    It’s often used to observe the DOM after reactive updates settle.
+    It's often used to observe the DOM after reactive updates settle.
 - `$probe(expr, cb)` bridges the evaluator and the tracker.
     It uses `extractDeps()` to pre-compute dependencies for the expression, subscribes to them, and re-evaluates via `evaluate()` on change.
 - `$arc`, `$uid`, `$pins`, `$store`, and `$probe` all use the same subscription mechanics.

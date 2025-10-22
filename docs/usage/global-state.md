@@ -58,7 +58,22 @@ console.log(store.get('count'));  // 5
 - `$store.get(key)` - Get signal value
 - `$store.set(key, value)` - Update signal value
 - `$store.has(key)` - Check if key exists
-- `$store[key]` - Direct signal access
+- `$store[key]` - Direct signal access (auto-unwrapped in read contexts)
+
+**Note on Signal Unwrapping:**
+
+When accessing store values via `$store[key]` in read contexts (like `data-volt-text` or `data-volt-if`), the signal is automatically unwrapped. In event handlers, use `.get()` and `.set()` methods for explicit control:
+
+```html
+<!-- Read context: signal auto-unwrapped -->
+<p data-volt-if="$store.theme === 'dark'">Dark mode active</p>
+
+<!-- Event handler: use methods -->
+<button data-volt-on-click="$store.theme.set('light')">Switch to Light</button>
+
+<!-- Or use the store's convenience methods -->
+<button data-volt-on-click="$store.set('theme', 'light')">Switch to Light</button>
+```
 
 ### `$origin`
 

@@ -55,6 +55,29 @@ volt/
     - Review [contribution](./CONTRIBUTING.md) guidelines
 - Documentation: `pnpm --filter docs docs:dev` launches the VitePress site.
 
+### Working on New Features
+
+The `lib/` package includes a comprehensive demo Vite app showcasing all VoltX.js features:
+
+```sh
+# Start the demo development server
+pnpm --filter voltx.js dev
+```
+
+The demo app essentially provides an interactive sandbox to develop and catch bugs in new implementations.
+
+#### Pages
+
+- **Home**: Framework overview and quick start examples
+- **Typography**: Volt CSS typography and layout features
+- **Interactivity**: Dialogs, buttons, event handling
+- **Forms**: Two-way binding and form validation patterns
+- **Reactivity**: Signals, computed values, conditional/list rendering
+- **Plugins**: Persistence, scroll management, URL sync
+- **Animations**: Transitions and keyframe animations
+
+Docs are the source of truth but take advantage of this environment. When developing new features, add examples to the appropriate demo section or create a new page to showcase the functionality.
+
 ## License
 
 MIT License © 2025 Stormlight Labs
