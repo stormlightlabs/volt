@@ -19,6 +19,18 @@ export {
 } from "$core/lifecycle";
 export { clearPlugins, getRegisteredPlugins, hasPlugin, registerPlugin, unregisterPlugin } from "$core/plugin";
 export { isReactive, reactive, toRaw } from "$core/reactive";
+export {
+  buildPath,
+  clearRouteCache,
+  compileRoute,
+  extractParams,
+  isMatch,
+  matchRoute,
+  matchRoutes,
+  normalizePath,
+  parseUrl,
+} from "$core/router";
+export type { RouteMatch } from "$core/router";
 export { getScopeMetadata } from "$core/scope-metadata";
 export { computed, effect, signal } from "$core/signal";
 export { deserializeScope, hydrate, isHydrated, isServerRendered, serializeScope } from "$core/ssr";

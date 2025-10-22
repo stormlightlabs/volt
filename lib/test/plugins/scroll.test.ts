@@ -17,7 +17,6 @@ describe("scroll plugin", () => {
 
       const scrollPos = signal(250);
       mount(element, { scrollPos });
-
       expect(element.scrollTop).toBe(250);
     });
 
@@ -42,7 +41,6 @@ describe("scroll plugin", () => {
 
       const scrollPos = signal("not a number" as unknown as number);
       mount(element, { scrollPos });
-
       expect(element.scrollTop).toBe(0);
     });
 
@@ -108,7 +106,6 @@ describe("scroll plugin", () => {
 
       const targetId = signal("otherSection");
       mount(element, { targetId });
-
       expect(scrollIntoViewMock).not.toHaveBeenCalled();
     });
 
@@ -122,7 +119,6 @@ describe("scroll plugin", () => {
 
       const targetId = signal("section1");
       mount(element, { targetId });
-
       expect(scrollIntoViewMock).toHaveBeenCalledOnce();
     });
   });
@@ -133,7 +129,6 @@ describe("scroll plugin", () => {
       element.dataset.voltScroll = "spy:isVisible";
 
       const isVisible = signal(false);
-
       let observerCallback!: IntersectionObserverCallback;
       const mockObserver = {
         observe: vi.fn(),
@@ -151,21 +146,17 @@ describe("scroll plugin", () => {
       }) as unknown as typeof IntersectionObserver;
 
       mount(element, { isVisible });
-
       expect(mockObserver.observe).toHaveBeenCalledWith(element);
-
       observerCallback(
         [{ isIntersecting: true, target: element } as unknown as IntersectionObserverEntry],
         mockObserver as IntersectionObserver,
       );
 
       expect(isVisible.get()).toBe(true);
-
       observerCallback(
         [{ isIntersecting: false, target: element } as unknown as IntersectionObserverEntry],
         mockObserver as IntersectionObserver,
       );
-
       expect(isVisible.get()).toBe(false);
     });
 
@@ -174,7 +165,6 @@ describe("scroll plugin", () => {
       element.dataset.voltScroll = "spy:isVisible";
 
       const isVisible = signal(false);
-
       const mockObserver = {
         observe: vi.fn(),
         disconnect: vi.fn(),
@@ -185,14 +175,12 @@ describe("scroll plugin", () => {
         thresholds: [],
       };
 
-      (globalThis as typeof globalThis).IntersectionObserver = vi.fn(() => {
-        return mockObserver;
-      }) as unknown as typeof IntersectionObserver;
+      (globalThis as typeof globalThis).IntersectionObserver = vi.fn(() =>
+        mockObserver
+      ) as unknown as typeof IntersectionObserver;
 
       const cleanup = mount(element, { isVisible });
-
       cleanup();
-
       expect(mockObserver.disconnect).toHaveBeenCalled();
     });
   });
@@ -204,7 +192,6 @@ describe("scroll plugin", () => {
 
       const smoothScroll = signal(true);
       mount(element, { smoothScroll });
-
       expect(element.style.scrollBehavior).toBe("smooth");
     });
 
@@ -214,7 +201,6 @@ describe("scroll plugin", () => {
 
       const smoothScroll = signal("smooth");
       mount(element, { smoothScroll });
-
       expect(element.style.scrollBehavior).toBe("smooth");
     });
 
@@ -260,12 +246,129 @@ describe("scroll plugin", () => {
 
       const smoothScroll = signal(true);
       const cleanup = mount(element, { smoothScroll });
-
       expect(element.style.scrollBehavior).toBe("smooth");
+      cleanup();
+      expect(element.style.scrollBehavior).toBe("");
+    });
+  });
+
+  describe("history mode", () => {
+    it("saves scroll position on volt:navigate event", () => {
+      const element = document.createElement("div");
+      element.dataset.voltScroll = "history";
+      Object.defineProperty(element, "scrollTop", { writable: true, value: 150 });
+
+      mount(element, {});
+      globalThis.dispatchEvent(new CustomEvent("volt:navigate", { detail: { url: "/page1" } }));
+      expect(element.dataset.voltScroll).toBe("history");
+    });
+
+    it("restores scroll position on volt:popstate event", async () => {
+      const element = document.createElement("div");
+      element.dataset.voltScroll = "history";
+
+      let currentScrollTop = 0;
+      Object.defineProperty(element, "scrollTop", {
+        get() {
+          return currentScrollTop;
+        },
+        set(value) {
+          currentScrollTop = value;
+        },
+        configurable: true,
+      });
+
+      mount(element, {});
+
+      globalThis.history.replaceState({}, "", "/page1");
+      element.scrollTop = 300;
+      globalThis.dispatchEvent(new CustomEvent("volt:navigate", { detail: { url: "/page1" } }));
+
+      globalThis.history.replaceState({}, "", "/page2");
+      element.scrollTop = 0;
+      globalThis.dispatchEvent(new CustomEvent("volt:navigate", { detail: { url: "/page2" } }));
+
+      globalThis.history.replaceState({}, "", "/page1");
+      element.scrollTop = 0;
+      globalThis.dispatchEvent(new CustomEvent("volt:popstate", { detail: { state: {} } }));
+
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+
+      expect(element.scrollTop).toBe(300);
+    });
+
+    it("handles multiple navigation cycles correctly", async () => {
+      const element = document.createElement("div");
+      element.dataset.voltScroll = "history";
+
+      let currentScrollTop = 0;
+      Object.defineProperty(element, "scrollTop", {
+        get() {
+          return currentScrollTop;
+        },
+        set(value) {
+          currentScrollTop = value;
+        },
+        configurable: true,
+      });
+
+      mount(element, {});
+
+      globalThis.history.replaceState({}, "", "/page1");
+      element.scrollTop = 100;
+      globalThis.dispatchEvent(new CustomEvent("volt:navigate", { detail: { url: "/page1" } }));
+
+      globalThis.history.replaceState({}, "", "/page2");
+      element.scrollTop = 200;
+      globalThis.dispatchEvent(new CustomEvent("volt:navigate", { detail: { url: "/page2" } }));
+
+      globalThis.history.replaceState({}, "", "/page3");
+      element.scrollTop = 300;
+      globalThis.dispatchEvent(new CustomEvent("volt:navigate", { detail: { url: "/page3" } }));
+
+      globalThis.history.replaceState({}, "", "/page2");
+      element.scrollTop = 0;
+      globalThis.dispatchEvent(new CustomEvent("volt:popstate", { detail: { state: {} } }));
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+      expect(element.scrollTop).toBe(200);
+
+      globalThis.history.replaceState({}, "", "/page1");
+      element.scrollTop = 0;
+      globalThis.dispatchEvent(new CustomEvent("volt:popstate", { detail: { state: {} } }));
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+      expect(element.scrollTop).toBe(100);
+    });
+
+    it("cleans up event listeners on unmount", () => {
+      const element = document.createElement("div");
+      element.dataset.voltScroll = "history";
+
+      const cleanup = mount(element, {});
+
+      Object.defineProperty(element, "scrollTop", { writable: true, value: 100 });
+      globalThis.dispatchEvent(new CustomEvent("volt:navigate"));
 
       cleanup();
 
-      expect(element.style.scrollBehavior).toBe("");
+      Object.defineProperty(element, "scrollTop", { writable: true, value: 200 });
+      globalThis.dispatchEvent(new CustomEvent("volt:navigate"));
+
+      expect(element.scrollTop).toBe(200);
+    });
+
+    it("does not restore scroll position if not previously saved", async () => {
+      const element = document.createElement("div");
+      element.dataset.voltScroll = "history";
+      Object.defineProperty(element, "scrollTop", { writable: true, value: 50 });
+
+      mount(element, {});
+
+      globalThis.history.replaceState({}, "", "/new-page");
+      globalThis.dispatchEvent(new CustomEvent("volt:popstate", { detail: { state: {} } }));
+
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+
+      expect(element.scrollTop).toBe(50);
     });
   });
 
@@ -276,9 +379,7 @@ describe("scroll plugin", () => {
       element.dataset.voltScroll = "invalidformat";
 
       mount(element, {});
-
       expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining("Invalid scroll binding"));
-
       errorSpy.mockRestore();
     });
 
@@ -288,9 +389,7 @@ describe("scroll plugin", () => {
       element.dataset.voltScroll = "unknown:signal";
 
       mount(element, {});
-
       expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining("Unknown scroll mode: \"unknown\""));
-
       errorSpy.mockRestore();
     });
 
@@ -300,9 +399,7 @@ describe("scroll plugin", () => {
       element.dataset.voltScroll = "restore:nonexistent";
 
       mount(element, {});
-
       expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining("Signal \"nonexistent\" not found"));
-
       errorSpy.mockRestore();
     });
   });

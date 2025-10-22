@@ -1,20 +1,21 @@
 /**
  * Navigate plugin for client-side navigation with History API
  *
- * Provides seamless client-side navigation by intercepting link clicks and form submissions,
- * integrating with the History API and View Transition API for smooth page transitions.
+ * Intercepts link clicks and form submissions. Integrates with the History API and View Transition API for smooth page transitions.
  */
 
 import { registerDirective } from "$core/binder";
 import { hasModifier, parseModifiers } from "$core/modifiers";
 import { startViewTransition } from "$core/view-transitions";
+import type { Optional } from "$types/helpers";
 import type { BindingContext, Modifier, PluginContext } from "$types/volt";
 
-type NavigationState = { scrollPosition?: { x: number; y: number }; timestamp: number };
+type NavigationState = { scrollPosition?: { x: number; y: number }; focusSelector?: string; timestamp: number };
 
 type NavigationOpts = { replace?: boolean; transition?: boolean; transitionName?: string };
 
 const scrollPositions = new Map<string, { x: number; y: number }>();
+const focusSelectors = new Map<string, string>();
 
 /**
  * Navigate directive handler for client-side navigation
@@ -71,7 +72,8 @@ function handleLinkNavigation(ctx: BindingContext, value: string, modifiers: Mod
   }
 
   if (hasModifier(modifiers, "prefetch")) {
-    setupPrefetch(link, targetUrl);
+    const viewportPrefetch = hasModifier(modifiers, "viewport");
+    setupPrefetch(link, targetUrl, { viewport: viewportPrefetch });
   }
 
   const clickHandler = async (event: MouseEvent) => {
@@ -126,7 +128,19 @@ async function navigateTo(url: string, options: NavigationOpts = {}): Promise<vo
   const currentKey = `${globalThis.location.pathname}${globalThis.location.search}`;
   scrollPositions.set(currentKey, { x: window.scrollX, y: window.scrollY });
 
-  const state: NavigationState = { scrollPosition: { x: window.scrollX, y: window.scrollY }, timestamp: Date.now() };
+  const activeElement = document.activeElement;
+  const focusSelector = activeElement && activeElement !== document.body
+    ? getElementSelector(activeElement)
+    : undefined;
+  if (focusSelector) {
+    focusSelectors.set(currentKey, focusSelector);
+  }
+
+  const state: NavigationState = {
+    scrollPosition: { x: window.scrollX, y: window.scrollY },
+    focusSelector,
+    timestamp: Date.now(),
+  };
 
   const performNavigation = async () => {
     if (replace) {
@@ -140,6 +154,8 @@ async function navigateTo(url: string, options: NavigationOpts = {}): Promise<vo
     );
 
     window.scrollTo(0, 0);
+
+    resetFocusAfterNavigation();
   };
 
   if (transition && typeof transitionName === "string") {
@@ -147,6 +163,85 @@ async function navigateTo(url: string, options: NavigationOpts = {}): Promise<vo
   } else {
     await performNavigation();
   }
+}
+
+/**
+ * Generate a unique selector for an element (for focus restoration)
+ * Tries id, then name, then data attributes, then position-based selector
+ */
+function getElementSelector(element: Element): Optional<string> {
+  if (element.id) {
+    return `#${element.id}`;
+  }
+
+  if (element.hasAttribute("name")) {
+    const name = element.getAttribute("name");
+    const tag = element.tagName.toLowerCase();
+    return `${tag}[name="${name}"]`;
+  }
+
+  for (const attr of element.attributes) {
+    if (attr.name.startsWith("data-volt-")) {
+      return `[${attr.name}="${attr.value}"]`;
+    }
+  }
+
+  if (element.hasAttribute("aria-label")) {
+    const label = element.getAttribute("aria-label");
+    return `[aria-label="${label}"]`;
+  }
+
+  const parent = element.parentElement;
+  if (!parent) return undefined;
+
+  const siblings = [...parent.children];
+  const index = siblings.indexOf(element);
+  const tag = element.tagName.toLowerCase();
+
+  return `${tag}:nth-child(${index + 1})`;
+}
+
+/**
+ * Reset focus to a sensible location after navigation
+ * Tries to focus main content area or first focusable element
+ */
+function resetFocusAfterNavigation(): void {
+  const main = document.querySelector("main, [role='main'], #main-content");
+  if (main instanceof HTMLElement && main.tabIndex < 0) {
+    main.tabIndex = -1;
+  }
+
+  if (main instanceof HTMLElement) {
+    main.focus({ preventScroll: true });
+    return;
+  }
+
+  const firstHeading = document.querySelector("h1");
+  if (firstHeading instanceof HTMLElement) {
+    if (firstHeading.tabIndex < 0) {
+      firstHeading.tabIndex = -1;
+    }
+    firstHeading.focus({ preventScroll: true });
+    return;
+  }
+
+  document.body.focus({ preventScroll: true });
+}
+
+/**
+ * Restore focus to the previously focused element (for back/forward navigation)
+ */
+function restoreFocus(selector: string): boolean {
+  try {
+    const element = document.querySelector(selector);
+    if (element instanceof HTMLElement) {
+      element.focus({ preventScroll: true });
+      return true;
+    }
+  } catch (error) {
+    console.warn(`Could not restore focus to selector: ${selector}`, error);
+  }
+  return false;
 }
 
 function isExternalLink(url: string): boolean {
@@ -158,21 +253,43 @@ function isExternalLink(url: string): boolean {
   }
 }
 
-function setupPrefetch(element: HTMLElement, url: string): void {
+/**
+ * Setup resource prefetching for a link
+ *
+ * By default, prefetches on hover/focus (interaction-based).
+ * With viewport option, prefetches when element enters viewport (IntersectionObserver).
+ */
+function setupPrefetch(element: HTMLElement, url: string, opts: { viewport?: boolean } = {}): void {
+  const { viewport = false } = opts;
   let prefetched = false;
 
   const prefetch = () => {
     if (prefetched) return;
     prefetched = true;
 
-    const link = document.createElement("link");
-    link.rel = "prefetch";
-    link.href = url;
-    document.head.append(link);
+    fetch(url, { method: "GET", priority: "low", credentials: "same-origin" } as RequestInit).catch(() => {
+      const link = document.createElement("link");
+      link.rel = "prefetch";
+      link.href = url;
+      document.head.append(link);
+    });
   };
 
-  element.addEventListener("mouseenter", prefetch, { once: true, passive: true });
-  element.addEventListener("focus", prefetch, { once: true, passive: true });
+  if (viewport) {
+    const observer = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        if (entry.isIntersecting) {
+          prefetch();
+          observer.disconnect();
+        }
+      }
+    }, { rootMargin: "50px" });
+
+    observer.observe(element);
+  } else {
+    element.addEventListener("mouseenter", prefetch, { once: true, passive: true });
+    element.addEventListener("focus", prefetch, { once: true, passive: true });
+  }
 }
 
 /**
@@ -185,11 +302,20 @@ export function initNavigationListener(): () => void {
 
     const key = `${globalThis.location.pathname}${globalThis.location.search}`;
     const savedPosition = scrollPositions.get(key);
+    const savedFocus = focusSelectors.get(key);
 
     if (savedPosition) {
       window.scrollTo(savedPosition.x, savedPosition.y);
     } else if (state?.scrollPosition) {
       window.scrollTo(state.scrollPosition.x, state.scrollPosition.y);
+    }
+
+    if (savedFocus) {
+      restoreFocus(savedFocus);
+    } else if (state?.focusSelector) {
+      restoreFocus(state.focusSelector);
+    } else {
+      resetFocusAfterNavigation();
     }
 
     globalThis.dispatchEvent(new CustomEvent("volt:popstate", { detail: { state }, bubbles: true, cancelable: false }));

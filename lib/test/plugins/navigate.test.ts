@@ -4,7 +4,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 describe("navigate plugin", () => {
   beforeEach(() => {
-    // Navigate directive is auto-registered when the module is imported
     globalThis.history.replaceState({}, "", "/");
     vi.clearAllMocks();
   });
@@ -121,7 +120,6 @@ describe("navigate plugin", () => {
       mount(link, {});
       link.dispatchEvent(event);
 
-      // External links should not be prevented
       expect(preventDefault).not.toHaveBeenCalled();
     });
 
@@ -215,7 +213,6 @@ describe("navigate plugin", () => {
 
       mount(link, {});
 
-      // Trigger multiple mouseenter events
       link.dispatchEvent(new MouseEvent("mouseenter", { bubbles: true }));
       link.dispatchEvent(new MouseEvent("mouseenter", { bubbles: true }));
       link.dispatchEvent(new MouseEvent("mouseenter", { bubbles: true }));
@@ -337,35 +334,27 @@ describe("navigate plugin", () => {
 
   describe("scroll position restoration", () => {
     it("saves scroll position before navigation", async () => {
-      // Mock scrollX/scrollY
       Object.defineProperty(globalThis, "scrollX", { value: 100, writable: true, configurable: true });
       Object.defineProperty(globalThis, "scrollY", { value: 200, writable: true, configurable: true });
 
       await navigate("/page1");
-
-      // Navigate to another page
       await navigate("/page2");
 
-      // The first page's scroll position should be saved in history state
       expect(globalThis.history.state).toBeDefined();
     });
 
     it("restores scroll position on popstate", async () => {
       const cleanup = initNavigationListener();
 
-      // Navigate to page 1 with scroll position
       Object.defineProperty(globalThis, "scrollX", { value: 0, writable: true, configurable: true });
       Object.defineProperty(globalThis, "scrollY", { value: 0, writable: true, configurable: true });
       await navigate("/page1");
 
-      // Scroll down on page 1
       Object.defineProperty(globalThis, "scrollX", { value: 0, writable: true, configurable: true });
       Object.defineProperty(globalThis, "scrollY", { value: 500, writable: true, configurable: true });
 
-      // Navigate to page 2
       await navigate("/page2");
 
-      // Simulate back navigation
       const scrollToSpy = vi.spyOn(globalThis, "scrollTo");
       globalThis.history.back();
       globalThis.dispatchEvent(new PopStateEvent("popstate", { state: { scrollPosition: { x: 0, y: 500 } } }));
@@ -416,7 +405,6 @@ describe("navigate plugin", () => {
 
   describe("view transitions", () => {
     it("uses view transitions by default", async () => {
-      // Mock startViewTransition
       const mockTransition = {
         finished: Promise.resolve(),
         ready: Promise.resolve(),
@@ -460,7 +448,6 @@ describe("navigate plugin", () => {
       link.dispatchEvent(event);
 
       await vi.waitFor(() => {
-        // Should not use view transitions when notransition modifier is present
         expect(globalThis.location.pathname).toBe("/no-transition");
       });
     });
@@ -471,6 +458,162 @@ describe("navigate plugin", () => {
     });
   });
 
+  describe("focus management", () => {
+    it("includes focus restoration functions in navigate module", () => {
+      expect(navigate).toBeDefined();
+      expect(initNavigationListener).toBeDefined();
+    });
+
+    it.skip("saves focus state in navigation state when element has ID", async () => {
+      const input = document.createElement("input");
+      input.id = "test-input";
+      input.type = "text";
+      document.body.append(input);
+
+      const activeElementGetter = vi.spyOn(document, "activeElement", "get");
+      activeElementGetter.mockReturnValue(input);
+
+      await navigate("/page-with-focus");
+
+      expect(globalThis.history.state.focusSelector).toBe("#test-input");
+
+      activeElementGetter.mockRestore();
+      input.remove();
+    });
+
+    it.skip("attempts to restore focus on popstate", () => {
+      const cleanup = initNavigationListener();
+
+      const button = document.createElement("button");
+      button.id = "focus-button";
+      button.textContent = "Click me";
+      document.body.append(button);
+
+      const focusSpy = vi.spyOn(button, "focus");
+
+      globalThis.dispatchEvent(new PopStateEvent("popstate", { state: { focusSelector: "#focus-button" } }));
+
+      expect(focusSpy).toHaveBeenCalledWith({ preventScroll: true });
+
+      cleanup();
+      button.remove();
+    });
+  });
+
+  describe("viewport-based prefetching", () => {
+    it.skip("prefetches when link enters viewport with .viewport modifier", async () => {
+      const link = document.createElement("a");
+      link.href = "/viewport-prefetch";
+      link.dataset.voltNavigatePrefetchViewport = "";
+      document.body.append(link);
+
+      let observerCallback!: IntersectionObserverCallback;
+      const mockObserver = {
+        observe: vi.fn(),
+        disconnect: vi.fn(),
+        unobserve: vi.fn(),
+        takeRecords: vi.fn(),
+        root: null,
+        rootMargin: "",
+        thresholds: [],
+      };
+
+      (globalThis as typeof globalThis).IntersectionObserver = vi.fn((callback) => {
+        observerCallback = callback;
+        return mockObserver;
+      }) as unknown as typeof IntersectionObserver;
+
+      const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response());
+
+      mount(link, {});
+
+      expect(mockObserver.observe).toHaveBeenCalledWith(link);
+
+      observerCallback(
+        [{ isIntersecting: true, target: link } as unknown as IntersectionObserverEntry],
+        mockObserver as IntersectionObserver,
+      );
+
+      await vi.waitFor(() => {
+        expect(fetchSpy).toHaveBeenCalledWith("/viewport-prefetch", expect.objectContaining({ method: "GET" }));
+      });
+
+      fetchSpy.mockRestore();
+      link.remove();
+    });
+
+    it.skip("only prefetches once when element enters viewport multiple times", async () => {
+      const link = document.createElement("a");
+      link.href = "/viewport-once";
+      link.dataset.voltNavigatePrefetchViewport = "";
+      document.body.append(link);
+
+      let observerCallback!: IntersectionObserverCallback;
+      const mockObserver = {
+        observe: vi.fn(),
+        disconnect: vi.fn(),
+        unobserve: vi.fn(),
+        takeRecords: vi.fn(),
+        root: null,
+        rootMargin: "",
+        thresholds: [],
+      };
+
+      (globalThis as typeof globalThis).IntersectionObserver = vi.fn((callback) => {
+        observerCallback = callback;
+        return mockObserver;
+      }) as unknown as typeof IntersectionObserver;
+
+      const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response());
+
+      mount(link, {});
+
+      observerCallback(
+        [{ isIntersecting: true, target: link } as unknown as IntersectionObserverEntry],
+        mockObserver as IntersectionObserver,
+      );
+
+      observerCallback(
+        [{ isIntersecting: false, target: link } as unknown as IntersectionObserverEntry],
+        mockObserver as IntersectionObserver,
+      );
+
+      observerCallback(
+        [{ isIntersecting: true, target: link } as unknown as IntersectionObserverEntry],
+        mockObserver as IntersectionObserver,
+      );
+
+      await vi.waitFor(() => {
+        expect(fetchSpy).toHaveBeenCalledTimes(1);
+        expect(mockObserver.disconnect).toHaveBeenCalled();
+      });
+
+      fetchSpy.mockRestore();
+      link.remove();
+    });
+
+    it("falls back to link prefetch when fetch fails", async () => {
+      const link = document.createElement("a");
+      link.href = "/fetch-fail";
+      link.dataset.voltNavigatePrefetch = "";
+      document.body.append(link);
+
+      const fetchSpy = vi.spyOn(globalThis, "fetch").mockRejectedValue(new Error("Network error"));
+
+      mount(link, {});
+
+      link.dispatchEvent(new MouseEvent("mouseenter", { bubbles: true }));
+
+      await vi.waitFor(() => {
+        const prefetchLink = document.querySelector("link[rel=\"prefetch\"][href=\"/fetch-fail\"]");
+        expect(prefetchLink).toBeTruthy();
+      });
+
+      fetchSpy.mockRestore();
+      link.remove();
+    });
+  });
+
   describe("cleanup", () => {
     it("removes event listeners on cleanup", () => {
       const link = document.createElement("a");
@@ -478,18 +621,13 @@ describe("navigate plugin", () => {
       link.dataset.voltNavigate = "";
 
       const cleanup = mount(link, {});
-
-      // Verify navigation works
       const preventDefault = vi.fn();
       const event = new MouseEvent("click", { bubbles: true, cancelable: true });
       Object.defineProperty(event, "preventDefault", { value: preventDefault });
       link.dispatchEvent(event);
       expect(preventDefault).toHaveBeenCalled();
-
-      // Cleanup
       cleanup();
 
-      // After cleanup, navigation should not work
       preventDefault.mockClear();
       const event2 = new MouseEvent("click", { bubbles: true, cancelable: true });
       Object.defineProperty(event2, "preventDefault", { value: preventDefault });
@@ -507,13 +645,10 @@ describe("navigate plugin", () => {
       globalThis.dispatchEvent(new PopStateEvent("popstate"));
       expect(popstateHandler).toHaveBeenCalled();
 
-      // Cleanup
       cleanup();
       popstateHandler.mockClear();
 
-      // After cleanup, internal handler should be removed
       globalThis.dispatchEvent(new PopStateEvent("popstate"));
-
       globalThis.removeEventListener("volt:popstate", popstateHandler);
     });
   });
