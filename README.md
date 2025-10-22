@@ -4,6 +4,8 @@
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![JSR](https://jsr.io/badges/@voltx/core)](https://jsr.io/@voltx/core)
 ![NPM Version](https://img.shields.io/npm/v/voltx.js?logo=npm)
+![Status - Test](https://github.com/stormlightlabs/volt/actions/workflows/test.yml/badge.svg)
+![Status - Lint](https://github.com/stormlightlabs/volt/actions/workflows/lint.yml/badge.svg)
 
 > ⚠️ **Pre-release Software**: VoltX.js remains in active development. Expect breaking changes until v1.0 and evaluate before using in production.
 
