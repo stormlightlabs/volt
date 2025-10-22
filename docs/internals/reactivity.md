@@ -1,6 +1,6 @@
 # Reactivity Architecture
 
-VoltX’s reactivity system is built around a small set of primitives—signals, computed signals, and effects—that coordinate via an explicit dependency tracker.
+VoltX’s reactivity system is built around a small set of primitives: signals, computed signals, and effects, that coordinate via an explicit dependency tracker.
 This document explains how those pieces fit together, how updates flow through the system, and the trade-offs we made while hardening the implementation.
 
 ## Signals
@@ -88,6 +88,33 @@ The evaluator uses a scope proxy that wraps signal objects differently based on 
 
 This dual behavior is controlled by the `opts.unwrapSignals` parameter passed to `evaluate()`.
 
+### Object Literal Unwrapping
+
+A subtle challenge arises when event handlers create object literals using signal values. Consider this common pattern:
+
+```html
+<button data-volt-on-click="todos.set([...todos, {id: todoId, text: newText, done: false}])">
+  Add Todo
+</button>
+```
+
+Without special handling, the object literal `{id: todoId, text: newText, done: false}` would capture **wrapped signal proxies** as property values instead of their unwrapped values. This breaks equality comparisons later when trying to match todos by ID.
+
+To solve this, the `transformExpr` function applies a compile-time transformation: it automatically unwraps signal identifiers used directly as object property values. The expression above is rewritten to:
+
+```javascript
+{id: $unwrap(todoId), text: $unwrap(newText), done: false}
+```
+
+This transformation:
+
+- Only applies to simple identifiers after `:` in object literals (e.g., `{key: identifier}`)
+- Does not affect method calls (e.g., `{text: newText.trim()}` remains unchanged)
+- Does not affect property access or computed values (e.g., `{id: obj.id}` remains unchanged)
+- Ensures object literals created in write-mode contexts contain primitive values, not wrapper proxies
+
+This keeps the mental model simple: users write natural JavaScript object literals and the evaluator ensures signal values are materialized correctly, regardless of whether `unwrapSignals` is true or false.
+
 ## Scope Helpers
 
 When a scope is mounted, VoltX injects several helpers that lean on the reactive core:
@@ -114,13 +141,11 @@ When batching is needed, use `$pulse` or wrap updates in a custom queue.
 ## Challenges & Trade-offs
 
 - **Minimal core vs features** - The system intentionally avoids hidden mutation queues or scheduler magic.
-This keeps mental models simple but means users must explicitly batch when necessary.
+    This keeps mental models simple but means users must explicitly batch when necessary.
 - **Signal identity** - Equality checks are referential.
     While fast, it means that mutating nested objects without cloning can bypass change detection unless you touch the signal again.
     We emphasises immutable patterns or explicit `set()` calls with copies.
 - **Dependency discovery** - Parsing expressions to pre-collect dependencies (`extractDeps`) introduces heuristics (e.g. `$store.get()` handling).
     We balance accuracy with performance by focusing on common patterns and falling back to runtime evaluation if static analysis fails.
 - **Error resilience** - Subscriber callbacks, cleanup functions, and recompute bodies are wrapped in try/catch to prevent one failure from derailing the reactive loop.
-    The trade-off is noisy console logs, but the alternative—silently swallowing issues—was harder to debug.
-
-Despite the lightweight implementation, these primitives provide deterministic, traceable update flows that underpin VoltX’s declarative bindings and plugin ecosystem.
+    The trade-off is noisy console logs, but the alternative (silent errors & no observability) was harder to debug.
