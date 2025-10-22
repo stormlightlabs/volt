@@ -173,6 +173,28 @@ _NOTE_: `data-x-*` is now `data-volt-*`
     - Announcement post and release notes
     - Community contribution guide & governance doc
 
+### Better Demo
+
+**Goal:** Transform the current programmatic demo into a declarative multi-page SPA showcasing all framework and CSS features.
+**Outcome:** Production-quality reference application demonstrating VoltX.js best practices and real-world patterns.
+**Deliverables:**
+    - Convert demo from programmatic to declarative mode (charge() + data-volt attributes)
+    - Implement multi-page routing using Navigation & History API plugin
+    - Add tooltips to VoltX css using data attributes
+        - Example: data-vx-tooltip="Right" data-placement="right"
+    - Page: Home - Framework overview and feature highlights
+    - Page: Getting Started - Installation and first examples
+    - Page: Reactivity - Signals, computed, effects, bindings, conditional/list rendering
+    - Page: HTTP - Backend integration with all methods, swap strategies, retry logic
+    - Page: State - Global stores and scope helpers ($store, $scope, $pulse, $uid, $probe, $pins, $arc)
+    - Page: Persistence - localStorage/sessionStorage/IndexedDB, persist plugin, URL sync
+    - Page: Animations - Surge directive, shift plugin, View Transitions
+    - Page: Forms - Model binding, validation, event modifiers, multi-step forms
+    - Page: CSS - Complete Volt CSS showcase (typography, layout, Tufte sidenotes, tables)
+    - Page: Patterns - Real-world components (tabs, accordion, modal, autocomplete)
+    - View-source friendly code with clear examples
+    - Copy-paste ready patterns for common use cases
+
 ## Parking Lot
 
 ### Evaluator & Binder Hardening
