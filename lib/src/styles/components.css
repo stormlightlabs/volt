@@ -179,26 +179,32 @@ details[open] summary {
   z-index: 1000;
 }
 
-/* Tooltip content */
 [data-vx-tooltip]::before {
   content: attr(data-vx-tooltip);
   background: var(--color-text);
   color: var(--color-bg);
-  padding: var(--space-xs) var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
   border-radius: var(--radius-sm);
   font-size: 0.875rem;
-  white-space: nowrap;
-  max-width: 250px;
+  white-space: normal;
+  min-width: 200px;
+  max-width: 300px;
+  width: max-content;
   text-align: center;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+  line-clamp: 4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.4;
 }
 
-/* Tooltip arrow */
 [data-vx-tooltip]::after {
   content: '';
   border: 6px solid transparent;
 }
 
-/* Show on hover/focus */
 [data-vx-tooltip]:hover::before,
 [data-vx-tooltip]:hover::after,
 [data-vx-tooltip]:focus::before,
@@ -250,7 +256,6 @@ details[open] summary {
   transform: translateX(-50%) translateY(0);
 }
 
-/* Placement: Right */
 [data-vx-tooltip][data-placement="right"]::before {
   left: calc(100% + 12px);
   top: 50%;
@@ -269,7 +274,6 @@ details[open] summary {
   transform: translateY(-50%) translateX(0);
 }
 
-/* Placement: Left */
 [data-vx-tooltip][data-placement="left"]::before {
   right: calc(100% + 12px);
   top: 50%;
@@ -288,7 +292,6 @@ details[open] summary {
   transform: translateY(-50%) translateX(0);
 }
 
-/* Responsive: Hide tooltips on small screens */
 @media (max-width: 768px) {
   [data-vx-tooltip]::before,
   [data-vx-tooltip]::after {
