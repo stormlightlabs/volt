@@ -347,22 +347,22 @@ describe("http", () => {
 
     it("sets loading state", () => {
       setLoadingState(element);
-      expect(element.getAttribute("data-volt-loading")).toBe("true");
+      expect(element.dataset.voltLoading).toBe("true");
     });
 
     it("sets error state", () => {
       setErrorState(element, "Network error");
-      expect(element.getAttribute("data-volt-error")).toBe("Network error");
+      expect(element.dataset.voltError).toBe("Network error");
     });
 
     it("clears states", () => {
-      element.setAttribute("data-volt-loading", "true");
-      element.setAttribute("data-volt-error", "Some error");
+      element.dataset.voltLoading = "true";
+      element.dataset.voltError = "Some error";
 
       clearStates(element);
 
-      expect(element.hasAttribute("data-volt-loading")).toBe(false);
-      expect(element.hasAttribute("data-volt-error")).toBe(false);
+      expect(Object.hasOwn(element.dataset, "voltLoading")).toBe(false);
+      expect(Object.hasOwn(element.dataset, "voltError")).toBe(false);
     });
 
     it("dispatches volt:loading event", () => {
@@ -627,7 +627,7 @@ describe("http", () => {
       button.click();
 
       await vi.waitFor(() => {
-        expect(button.getAttribute("data-volt-loading")).toBe("true");
+        expect(button.dataset.voltLoading).toBe("true");
       });
 
       resolveRequest?.(
@@ -641,7 +641,7 @@ describe("http", () => {
       );
 
       await vi.waitFor(() => {
-        expect(button.hasAttribute("data-volt-loading")).toBe(false);
+        expect(Object.hasOwn(button.dataset, "voltLoading")).toBe(false);
       });
     });
 
@@ -657,7 +657,7 @@ describe("http", () => {
       button.click();
 
       await vi.waitFor(() => {
-        expect(button.getAttribute("data-volt-error")).toContain("Server error");
+        expect(button.dataset.voltError).toContain("Server error");
       });
     });
   });
@@ -775,7 +775,7 @@ describe("http", () => {
       button.click();
 
       await vi.waitFor(() => {
-        const errorAttr = result.getAttribute("data-volt-error");
+        const errorAttr = result.dataset.voltError;
         expect(errorAttr).toBeTruthy();
         expect(errorAttr).toContain("404");
       });
@@ -800,7 +800,7 @@ describe("http", () => {
       button.click();
 
       await vi.waitFor(() => {
-        expect(result.getAttribute("data-volt-error")).toBeTruthy();
+        expect(result.dataset.voltError).toBeTruthy();
       });
 
       expect(mockFetch).toHaveBeenCalledTimes(3);
@@ -967,7 +967,7 @@ describe("http", () => {
       });
 
       await vi.waitFor(() => {
-        expect(button.getAttribute("data-volt-error")).toBeTruthy();
+        expect(button.dataset.voltError).toBeTruthy();
         expect(spinner.style.display).toBe("none");
       }, { timeout: 1000 });
     });

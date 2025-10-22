@@ -49,12 +49,7 @@ describe("Shift Plugin", () => {
     globalThis.matchMedia = vi.fn().mockReturnValue({ matches: false });
 
     element.animate = vi.fn((keyframes: Keyframe[], options?: KeyframeAnimationOptions) => {
-      return {
-        onfinish: null,
-        cancel: vi.fn(),
-        _keyframes: keyframes,
-        _options: options,
-      };
+      return { onfinish: null, cancel: vi.fn(), _keyframes: keyframes, _options: options };
     }) as unknown as typeof element.animate;
   });
 
@@ -79,10 +74,7 @@ describe("Shift Plugin", () => {
 
     it("should register custom animation", () => {
       const customAnimation: AnimationPreset = {
-        keyframes: [
-          { offset: 0, transform: "scale(1)" },
-          { offset: 1, transform: "scale(1.5)" },
-        ],
+        keyframes: [{ offset: 0, transform: "scale(1)" }, { offset: 1, transform: "scale(1.5)" }],
         duration: 500,
         iterations: 1,
         timing: "ease",
@@ -135,7 +127,7 @@ describe("Shift Plugin", () => {
 
       registerAnimation("bounce", customAnimation);
       expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Overriding built-in animation preset: "bounce"'),
+        expect.stringContaining("Overriding built-in animation preset: \"bounce\""),
       );
 
       consoleSpy.mockRestore();
@@ -186,7 +178,7 @@ describe("Shift Plugin", () => {
       shiftPlugin(mockContext, "unknown");
 
       expect(element.animate).not.toHaveBeenCalled();
-      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Unknown animation preset: "unknown"'));
+      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining("Unknown animation preset: \"unknown\""));
 
       consoleSpy.mockRestore();
     });
@@ -241,11 +233,11 @@ describe("Shift Plugin", () => {
 
     it("should handle signal not found", () => {
       const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-      mockContext.findSignal = vi.fn().mockReturnValue(undefined);
+      mockContext.findSignal = vi.fn().mockReturnValue(void 0);
 
       shiftPlugin(mockContext, "missing:bounce");
 
-      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Signal "missing" not found'));
+      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining("Signal \"missing\" not found"));
       consoleSpy.mockRestore();
     });
 
@@ -290,10 +282,7 @@ describe("Shift Plugin", () => {
 
   describe("Animation Cleanup", () => {
     it("should cancel animation on finish", () => {
-      const mockAnimation = {
-        onfinish: null as (() => void) | null,
-        cancel: vi.fn(),
-      };
+      const mockAnimation = { onfinish: null as (() => void) | null, cancel: vi.fn() };
 
       element.animate = vi.fn().mockReturnValue(mockAnimation);
 

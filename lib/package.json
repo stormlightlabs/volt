@@ -37,7 +37,8 @@
     "prepublishOnly": "pnpm build && pnpm test:run",
     "publish:npm": "npm publish --access=public",
     "publish:jsr": "npx jsr publish",
-    "publish:all": "pnpm publish:npm && pnpm publish:jsr"
+    "publish:all": "pnpm publish:npm && pnpm publish:jsr",
+    "lint": "eslint . --fix"
   },
   "publishConfig": { "access": "public" },
   "devDependencies": {

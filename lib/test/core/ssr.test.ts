@@ -65,7 +65,7 @@ describe("ssr", () => {
 
     it("returns true for hydrated elements", () => {
       const el = document.createElement("div");
-      el.setAttribute("data-volt-hydrated", "true");
+      el.dataset.voltHydrated = "true";
       expect(isHydrated(el)).toBe(true);
     });
   });
@@ -180,7 +180,7 @@ describe("ssr", () => {
 
       hydrate();
 
-      const el = document.getElementById("app")!;
+      const el = document.querySelector("#app")!;
       expect(isHydrated(el)).toBe(true);
     });
 
