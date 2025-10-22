@@ -88,15 +88,36 @@ When using programmatic mounting, the scope is the object passed as the second a
 Bindings can access nested properties, and the evaluator automatically unwraps signal values.
 Event handlers receive special scope additions: `$el` for the element and `$event` for the event object.
 
-## Signal Methods in Expressions
+## Signal Auto-Unwrapping
 
-While signal values are automatically unwrapped in most expressions, explicit signal methods are available when needed:
+VoltX automatically unwraps signals in read contexts, making expressions simpler and more natural:
 
-- Use `signal.get()` to read the current value
-- Use `signal.set(newValue)` to update state from event handlers
-- Use `signal.subscribe(fn)` in custom JavaScript (not typical in templates)
+```html
+<div data-volt data-volt-state='{"count": 5, "name": "Alice"}'>
+  <!-- Signals are automatically unwrapped in bindings -->
+  <p data-volt-text="count"></p>
+  <p data-volt-if="count > 0">Count is positive</p>
+  <p data-volt-if="name === 'Alice'">Hello Alice!</p>
 
-The `.set()` method is commonly used in `data-volt-on-*` event bindings to update state in response to user actions.
+  <!-- In event handlers, use .get() to read and .set() to write -->
+  <button data-volt-on-click="count.set(count.get() + 1)">Increment</button>
+</div>
+```
+
+**Read Contexts** (signals auto-unwrapped):
+- `data-volt-text`, `data-volt-html`
+- `data-volt-if`, `data-volt-else`
+- `data-volt-for`
+- `data-volt-class`, `data-volt-style`
+- `data-volt-bind:*`
+- `data-volt-computed:*` expressions
+
+**Write Contexts** (signals not auto-unwrapped):
+- `data-volt-on-*` event handlers
+- `data-volt-init` initialization code
+- `data-volt-model` (handles both read and write automatically)
+
+This design allows strict equality comparisons (`===`) to work naturally in conditional rendering while preserving access to signal methods like `.set()` in event handlers.
 
 ## State Persistence
 

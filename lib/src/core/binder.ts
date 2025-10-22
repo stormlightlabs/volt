@@ -1,5 +1,5 @@
 /**
- * Binder system for mounting and managing Volt.js bindings
+ * Binder system for mounting and managing VoltX.js bindings
  */
 
 import { executeSurgeEnter, executeSurgeLeave, hasSurge } from "$plugins/surge";
@@ -47,7 +47,7 @@ export function registerDirective(name: string, handler: DirectiveHandler): void
 }
 
 /**
- * Mount Volt.js on a root element and its descendants and binds all data-volt-* attributes to the provided scope.
+ * Mount VoltX.js on a root element and its descendants and binds all data-volt-* attributes to the provided scope.
  *
  * @param root - Root element to mount on
  * @param scope - Scope object containing signals and data
@@ -495,6 +495,80 @@ function bindEvent(ctx: BindingContext, eventName: string, expr: string, modifie
 }
 
 /**
+ * Get a nested property value from an object using a path array
+ *
+ * @example
+ * getNestedProperty({ user: { name: "Alice" } }, ["user", "name"]) // "Alice"
+ */
+function getNestedProperty(obj: unknown, path: string[]): unknown {
+  let current = obj;
+  for (const key of path) {
+    if (current == null || typeof current !== "object") {
+      return undefined;
+    }
+    current = (current as Record<string, unknown>)[key];
+  }
+  return current;
+}
+
+/**
+ * Set a nested property value in an object immutably using a path array
+ *
+ * @example
+ * setNestedProperty({ user: { name: "Alice" } }, ["user", "name"], "Bob")
+ * // Returns: { user: { name: "Bob" } }
+ */
+function setNestedProperty(obj: unknown, path: string[], value: unknown): unknown {
+  if (path.length === 0) {
+    return value;
+  }
+
+  if (obj == null || typeof obj !== "object") {
+    return obj;
+  }
+
+  const clone = Array.isArray(obj) ? [...obj] : { ...obj };
+  const [head, ...tail] = path;
+
+  if (tail.length === 0) {
+    (clone as Record<string, unknown>)[head] = value;
+  } else {
+    (clone as Record<string, unknown>)[head] = setNestedProperty((clone as Record<string, unknown>)[head], tail, value);
+  }
+
+  return clone;
+}
+
+/**
+ * Find a signal and optional nested property path for data-volt-model binding
+ *
+ * Supports two patterns:
+ * 1. Nested signals: { formData: { name: signal("") } } with path "formData.name"
+ * 2. Signal with object value: { formData: signal({ name: "" }) } with path "formData.name"
+ *
+ * @returns Object with signal and propertyPath, or null if not found
+ */
+function findModelSignal(scope: Scope, path: string): Nullable<{ signal: Signal<unknown>; propertyPath: string[] }> {
+  const signal = findScopedSignal(scope, path);
+  if (signal) {
+    return { signal, propertyPath: [] };
+  }
+
+  const parts = path.split(".");
+  for (let i = parts.length - 1; i > 0; i--) {
+    const prefix = parts.slice(0, i).join(".");
+    const testSignal = findScopedSignal(scope, prefix);
+
+    if (testSignal) {
+      const propertyPath = parts.slice(i);
+      return { signal: testSignal, propertyPath };
+    }
+  }
+
+  return null;
+}
+
+/**
  * Bind data-volt-model for two-way data binding on form elements with support for modifiers.
  * Syncs the signal value with the input value bidirectionally.
  *
@@ -505,19 +579,27 @@ function bindEvent(ctx: BindingContext, eventName: string, expr: string, modifie
  * - .debounce[.ms] - debounces signal updates (default 300ms)
  */
 function bindModel(context: BindingContext, signalPath: string, modifiers: Modifier[] = []): void {
-  const signal = findScopedSignal(context.scope, signalPath);
-  if (!signal) {
+  const result = findModelSignal(context.scope, signalPath);
+  if (!result) {
     console.error(`Signal "${signalPath}" not found for data-volt-model`);
     return;
   }
 
+  const { signal, propertyPath } = result;
+
   const element = context.element as FormControlElement;
   const type = element instanceof HTMLInputElement ? element.type : null;
-  const initialValue = signal.get();
+
+  const getValue = (): unknown => {
+    const signalValue = signal.get();
+    return propertyPath.length > 0 ? getNestedProperty(signalValue, propertyPath) : signalValue;
+  };
+
+  const initialValue = getValue();
   setElementValue(element, initialValue, type);
 
   const unsubscribe = signal.subscribe(() => {
-    const value = signal.get();
+    const value = getValue();
     setElementValue(element, value, type);
   });
   context.cleanups.push(unsubscribe);
@@ -541,7 +623,13 @@ function bindModel(context: BindingContext, signalPath: string, modifiers: Modif
       }
     }
 
-    (signal as Signal<unknown>).set(value);
+    if (propertyPath.length > 0) {
+      const currentObj = signal.get();
+      const updatedObj = setNestedProperty(currentObj, propertyPath, value);
+      (signal as Signal<unknown>).set(updatedObj);
+    } else {
+      (signal as Signal<unknown>).set(value);
+    }
   };
 
   let handler = baseHandler;

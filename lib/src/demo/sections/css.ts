@@ -1,14 +1,14 @@
 /**
- * Typography & Layout Section
- * Demonstrates Volt CSS typography features including Tufte-style sidenotes
+ * CSS & Typography Section
+ * Showcases VoltX CSS styling capabilities, typography, and component features
  */
 
 import * as dom from "../utils";
 
-export function createTypographySection(): HTMLElement {
+export function createCssSection(): HTMLElement {
   return dom.article(
-    { id: "typography" },
-    dom.h2(null, "Typography & Layout"),
+    { id: "css" },
+    dom.h2(null, "VoltX.css"),
     dom.section(
       null,
       dom.h3(null, "Headings & Hierarchy"),
@@ -158,6 +158,152 @@ mount(document.querySelector('#app'), {
           dom.tr(null, ...dom.repeat(dom.td, ["Learning Curve", "Gentle", "Moderate", "Steep"])),
         ),
       ),
+    ),
+    dom.section(
+      null,
+      dom.h3(null, "Tooltips"),
+      dom.p(null, "VoltX CSS includes pure-CSS tooltips with zero JavaScript. Try hovering over these examples:"),
+      dom.p(
+        null,
+        dom.abbr({ "data-vx-tooltip": "Tooltips appear on top by default", "data-placement": "top" }, "Top"),
+        " · ",
+        dom.abbr({ "data-vx-tooltip": "Tooltips can appear on the right", "data-placement": "right" }, "Right"),
+        " · ",
+        dom.abbr({ "data-vx-tooltip": "Tooltips can appear on the bottom", "data-placement": "bottom" }, "Bottom"),
+        " · ",
+        dom.abbr({ "data-vx-tooltip": "Tooltips can appear on the left", "data-placement": "left" }, "Left"),
+      ),
+      dom.p(
+        null,
+        dom.small(
+          null,
+          "Tooltips use the data-vx-tooltip attribute and are styled with pure CSS. They automatically hide on mobile devices for better touch interaction.",
+        ),
+      ),
+      dom.h4(null, "Implementation"),
+      dom.p(
+        null,
+        "Add the ",
+        dom.code(null, "data-vx-tooltip"),
+        " attribute with your tooltip text, and optionally specify ",
+        dom.code(null, "data-placement"),
+        " (top, right, bottom, left) for positioning.",
+      ),
+      dom.pre(
+        null,
+        dom.code(
+          null,
+          `<abbr data-vx-tooltip="Helpful tooltip text"
+      data-placement="top">
+  Hover me
+</abbr>`,
+        ),
+      ),
+    ),
+    dom.section(
+      null,
+      dom.h3(null, "Accordions"),
+      dom.p(
+        null,
+        "Native HTML ",
+        dom.code(null, "<details>"),
+        " and ",
+        dom.code(null, "<summary>"),
+        " elements provide semantic accordion functionality.",
+        dom.small(
+          null,
+          "The details element is fully accessible by default, with keyboard navigation built in. VoltX CSS styles it beautifully without requiring any JavaScript.",
+        ),
+      ),
+      dom.details(
+        null,
+        dom.summary(null, "What is VoltX.js?"),
+        dom.p(
+          null,
+          "VoltX.js is a lightweight reactive framework for building declarative user interfaces. It uses signals for reactivity and provides HTML-driven behavior through data-volt-* attributes.",
+        ),
+      ),
+      dom.details(
+        null,
+        dom.summary(null, "How does reactivity work?"),
+        dom.p(
+          null,
+          "VoltX uses a signal-based reactive system. When a signal changes, all computed values and effects that depend on it automatically update. The DOM bindings subscribe to these signals and update the UI accordingly.",
+        ),
+      ),
+      dom.details(
+        null,
+        dom.summary(null, "What about styling?"),
+        dom.p(
+          null,
+          "VoltX CSS is a classless CSS framework inspired by Pico CSS and Tufte CSS. It provides beautiful, semantic styling without requiring any CSS classes. Just write semantic HTML and it looks great!",
+        ),
+      ),
+    ),
+    dom.section(
+      null,
+      dom.h3(null, "Dialogs"),
+      dom.p(
+        null,
+        "Native ",
+        dom.code(null, "<dialog>"),
+        " elements provide semantic modal functionality with built-in accessibility.",
+        dom.small(
+          null,
+          "The dialog element includes keyboard handling (ESC to close), focus trapping, and backdrop support. Modern browsers support it natively.",
+        ),
+        " VoltX CSS styles dialogs elegantly with proper backdrop blur and animations.",
+      ),
+      dom.p(
+        null,
+        "Dialogs require JavaScript to open and close (using ",
+        dom.code(null, "showModal()"),
+        " and ",
+        dom.code(null, "close()"),
+        " methods). ",
+        "See the ",
+        dom.a({ href: "/interactivity" }, "Interactivity section"),
+        " for a working dialog demo.",
+      ),
+      dom.h4(null, "Structure"),
+      dom.p(null, "Dialogs should follow this semantic structure for proper styling:"),
+      dom.pre(
+        null,
+        dom.code(
+          null,
+          `<dialog id="my-dialog">
+  <article>
+    <header>
+      <h3>Dialog Title</h3>
+      <button aria-label="Close">×</button>
+    </header>
+    <!-- Dialog content -->
+    <footer>
+      <button>Cancel</button>
+      <button>Confirm</button>
+    </footer>
+  </article>
+</dialog>`,
+        ),
+      ),
+    ),
+    dom.section(
+      null,
+      dom.h3(null, "Additional Features"),
+      dom.p(null, "VoltX CSS includes comprehensive styling for all semantic HTML elements:"),
+      dom.ul(
+        null,
+        ...dom.repeat(dom.li, [
+          "Typography with modular scale and Tufte-style sidenotes",
+          "Form elements with consistent, accessible styling",
+          "Tables with zebra striping and responsive behavior",
+          "Code blocks with syntax-appropriate styling",
+          "Blockquotes and citations",
+          "Responsive images and media",
+          "And much more, all without CSS classes!",
+        ]),
+      ),
+      dom.p(null, "Explore the other sections of this demo to see these features in action."),
     ),
   );
 }

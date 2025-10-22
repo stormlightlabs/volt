@@ -5,10 +5,10 @@
  */
 
 import { registerDirective } from "$core/binder";
-import { hasModifier, parseModifiers } from "$core/modifiers";
+import { hasModifier } from "$core/modifiers";
 import { startViewTransition } from "$core/view-transitions";
 import type { Optional } from "$types/helpers";
-import type { BindingContext, Modifier, PluginContext } from "$types/volt";
+import type { BindingContext, Modifier } from "$types/volt";
 
 type NavigationState = { scrollPosition?: { x: number; y: number }; focusSelector?: string; timestamp: number };
 
@@ -44,21 +44,6 @@ export function bindNavigate(ctx: BindingContext, value: string, modifiers: Modi
     handleFormNavigation(ctx, value, modifiers);
   } else {
     console.warn("data-volt-navigate only works on <a> and <form> elements");
-  }
-}
-
-/**
- * Plugin-compatible wrapper for navigate directive
- * @deprecated Use bindNavigate directly or register as a directive
- */
-export function navigatePlugin(ctx: PluginContext, value: string): void {
-  const { baseName, modifiers } = parseModifiers(value || "");
-  const bindingCtx: BindingContext = { element: ctx.element, scope: ctx.scope, cleanups: [] };
-
-  bindNavigate(bindingCtx, baseName, modifiers);
-
-  for (const cleanup of bindingCtx.cleanups) {
-    ctx.addCleanup(cleanup);
   }
 }
 

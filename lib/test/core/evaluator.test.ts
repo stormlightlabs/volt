@@ -279,6 +279,21 @@ describe("Evaluator - Functional Tests", () => {
       evaluateStatements("count.set(20)", scope);
       expect((scope.count as Signal<number>).get()).toBe(20);
     });
+
+    it("should support strict equality comparisons with signals", () => {
+      scope.status = signal("active");
+      scope.page = signal("home");
+      expect(evaluate("status === 'active'", scope)).toBe(true);
+      expect(evaluate("status === 'inactive'", scope)).toBe(false);
+      expect(evaluate("page === 'home'", scope)).toBe(true);
+      expect(evaluate("page === 'about'", scope)).toBe(false);
+    });
+
+    it("should support loose equality comparisons with signals", () => {
+      scope.status = signal("active");
+      expect(evaluate("status == 'active'", scope)).toBe(true);
+      expect(evaluate("status == 'inactive'", scope)).toBe(false);
+    });
   });
 
   describe("Expression Caching", () => {

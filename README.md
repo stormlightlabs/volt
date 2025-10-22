@@ -39,6 +39,20 @@ Volt is a monorepo centered around the VoltX.js runtime—a lightweight, declara
 | Streams  | `data-volt-stream="/events"` listens for SSE or WebSocket updates and applies JSON patches.       |
 | Plugins  | Modular extensions (`data-volt-persist`, `data-volt-surge`, `data-volt-shift`, etc.) to enhance the core. |
 
+## VoltX.css
+
+VoltX ships with an optional classless CSS framework inspired by Pico CSS and Tufte CSS. It provides beautiful, semantic styling for HTML elements without requiring any CSS classes—just write semantic markup and it looks great out of the box.
+
+Features include typography with modular scale, Tufte-style sidenotes, styled form elements, dialogs, accordions, tooltips, tables, and more. See the framework's [README](./lib/README.md#voltxcss) for installation and usage details.
+
+Here are some highlights
+
+![VoltX Typography](./docs/images/voltx-css_typography.png)
+
+![VoltX Structured Content](./docs/images/voltx-css_structured-content.png)
+
+![VoltX Components](./docs/images/voltx-css_components.png)
+
 ## Packages
 
 ```sh
@@ -54,6 +68,29 @@ volt/
 - Local development: `pnpm install` then `pnpm --filter lib dev` run package-specific scripts (`build`, `test`, etc.).
     - Review [contribution](./CONTRIBUTING.md) guidelines
 - Documentation: `pnpm --filter docs docs:dev` launches the VitePress site.
+
+### Working on New Features
+
+The `lib/` package includes a comprehensive demo Vite app showcasing all VoltX.js features:
+
+```sh
+# Start the demo development server
+pnpm --filter voltx.js dev
+```
+
+The demo app essentially provides an interactive sandbox to develop and catch bugs in new implementations.
+
+#### Pages
+
+- **Home**: Framework overview and quick start examples
+- **CSS**: VoltX.css typography, layout, and component features
+- **Interactivity**: Dialogs, buttons, event handling
+- **Forms**: Two-way binding and form validation patterns
+- **Reactivity**: Signals, computed values, conditional/list rendering
+- **Plugins**: Persistence, scroll management, URL sync
+- **Animations**: Transitions and keyframe animations
+
+Docs are the source of truth but take advantage of this environment. When developing new features, add examples to the appropriate demo section or create a new page to showcase the functionality.
 
 ## License
 

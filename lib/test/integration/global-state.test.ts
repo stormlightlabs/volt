@@ -194,7 +194,7 @@ describe("Global State Integration", () => {
       document.body.innerHTML = `
         <div data-volt data-volt-state='{"log": []}'>
           <button data-volt-on-click="log.set([...log.get(), 'sync']); $pulse(() => log.set([...log.get(), 'async']))">Click</button>
-          <p data-volt-text="log.get().join(', ')"></p>
+          <p data-volt-text="log.join(', ')"></p>
         </div>
       `;
 
@@ -319,7 +319,7 @@ describe("Global State Integration", () => {
       document.body.innerHTML = `
         <div data-volt data-volt-state='{"count": 0, "log": []}' data-volt-init="$probe('count', v => log.set([...log.get(), v]))">
           <button data-volt-on-click="count.set(count.get() + 1)">Increment</button>
-          <p data-volt-text="log.get().join(', ')"></p>
+          <p data-volt-text="log.join(', ')"></p>
         </div>
       `;
 

@@ -472,13 +472,15 @@ function unwrapSignal(value: unknown): unknown {
  *
  * @param expr - The expression string to evaluate
  * @param scope - The scope object containing values
+ * @param opts - Evaluation options. By default, signals are unwrapped for read operations.
+ *               Pass { unwrapSignals: false } to keep signals wrapped (needed for event handlers that call .set())
  * @returns The evaluated result
  * @throws EvaluationError if expression is invalid or evaluation fails
  */
 export function evaluate(expr: string, scope: Scope, opts?: EvaluateOpts): unknown {
   try {
     const fn = compileExpr(expr, false);
-    const wrapOptions = opts && opts.unwrapSignals ? readWrapOptions : defaultWrapOptions;
+    const wrapOptions = opts?.unwrapSignals === false ? defaultWrapOptions : readWrapOptions;
     const proxiedScope = createScopeProxy(scope, wrapOptions);
     const result = fn(proxiedScope, unwrapMaybeSignal);
     return unwrapSignal(result);
@@ -498,6 +500,7 @@ export function evaluate(expr: string, scope: Scope, opts?: EvaluateOpts): unkno
  *
  * Used for event handlers that may contain multiple semicolon-separated statements.
  * Statements are executed in order but no return value is captured.
+ * Signals are NOT unwrapped by default to allow calling .set() and other signal methods.
  *
  * @param expr - The statement(s) to evaluate
  * @param scope - The scope object containing values
@@ -506,7 +509,7 @@ export function evaluate(expr: string, scope: Scope, opts?: EvaluateOpts): unkno
 export function evaluateStatements(expr: string, scope: Scope): void {
   try {
     const fn = compileExpr(expr, true);
-    const proxiedScope = createScopeProxy(scope);
+    const proxiedScope = createScopeProxy(scope, defaultWrapOptions);
     fn(proxiedScope, unwrapMaybeSignal);
   } catch (error) {
     if (error instanceof EvaluationError) {
