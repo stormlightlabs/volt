@@ -37,7 +37,7 @@ Common uses include:
 - Logging or analytics
 - Coordinating multiple signals
 
-For asynchronous operations, use `asyncEffect()` (see [asyncEffect](./usage/async-effect)) which handles cleanup of pending operations when dependencies change or the effect is disposed.
+For asynchronous operations, use `asyncEffect()` (see [asyncEffect](./async-effect.md)) which handles cleanup of pending operations when dependencies change or the effect is disposed.
 
 ## Declarative State
 
