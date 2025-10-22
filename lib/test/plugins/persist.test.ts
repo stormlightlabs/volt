@@ -12,6 +12,23 @@ describe("persist plugin", () => {
   });
 
   describe("localStorage persistence", () => {
+    it("supports attribute suffix syntax with camelCase signal and storage aliases", async () => {
+      localStorage.setItem("volt:persistedCount", "7");
+
+      const element = document.createElement("div");
+      element.dataset["voltPersist:persistedcount"] = "localStorage";
+
+      const persistedCount = signal(0);
+      mount(element, { persistedCount });
+
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      expect(persistedCount.get()).toBe(7);
+
+      persistedCount.set(9);
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      expect(localStorage.getItem("volt:persistedCount")).toBe("9");
+    });
+
     it("loads persisted value from localStorage on mount", () => {
       localStorage.setItem("volt:count", "42");
 

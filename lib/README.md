@@ -66,7 +66,9 @@ Plugins are opt-in and can be combined declaratively or registered programmatica
 
 ## VoltX.css
 
-VoltX ships with an optional classless CSS framework inspired by Pico CSS and Tufte CSS. It provides beautiful, semantic styling without requiring any CSS classes—just write semantic HTML and it looks great. It's perfect for prototyping.
+VoltX ships with an optional classless CSS framework inspired by Pico CSS and Tufte CSS.
+It provides beautiful, semantic styling without requiring any CSS classes.
+Just write semantic HTML and it looks great. It's perfect for prototyping.
 
 ### Features
 
@@ -94,7 +96,7 @@ Or include via CDN:
 
 ### Usage
 
-No classes needed—just write semantic HTML:
+No classes needed. Just write semantic HTML:
 
 ```html
 <article>

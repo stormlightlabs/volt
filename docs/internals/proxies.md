@@ -33,7 +33,7 @@ When a consumer reads `proxy.key`:
     If it’s an object/function, we recursively call `reactive()` so nested access stays reactive.
     Otherwise we return `signal.get()` which unwraps the value.
 
-This layered approach means `reactive()` objects are safe to embed in evaluator scopes—the same dangerous keys are filtered and every nested property remains reactive.
+This layered approach means `reactive()` objects are safe to embed in evaluator scopes. The same dangerous keys are filtered and every nested property remains reactive.
 
 ## Property Mutation (set trap)
 
@@ -64,7 +64,7 @@ Methods that do not mutate (e.g. `slice`) pass through unwrapped.
 
 ## Integration with Signals
 
-Every reactive property is backed by a `signal`. This keeps the proxy layer thin—core logic lives in `signal.ts`, and the proxy simply orchestrates reads/writes against those signals.
+Every reactive property is backed by a `signal`. This keeps the proxy layer thin. Core logic lives in `signal.ts`, and the proxy simply orchestrates reads/writes against those signals.
 Because signals already integrate with dependency tracking, reactive object reads automatically wire into computeds, effects, and DOM bindings without extra bookkeeping.
 
 ## Interop Utilities
@@ -82,6 +82,21 @@ Bindings and expressions run via the hardened evaluator. When it encounters a re
 - Signals returned from proxy properties expose `get`, `set`, and `subscribe`, but property reads on the signal proxy delegate back to the underlying value.
 - Primitive coercion works because the wrapper defines `valueOf`, `toString`, and `Symbol.toPrimitive` on demand.
 - Boolean negation (`!signal`) is rewritten to `!$unwrap(signal)` before compilation so reactive values behave like plain booleans.
+- **Iteration support** - Signal wrappers implement `Symbol.iterator` to enable spread operations on signals containing iterable values.
+
+### Spread Operator Support
+
+When a signal contains an iterable value (like an array), the wrapper proxy delegates the `Symbol.iterator` property to the unwrapped value.
+This enables the JavaScript spread operator to work transparently:
+
+```javascript
+const todos = signal([{id: 1, text: "Learn"}, {id: 2, text: "Build"}]);
+const newTodos = [...todos, {id: 3, text: "Ship"}];
+```
+
+Without this, the spread operator would fail because the JS runtime can't iterate over the signal wrapper.
+The implementation returns the iterator from the unwrapped array directly, ensuring spread operations receive raw values rather than wrapped proxies.
+This is critical for immutable update patterns where new arrays are constructed from existing signal values.
 
 ## Challenges & Lessons
 

@@ -28,19 +28,38 @@ export function isSignal(value: unknown): value is Dep {
 
 export function findScopedSignal(scope: Scope, path: string): Optional<Signal<unknown>> {
   const trimmed = path.trim();
+  if (!trimmed) {
+    return undefined;
+  }
+
   const parts = trimmed.split(".");
   let current: unknown = scope;
 
   for (const part of parts) {
-    if (isNil(current)) {
+    if (isNil(current) || typeof current !== "object") {
       return undefined;
     }
 
-    if (typeof current === "object" && part in (current as Record<string, unknown>)) {
-      current = (current as Record<string, unknown>)[part];
-    } else {
+    const record = current as Record<string, unknown>;
+
+    if (Object.hasOwn(record, part)) {
+      current = record[part];
+      continue;
+    }
+
+    const camelCandidate = kebabToCamel(part);
+    if (Object.hasOwn(record, camelCandidate)) {
+      current = record[camelCandidate];
+      continue;
+    }
+
+    const lowerPart = part.toLowerCase();
+    const matchedKey = Object.keys(record).find((key) => key.toLowerCase() === lowerPart);
+    if (!matchedKey) {
       return undefined;
     }
+
+    current = record[matchedKey];
   }
 
   if (isSignal(current)) {

@@ -1,8 +1,7 @@
 /**
- * Demo module for showcasing VoltX.js features and volt.css styling
+ * Demo module for showcasing VoltX features and voltx.css styling
  *
- * This module creates the entire demo structure programmatically using DOM APIs,
- * then uses charge() to mount it declaratively.
+ * This module creates the entire demo structure programmatically using DOM APIs, then uses charge() to mount it declaratively.
  */
 
 import { charge } from "$core/charge";
@@ -94,7 +93,7 @@ const buildNav = () =>
 function getCurrentPageFromPath(): string {
   const path = globalThis.location.pathname;
   if (path === "/" || path === "") return "home";
-  return path.slice(1); // Remove leading slash
+  return path.slice(1);
 }
 
 function buildDemoStructure(): HTMLElement {
@@ -131,6 +130,7 @@ function buildDemoStructure(): HTMLElement {
     triggerFlash: 0,
     triggerTripleBounce: 0,
     triggerLongShake: 0,
+    spinningGear: true,
   };
 
   return dom.div(
@@ -138,8 +138,8 @@ function buildDemoStructure(): HTMLElement {
       "data-volt": "",
       "data-volt-state": JSON.stringify(initialState),
       "data-volt-computed:doubled": "count * 2",
-      "data-volt-computed:activeTodos": "todos.filter(t => !t.done)",
-      "data-volt-computed:completedTodos": "todos.filter(t => t.done)",
+      "data-volt-computed:active-todos": "todos.filter(t => !t.done)",
+      "data-volt-computed:completed-todos": "todos.filter(t => t.done)",
     },
     dom.header(
       null,
@@ -173,10 +173,7 @@ function buildDemoStructure(): HTMLElement {
         dom.a({ href: "https://github.com/stormlightlabs/volt" }, "VoltX.js"),
         " - A lightweight, reactive hypermedia framework",
       ),
-      dom.p(
-        null,
-        "This demo showcases both VoltX.js reactive features and Volt CSS classless styling. View source to see how everything works!",
-      ),
+      dom.p(null, "This demo showcases both VoltX's reactive features and VoltX.css' classless styling."),
     ),
   );
 }

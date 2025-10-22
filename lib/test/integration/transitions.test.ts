@@ -114,7 +114,7 @@ describe("integration: transitions", () => {
       const show = signal(true);
       mount(container, { show });
 
-      await vi.advanceTimersByTimeAsync(50);
+      await vi.advanceTimersByTimeAsync(400);
 
       let shownEl = [...container.querySelectorAll("div")].find((el) => el.textContent?.includes("Shown"));
       let hiddenEl = [...container.querySelectorAll("div")].find((el) => el.textContent?.includes("Hidden"));
@@ -275,13 +275,7 @@ describe("integration: transitions", () => {
   });
 
   describe("Shift animations", () => {
-    beforeEach(() => {
-      HTMLElement.prototype.animate = vi.fn((_keyframes: Keyframe[], _options?: KeyframeAnimationOptions) => {
-        return { onfinish: null, cancel: vi.fn() } as unknown as Animation;
-      });
-    });
-
-    it("should apply animation on mount", () => {
+    it("should apply animation on mount", async () => {
       const container = document.createElement("div");
       const testEl = document.createElement("div");
       testEl.dataset.voltShift = "bounce";
@@ -292,7 +286,11 @@ describe("integration: transitions", () => {
 
       mount(container, {});
 
-      expect(element.animate).toHaveBeenCalled();
+      // Wait for requestAnimationFrame to apply the animation
+      await vi.waitFor(() => {
+        expect(element.dataset.voltShiftRuns).toBe("1");
+        expect(element.style.animationName).toMatch(/^volt-shift-/);
+      });
     });
 
     it("should trigger animation based on signal", () => {
@@ -307,13 +305,13 @@ describe("integration: transitions", () => {
       mount(container, { trigger });
 
       const button = container.querySelector("button") as HTMLElement;
-      expect(button.animate).not.toHaveBeenCalled();
+      expect(button.dataset.voltShiftRuns ?? "0").toBe("0");
 
       trigger.set(true);
-      expect(button.animate).toHaveBeenCalled();
+      expect(button.dataset.voltShiftRuns).toBe("1");
     });
 
-    it("should support duration and iteration modifiers", () => {
+    it("should support duration and iteration modifiers", async () => {
       const container = document.createElement("div");
       const testEl = document.createElement("div");
       testEl.dataset.voltShift = "bounce.1000.3";
@@ -324,12 +322,12 @@ describe("integration: transitions", () => {
 
       mount(container, {});
 
-      expect(element.animate).toHaveBeenCalled();
-
-      const animateMock = element.animate as unknown as ReturnType<typeof vi.fn>;
-      const options = animateMock.mock.calls[0]?.[1] as KeyframeAnimationOptions;
-      expect(options?.duration).toBe(1000);
-      expect(options?.iterations).toBe(3);
+      // Wait for requestAnimationFrame to apply the animation
+      await vi.waitFor(() => {
+        expect(element.dataset.voltShiftRuns).toBe("1");
+        expect(element.style.animationDuration).toBe("1000ms");
+        expect(element.style.animationIterationCount).toBe("3");
+      });
     });
 
     it("should cleanup signal subscription on unmount", () => {
@@ -348,7 +346,7 @@ describe("integration: transitions", () => {
       const button = container.querySelector("button") as HTMLElement;
       trigger.set(true);
 
-      expect(button.animate).not.toHaveBeenCalled();
+      expect(button.dataset.voltShiftRuns ?? "0").toBe("0");
     });
   });
 
@@ -544,10 +542,6 @@ describe("integration: transitions", () => {
     });
 
     it("should combine surge and shift on same element", async () => {
-      HTMLElement.prototype.animate = vi.fn((_keyframes: Keyframe[], _options?: KeyframeAnimationOptions) => {
-        return { onfinish: null, cancel: vi.fn() } as unknown as Animation;
-      });
-
       const container = document.createElement("div");
       const testEl = document.createElement("div");
       testEl.dataset.voltShow = "visible";
@@ -565,7 +559,7 @@ describe("integration: transitions", () => {
         setTimeout(resolve, 100);
       });
 
-      expect(element.animate).toHaveBeenCalled();
+      expect(element.dataset.voltShiftRuns).toBe("1");
     });
   });
 });

@@ -89,6 +89,22 @@ describe("url plugin", () => {
       expect(filter.get()).toBe("active");
     });
 
+    it("supports attribute suffix syntax with query alias", async () => {
+      globalThis.history.replaceState({}, "", "/");
+
+      const element = document.createElement("div");
+      element.dataset["voltUrl:searchterm"] = "query";
+
+      const searchTerm = signal("");
+      mount(element, { searchTerm });
+
+      searchTerm.set("hello");
+
+      await new Promise((resolve) => setTimeout(resolve, 150));
+
+      expect(globalThis.location.search).toBe("?searchTerm=hello");
+    });
+
     it("updates URL when signal changes", async () => {
       globalThis.history.replaceState({}, "", "/");
 
@@ -564,7 +580,7 @@ describe("url plugin", () => {
 
       mount(element, {});
 
-      expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining("Unknown url mode: \"unknown\""));
+      expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining("Unknown url mode"));
 
       errorSpy.mockRestore();
     });

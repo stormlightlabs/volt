@@ -31,7 +31,7 @@ This guide walks through building both hash-based and History API routers that s
     ```
 
     ```ts
-    // src/main.ts — bundled projects
+    // src/main.ts -> entry point for a bundled project
     import { charge, initNavigationListener, registerPlugin, urlPlugin } from "voltx.js";
 
     registerPlugin("url", urlPlugin);

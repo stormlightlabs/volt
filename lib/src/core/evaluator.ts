@@ -5,7 +5,7 @@
  * Includes hardened scope proxy to prevent prototype pollution and auto-unwrap signals.
  */
 
-import type { Scope } from "$types/volt";
+import type { Dep, Scope, Signal } from "$types/volt";
 import { DANGEROUS_GLOBALS, DANGEROUS_PROPERTIES, SAFE_GLOBALS } from "./constants";
 import { isSignal } from "./shared";
 
@@ -52,9 +52,7 @@ function isDangerousProperty(key: unknown): boolean {
 /**
  * Type guard to check if a Dep has a set method (is a Signal vs ComputedSignal)
  */
-function hasSetMethod(
-  dep: unknown,
-): dep is { get: () => unknown; set: (v: unknown) => void; subscribe: (fn: () => void) => () => void } {
+function hasSetMethod(dep: unknown): dep is Dep & { set: (v: unknown) => void } {
   return (typeof dep === "object"
     && dep !== null
     && "set" in dep
@@ -71,10 +69,7 @@ function hasSetMethod(
  *
  * Handles both Signal (has set) and ComputedSignal (no set)
  */
-function wrapSignal(
-  signal: { get: () => unknown; subscribe: (fn: () => void) => () => void },
-  options: WrapOptions,
-): unknown {
+function wrapSignal(signal: Signal<unknown>, options: WrapOptions): unknown {
   const hasSet = hasSetMethod(signal);
 
   const wrapper: Record<string | symbol, unknown> = {
@@ -105,6 +100,14 @@ function wrapSignal(
 
       if (prop === "valueOf" || prop === "toString" || prop === Symbol.toPrimitive) {
         return target[prop];
+      }
+
+      if (prop === Symbol.iterator) {
+        const unwrapped = signal.get();
+        if (unwrapped && typeof unwrapped === "object" && Symbol.iterator in unwrapped) {
+          return (unwrapped as Iterable<unknown>)[Symbol.iterator].bind(unwrapped);
+        }
+        return;
       }
 
       const unwrapped = signal.get();
@@ -140,6 +143,12 @@ function wrapSignal(
         return true;
       }
 
+      if (prop === Symbol.iterator) {
+        const unwrapped = signal.get();
+        return unwrapped !== null && unwrapped !== undefined && typeof unwrapped === "object"
+          && Symbol.iterator in unwrapped;
+      }
+
       const unwrapped = signal.get();
       if (unwrapped && (typeof unwrapped === "object" || typeof unwrapped === "function")) {
         return prop in unwrapped;
@@ -168,7 +177,7 @@ function wrapValue(value: unknown, options: WrapOptions = defaultWrapOptions): u
     if (options.unwrapSignals) {
       return wrapValue((value as { get: () => unknown }).get(), options);
     }
-    return wrapSignal(value, options);
+    return wrapSignal(value as Signal<unknown>, options);
   }
 
   if (typeof value !== "object" && typeof value !== "function") {
@@ -384,6 +393,40 @@ function transformExpr(expr: string): string {
       const identifier = expr.slice(cursor, end);
       result += "!$unwrap(" + identifier + ")";
       index = end;
+      continue;
+    }
+
+    if (char === ":" && index > 0) {
+      result += char;
+      index += 1;
+
+      while (index < expr.length && isWhitespace(expr[index])) {
+        result += expr[index];
+        index += 1;
+      }
+
+      if (index < expr.length && isIdentifierStart(expr[index])) {
+        const identStart = index;
+        let identEnd = identStart + 1;
+
+        while (identEnd < expr.length && isIdentifierPart(expr[identEnd])) {
+          identEnd += 1;
+        }
+
+        let lookahead = identEnd;
+        while (lookahead < expr.length && isWhitespace(expr[lookahead])) {
+          lookahead += 1;
+        }
+
+        const afterIdent = expr[lookahead] ?? "";
+        if (afterIdent === "," || afterIdent === "}" || lookahead >= expr.length || afterIdent === ")") {
+          const identifier = expr.slice(identStart, identEnd);
+          result += "$unwrap(" + identifier + ")";
+          index = identEnd;
+          continue;
+        }
+      }
+
       continue;
     }
 

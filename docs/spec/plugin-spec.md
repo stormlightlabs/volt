@@ -249,6 +249,13 @@ Reads URL parameter on mount and sets signal value. Signal changes do not update
 <input data-volt-on-input="handleSearch" data-volt-url="sync:searchQuery" />
 ```
 
+You can also use the shorthand attribute form where the signal name is encoded in the attribute suffix:
+
+```html
+<!-- Equivalent to data-volt-url="sync:searchQuery" -->
+<input data-volt-url:searchQuery="query" />
+```
+
 Changes to signal update URL parameter, changes to URL update signal. Uses History API for clean URLs.
 
 **Hash Routing:**
@@ -267,6 +274,8 @@ Keeps hash portion of URL in sync with signal. Useful for client-side routing.
 - Listens to `popstate` for browser back/forward
 - Debounces URL updates to avoid excessive history entries
 - Automatically serializes/deserializes values (strings, numbers, booleans)
+- Accepts `data-volt-url="mode:signal"` or `data-volt-url:signal="mode"` forms
+- Supports `query`, `hash`, and `history` mode aliases in shorthand attributes (e.g., `data-volt-url:filter="query"`)
 
 ## Implementation
 

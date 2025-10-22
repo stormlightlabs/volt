@@ -108,7 +108,12 @@ export function createAnimationsSection(): HTMLElement {
           "data-volt-shift": "triggerFlash:flash",
         }, "Flash"),
       ),
-      dom.p(null, "Spinning gear: ", dom.span({ "data-volt-shift": "spin", style: "font-size: 2rem;" }, "⚙️")),
+      dom.p(
+        null,
+        dom.button({ "data-volt-on-click": "spinningGear.set(!spinningGear)" }, "Toggle Spin"),
+        " Spinning gear: ",
+        dom.span({ "data-volt-shift": "spinningGear:spin", style: "font-size: 2rem;" }, "⚙️"),
+      ),
     ),
     dom.section(
       null,
@@ -139,12 +144,14 @@ export function createAnimationsSection(): HTMLElement {
         dom.small(null, "Toggle to see content that fades in, then bounces on mount"),
       ),
       dom.button({ "data-volt-on-click": "showCombined.set(!showCombined)" }, "Toggle Combined Animation"),
-      dom.aside(
-        { "data-volt-if": "showCombined", "data-volt-surge": "fade.400", "data-volt-shift": "bounce" },
-        dom.p(
-          null,
-          dom.strong(null, "Animated aside:"),
-          " This content fades in smoothly, then bounces when it appears!",
+      dom.p(
+        null,
+        dom.strong(null, "Animated sidenote:"),
+        " This paragraph keeps the flow of the article while the sidenote animates into view.",
+        " ",
+        dom.small(
+          { "data-volt-if": "showCombined", "data-volt-surge": "fade.400", "data-volt-shift": "bounce" },
+          "This margin note fades into place and bounces to grab your attention.",
         ),
       ),
     ),

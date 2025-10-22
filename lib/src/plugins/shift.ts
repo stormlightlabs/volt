@@ -11,6 +11,10 @@ import type { AnimationPreset, PluginContext, Signal } from "$types/volt";
  * Registry of animation presets
  */
 const animationRegistry = new Map<string, AnimationPreset>();
+const keyframeRegistry = new Map<string, string>();
+
+let keyframeSheet: Optional<CSSStyleSheet>;
+let keyframeCounter = 0;
 
 /**
  * Built-in animation presets with CSS keyframes
@@ -211,24 +215,156 @@ function parseAnimationValue(value: string): Optional<ParsedShiftValue> {
   return result;
 }
 
-function applyAnimation(element: HTMLElement, preset: AnimationPreset, duration?: number, iterations?: number): void {
+function stopAnimation(el: HTMLElement): void {
+  el.style.animation = "";
+  el.style.animationName = "";
+  el.style.animationDuration = "";
+  el.style.animationTimingFunction = "";
+  el.style.animationIterationCount = "";
+  el.style.animationFillMode = "";
+  restoreOriginalDisplay(el);
+}
+
+function applyAnimation(el: HTMLElement, preset: AnimationPreset, duration?: number, iterations?: number): void {
   if (prefersReducedMotion()) {
     return;
   }
 
   const effectiveDuration = duration ?? preset.duration;
   const effectiveIterations = iterations ?? preset.iterations;
+  const animationName = getOrCreateKeyframes(preset);
+  if (!animationName) {
+    return;
+  }
 
-  const animation = element.animate(preset.keyframes, {
-    duration: effectiveDuration,
-    iterations: effectiveIterations,
-    easing: preset.timing,
-    fill: "forwards",
-  });
+  ensureInlineBlockForTransforms(el, effectiveIterations === Number.POSITIVE_INFINITY);
+  resetCssAnimation(el);
 
-  animation.onfinish = () => {
-    animation.cancel();
-  };
+  el.style.animationName = animationName;
+  el.style.animationDuration = `${effectiveDuration}ms`;
+  el.style.animationTimingFunction = preset.timing;
+  el.style.animationIterationCount = effectiveIterations === Number.POSITIVE_INFINITY
+    ? "infinite"
+    : String(effectiveIterations);
+  el.style.animationFillMode = "forwards";
+
+  const runs = Number.parseInt(el.dataset.voltShiftRuns ?? "0", 10) + 1;
+  el.dataset.voltShiftRuns = String(runs);
+
+  if (effectiveIterations !== Number.POSITIVE_INFINITY) {
+    const totalDuration = effectiveDuration * effectiveIterations;
+    setTimeout(() => {
+      if (el.style.animationName === animationName) {
+        stopAnimation(el);
+      }
+    }, totalDuration);
+  }
+}
+
+function resetCssAnimation(el: HTMLElement): void {
+  const previousName = el.style.animationName;
+  if (!previousName) {
+    return;
+  }
+  el.style.animation = "none";
+  void el.offsetWidth;
+  el.style.animation = "";
+  el.style.animationName = "";
+}
+
+function ensureKeyframeSheet(): Optional<CSSStyleSheet> {
+  if (keyframeSheet) {
+    return keyframeSheet;
+  }
+
+  if (typeof document === "undefined" || !document.head) {
+    return undefined;
+  }
+
+  const styleEl = document.createElement("style");
+  styleEl.dataset.voltShift = "true";
+  document.head.append(styleEl);
+  keyframeSheet = styleEl.sheet ?? undefined;
+  return keyframeSheet;
+}
+
+function toCssProperty(property: string): string {
+  return property.replaceAll(/[A-Z]/g, (match) => `-${match.toLowerCase()}`);
+}
+
+function getOrCreateKeyframes(preset: AnimationPreset): Optional<string> {
+  const key = JSON.stringify(preset.keyframes) + preset.timing;
+  if (keyframeRegistry.has(key)) {
+    return keyframeRegistry.get(key);
+  }
+
+  const sheet = ensureKeyframeSheet();
+  if (!sheet) {
+    return undefined;
+  }
+
+  const animationName = `volt-shift-${keyframeCounter += 1}`;
+  keyframeRegistry.set(key, animationName);
+
+  const frames = preset.keyframes.map((frame, index) => {
+    const offset = frame.offset ?? (preset.keyframes.length > 1 ? index / (preset.keyframes.length - 1) : 0);
+    const percent = Math.round(offset * 10_000) / 100;
+    const declarations = Object.entries(frame).filter(([prop]) => prop !== "offset").map(([prop, value]) =>
+      `${toCssProperty(prop)}: ${value};`
+    ).join(" ");
+    return `${percent}% { ${declarations} }`;
+  }).join(" ");
+
+  sheet.insertRule(`@keyframes ${animationName} { ${frames} }`, sheet.cssRules.length);
+  return animationName;
+}
+
+function ensureInlineBlockForTransforms(el: HTMLElement, isInf: boolean): void {
+  if (el.dataset.voltShiftDisplayManaged) {
+    return;
+  }
+
+  if (typeof getComputedStyle !== "function") {
+    return;
+  }
+
+  if (!el.isConnected) {
+    return;
+  }
+
+  void el.offsetHeight;
+
+  const computedDisplay = getComputedStyle(el).display;
+  if (computedDisplay !== "inline") {
+    return;
+  }
+
+  el.dataset.voltShiftDisplayManaged = isInf ? "infinite" : "managed";
+  el.dataset.voltShiftOriginalDisplay = el.style.display ?? "";
+
+  if (!el.dataset.voltShiftOriginalTransformOrigin) {
+    el.dataset.voltShiftOriginalTransformOrigin = el.style.transformOrigin ?? "";
+  }
+
+  el.style.display = "inline-block";
+  if (!el.style.transformOrigin) {
+    el.style.transformOrigin = "center center";
+  }
+}
+
+function restoreOriginalDisplay(element: HTMLElement): void {
+  const state = element.dataset.voltShiftDisplayManaged;
+  if (!state || state === "infinite") {
+    return;
+  }
+
+  const original = element.dataset.voltShiftOriginalDisplay ?? "";
+  element.style.display = original;
+  const originalOrigin = element.dataset.voltShiftOriginalTransformOrigin ?? "";
+  element.style.transformOrigin = originalOrigin;
+  delete element.dataset.voltShiftDisplayManaged;
+  delete element.dataset.voltShiftOriginalDisplay;
+  delete element.dataset.voltShiftOriginalTransformOrigin;
 }
 
 /**
@@ -277,11 +413,17 @@ export function shiftPlugin(ctx: PluginContext, value: string): void {
       return;
     }
 
+    const effectiveIterations = parsed.iterations ?? preset.iterations;
+    const isInfinite = effectiveIterations === Number.POSITIVE_INFINITY;
     let previousValue = signal.get();
 
     const unsubscribe = signal.subscribe((value) => {
-      if (value !== previousValue && Boolean(value)) {
-        applyAnimation(el, preset, parsed.duration, parsed.iterations);
+      if (value !== previousValue) {
+        if (value) {
+          applyAnimation(el, preset, parsed.duration, parsed.iterations);
+        } else if (isInfinite && el.style.animationName) {
+          stopAnimation(el);
+        }
       }
       previousValue = value;
     });
@@ -290,12 +432,16 @@ export function shiftPlugin(ctx: PluginContext, value: string): void {
 
     if (signal.get()) {
       ctx.lifecycle.onMount(() => {
-        applyAnimation(el, preset, parsed.duration, parsed.iterations);
+        requestAnimationFrame(() => {
+          applyAnimation(el, preset, parsed.duration, parsed.iterations);
+        });
       });
     }
   } else {
     ctx.lifecycle.onMount(() => {
-      applyAnimation(el, preset, parsed.duration, parsed.iterations);
+      requestAnimationFrame(() => {
+        applyAnimation(el, preset, parsed.duration, parsed.iterations);
+      });
     });
   }
 }

@@ -49,15 +49,35 @@ describe("Surge Plugin", () => {
       expect(hasSurge(element as HTMLElement)).toBe(true);
     });
 
+    it("should detect surge attributes before plugin execution", async () => {
+      vi.useFakeTimers();
+
+      element.dataset.voltSurge = "fade";
+      expect(hasSurge(element as HTMLElement)).toBe(true);
+
+      const enterPromise = executeSurgeEnter(element as HTMLElement);
+      await vi.advanceTimersByTimeAsync(400);
+      await enterPromise;
+      expect(element.style.opacity).toBe("1");
+
+      element.dataset["voltSurge:leave"] = "fade";
+      const leavePromise = executeSurgeLeave(element as HTMLElement);
+      await vi.advanceTimersByTimeAsync(400);
+      await leavePromise;
+      expect(element.style.opacity).toBe("0");
+
+      vi.useRealTimers();
+    });
+
     it("should store enter-specific config", () => {
       surgePlugin(mockContext, "enter:slide-down");
-      const stored = (element as HTMLElement & { _voltSurgeEnter?: unknown })._voltSurgeEnter;
+      const stored = (element as HTMLElement & { _vxSurgeEnter?: unknown })._vxSurgeEnter;
       expect(stored).toBeDefined();
     });
 
     it("should store leave-specific config", () => {
       surgePlugin(mockContext, "leave:fade.300");
-      const stored = (element as HTMLElement & { _voltSurgeLeave?: unknown })._voltSurgeLeave;
+      const stored = (element as HTMLElement & { _vxSurgeLeave?: unknown })._vxSurgeLeave;
       expect(stored).toBeDefined();
     });
   });

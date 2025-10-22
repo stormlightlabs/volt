@@ -4,9 +4,9 @@
  * Supports localStorage, sessionStorage, IndexedDB, and custom adapters
  */
 
-import { isNil } from "$core/shared";
+import { isNil, kebabToCamel } from "$core/shared";
 import type { Optional } from "$types/helpers";
-import type { PluginContext, Signal, StorageAdapter } from "$types/volt";
+import type { PluginContext, Scope, Signal, StorageAdapter } from "$types/volt";
 
 const storageAdapterRegistry = new Map<string, StorageAdapter>();
 
@@ -151,6 +151,94 @@ function getStorageAdapter(type: string): Optional<StorageAdapter> {
   }
 }
 
+function resolveCanonicalPath(scope: Scope, rawPath: string): string {
+  const trimmed = rawPath.trim();
+  if (!trimmed) {
+    return trimmed;
+  }
+
+  const parts = trimmed.split(".");
+  const resolved: string[] = [];
+  let current: unknown = scope;
+
+  for (const part of parts) {
+    if (isNil(current) || typeof current !== "object") {
+      resolved.push(part);
+      current = undefined;
+      continue;
+    }
+
+    const record = current as Record<string, unknown>;
+
+    if (Object.hasOwn(record, part)) {
+      resolved.push(part);
+      current = record[part];
+      continue;
+    }
+
+    const camelCandidate = kebabToCamel(part);
+    if (Object.hasOwn(record, camelCandidate)) {
+      resolved.push(camelCandidate);
+      current = record[camelCandidate];
+      continue;
+    }
+
+    const lower = part.toLowerCase();
+    const matchedKey = Object.keys(record).find((key) => key.toLowerCase() === lower);
+
+    if (matchedKey) {
+      resolved.push(matchedKey);
+      current = record[matchedKey];
+      continue;
+    }
+
+    resolved.push(part);
+    current = undefined;
+  }
+
+  return resolved.join(".");
+}
+
+function resolveSignal(ctx: PluginContext, rawPath: string): Optional<{ path: string; signal: Signal<unknown> }> {
+  const trimmed = rawPath.trim();
+  if (!trimmed) {
+    return undefined;
+  }
+
+  const canonicalPath = resolveCanonicalPath(ctx.scope, trimmed);
+  const candidatePaths = new Set([canonicalPath, trimmed]);
+
+  for (const candidate of candidatePaths) {
+    const found = ctx.findSignal(candidate);
+    if (found) {
+      return { path: candidate, signal: found as Signal<unknown> };
+    }
+  }
+}
+
+function normalizeStorageType(type: string): { key: string; original: string } {
+  const original = type.trim();
+  const normalized = original.toLowerCase().replaceAll(/[\s_-]/g, "");
+
+  switch (normalized) {
+    case "local":
+    case "localstorage": {
+      return { key: "local", original };
+    }
+    case "session":
+    case "sessionstorage": {
+      return { key: "session", original };
+    }
+    case "indexeddb":
+    case "indexed-db": {
+      return { key: "indexeddb", original };
+    }
+    default: {
+      return { key: original, original };
+    }
+  }
+}
+
 /**
  * Persist plugin handler.
  * Synchronizes signal values with persistent storage.
@@ -170,48 +258,49 @@ export function persistPlugin(ctx: PluginContext, value: string): void {
   }
 
   const [signalPath, storageType] = parts;
-  const signal = ctx.findSignal(signalPath.trim());
+  const resolvedSignal = resolveSignal(ctx, signalPath);
 
-  if (!signal) {
-    console.error(`Signal "${signalPath}" not found in scope for persist binding`);
+  if (!resolvedSignal) {
+    console.error(`Signal "${signalPath.trim()}" not found in scope for persist binding`);
     return;
   }
 
-  const adapter = getStorageAdapter(storageType.trim());
+  const { key: adapterKey, original } = normalizeStorageType(storageType);
+  const adapter = getStorageAdapter(adapterKey) ?? (adapterKey === original ? undefined : getStorageAdapter(original));
   if (!adapter) {
-    console.error(`Unknown storage type: "${storageType}"`);
+    console.error(`Unknown storage type: "${storageType.trim()}"`);
     return;
   }
 
-  const storageKey = `volt:${signalPath.trim()}`;
+  const storageKey = `volt:${resolvedSignal.path}`;
 
   try {
     const result = adapter.get(storageKey);
     if (result instanceof Promise) {
       result.then((storedValue) => {
         if (storedValue !== undefined) {
-          (signal as Signal<unknown>).set(storedValue);
+          resolvedSignal.signal.set(storedValue);
         }
       }).catch((error) => {
-        console.error(`Failed to load persisted value for "${signalPath}":`, error);
+        console.error(`Failed to load persisted value for "${signalPath.trim()}":`, error);
       });
     } else if (result !== undefined) {
-      (signal as Signal<unknown>).set(result);
+      resolvedSignal.signal.set(result);
     }
   } catch (error) {
-    console.error(`Failed to load persisted value for "${signalPath}":`, error);
+    console.error(`Failed to load persisted value for "${signalPath.trim()}":`, error);
   }
 
-  const unsubscribe = signal.subscribe((newValue) => {
+  const unsubscribe = resolvedSignal.signal.subscribe((newValue) => {
     try {
       const result = adapter.set(storageKey, newValue);
       if (result instanceof Promise) {
         result.catch((error) => {
-          console.error(`Failed to persist value for "${signalPath}":`, error);
+          console.error(`Failed to persist value for "${signalPath.trim()}":`, error);
         });
       }
     } catch (error) {
-      console.error(`Failed to persist value for "${signalPath}":`, error);
+      console.error(`Failed to persist value for "${signalPath.trim()}":`, error);
     }
   });
 
