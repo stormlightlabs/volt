@@ -16,12 +16,12 @@ import { urlPlugin } from "$plugins/url";
 import type { Signal } from "$types/volt";
 import { registerPlugin } from "$volt";
 import { createAnimationsSection } from "./sections/animations";
+import { createCssSection } from "./sections/css";
 import { createFormsSection } from "./sections/forms";
 import { createHomeSection } from "./sections/home";
 import { createInteractivitySection } from "./sections/interactivity";
 import { createPluginsSection } from "./sections/plugins";
 import { createReactivitySection } from "./sections/reactivity";
-import { createTypographySection } from "./sections/typography";
 import * as dom from "./utils";
 
 registerPlugin("persist", persistPlugin);
@@ -32,7 +32,7 @@ registerPlugin("shift", shiftPlugin);
 
 /**
  * Helper functions for DOM operations that can't be expressed declaratively
- * These are added to window.$helpers so they can be called from data-volt-on-* attributes
+ * These are added to the scope so they can be called from data-volt-on-* attributes
  */
 const helpers = {
   openDialog(id: string) {
@@ -70,14 +70,12 @@ const helpers = {
   },
 };
 
-(globalThis as any).$helpers = helpers;
-
 const buildNav = () =>
   dom.nav(
     null,
     dom.a({ "data-volt-navigate": "", href: "/" }, "Home"),
     " | ",
-    dom.a({ "data-volt-navigate": "", href: "/typography" }, "Typography"),
+    dom.a({ "data-volt-navigate": "", href: "/css" }, "CSS"),
     " | ",
     dom.a({ "data-volt-navigate": "", href: "/interactivity" }, "Interactivity"),
     " | ",
@@ -160,7 +158,7 @@ function buildDemoStructure(): HTMLElement {
       "main",
       null,
       dom.div({ "data-volt-if": "currentPage === 'home'" }, createHomeSection()),
-      dom.div({ "data-volt-if": "currentPage === 'typography'" }, createTypographySection()),
+      dom.div({ "data-volt-if": "currentPage === 'css'" }, createCssSection()),
       dom.div({ "data-volt-if": "currentPage === 'interactivity'" }, createInteractivitySection()),
       dom.div({ "data-volt-if": "currentPage === 'forms'" }, createFormsSection()),
       dom.div({ "data-volt-if": "currentPage === 'reactivity'" }, createReactivitySection()),
@@ -201,6 +199,9 @@ export function setupDemo() {
     console.error("Failed to get root scope from charge result");
     return;
   }
+
+  // Add helper functions to scope (not serializable, so added after charge)
+  rootScope.$helpers = helpers;
 
   const handleNavigate = (event: Event) => {
     const customEvent = event as CustomEvent;

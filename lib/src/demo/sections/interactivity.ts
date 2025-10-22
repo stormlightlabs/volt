@@ -23,7 +23,9 @@ export function createInteractivitySection(): HTMLElement {
         ),
         " VoltX CSS styles it elegantly, and VoltX.js handles the interaction.",
       ),
-      dom.button({ "data-volt-on-click": "$helpers.openDialog('demo-dialog'); dialogMessage.set(''); dialogInput.set('')" }, "Open Dialog"),
+      dom.button({
+        "data-volt-on-click": "$helpers.openDialog('demo-dialog'); dialogMessage.set(''); dialogInput.set('')",
+      }, "Open Dialog"),
       dom.p({ "data-volt-if": "dialogMessage", "data-volt-text": "dialogMessage" }),
       dom.dialog(
         { id: "demo-dialog" },
@@ -37,7 +39,8 @@ export function createInteractivitySection(): HTMLElement {
           dom.form(
             {
               id: "demo-dialog-form",
-              "data-volt-on-submit": "$event.preventDefault(); dialogMessage.set('You entered: ' + dialogInput); setTimeout(() => $helpers.closeDialog('demo-dialog'), 2000)",
+              "data-volt-on-submit":
+                "$event.preventDefault(); dialogMessage.set('You entered: ' + dialogInput); setTimeout(() => $helpers.closeDialog('demo-dialog'), 2000)",
             },
             ...dom.labelFor("Enter something:", {
               type: "text",
@@ -67,35 +70,10 @@ export function createInteractivitySection(): HTMLElement {
       ),
       dom.div(
         { style: "display: flex; gap: 0.5rem; flex-wrap: wrap;" },
-        ...dom.buttons([
-          ["Increment", "count.set(count + 1)"],
-          ["Decrement", "count.set(count - 1)"],
-          ["Reset", "count.set(0)"],
-          ["Update Header", "message.set('Count is now ' + count)"],
-        ]),
-      ),
-    ),
-    // TODO: Eventually move tooltips to a dedicated CSS section/page
-    dom.section(
-      null,
-      dom.h3(null, "Tooltips"),
-      dom.p(null, "VoltX CSS includes pure-CSS tooltips with zero JavaScript. Try hovering over these examples:"),
-      dom.p(
-        null,
-        dom.abbr({ "data-vx-tooltip": "Tooltips appear on top by default", "data-placement": "top" }, "Top"),
-        " · ",
-        dom.abbr({ "data-vx-tooltip": "Tooltips can appear on the right", "data-placement": "right" }, "Right"),
-        " · ",
-        dom.abbr({ "data-vx-tooltip": "Tooltips can appear on the bottom", "data-placement": "bottom" }, "Bottom"),
-        " · ",
-        dom.abbr({ "data-vx-tooltip": "Tooltips can appear on the left", "data-placement": "left" }, "Left"),
-      ),
-      dom.p(
-        null,
-        dom.small(
-          null,
-          "Tooltips use the data-vx-tooltip attribute and are styled with pure CSS. They automatically hide on mobile devices.",
-        ),
+        ...dom.buttons([["Increment", "count.set(count + 1)"], ["Decrement", "count.set(count - 1)"], [
+          "Reset",
+          "count.set(0)",
+        ], ["Update Header", "message.set('Count is now ' + count)"]]),
       ),
     ),
   );

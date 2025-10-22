@@ -64,9 +64,23 @@ import { charge, signal } from "jsr:@voltx/core";
 
 Plugins are opt-in and can be combined declaratively or registered programmatically via `charge({ plugins: [...] })`.
 
-## Using CSS
+## VoltX.css
 
-Import the optional CSS framework:
+VoltX ships with an optional classless CSS framework inspired by Pico CSS and Tufte CSS. It provides beautiful, semantic styling without requiring any CSS classes—just write semantic HTML and it looks great. It's perfect for prototyping.
+
+### Features
+
+- **Typography**: Modular scale (1.25 ratio), harmonious spacing, and responsive sizing
+- **Tufte-style sidenotes**: Margin notes using `<small>` that float on desktop, inline on mobile
+- **Components**: Styled dialogs, accordions (details/summary), and pure-CSS tooltips
+- **Forms**: Consistent, accessible input styling with validation states
+- **Tables**: Zebra striping and responsive behavior
+- **Code blocks**: Syntax-appropriate styling for inline and block code
+- **Dark mode**: Automatic theme switching based on system preferences
+
+### Installation
+
+Import the CSS in your application:
 
 ```typescript
 import 'voltx.js/css';
@@ -77,6 +91,28 @@ Or include via CDN:
 ```html
 <link rel="stylesheet" href="https://unpkg.com/voltx.js/dist/voltx.css">
 ```
+
+### Usage
+
+No classes needed—just write semantic HTML:
+
+```html
+<article>
+  <h2>Beautiful Typography</h2>
+  <p>
+    This paragraph has proper spacing.
+    <small>This sidenote appears in the margin on wide screens.</small>
+    All elements are styled automatically.
+  </p>
+
+  <details>
+    <summary>Accordion Example</summary>
+    <p>Content revealed when opened.</p>
+  </details>
+</article>
+```
+
+See the demo app's CSS section for comprehensive examples of all features.
 
 ## Documentation
 
