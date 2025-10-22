@@ -138,8 +138,8 @@ function buildDemoStructure(): HTMLElement {
       "data-volt": "",
       "data-volt-state": JSON.stringify(initialState),
       "data-volt-computed:doubled": "count * 2",
-      "data-volt-computed:activeTodos": "todos.filter(t => !t.done)",
-      "data-volt-computed:completedTodos": "todos.filter(t => t.done)",
+      "data-volt-computed:active-todos": "todos.filter(t => !t.done)",
+      "data-volt-computed:completed-todos": "todos.filter(t => t.done)",
     },
     dom.header(
       null,

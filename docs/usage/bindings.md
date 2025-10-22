@@ -364,6 +364,7 @@ The binding syntax is `data-volt-url:signalName="urlPart"` where URL part is:
 
 - `query`: Sync with query parameter (e.g., `?page=1`)
 - `hash`: Sync with URL hash (e.g., `#section`)
+- `history`: Sync with the full pathname + search (e.g., `data-volt-url:route="history:/app"`)
 
 Signal changes update the URL, and URL changes (back/forward navigation) update signals. This enables client-side routing without additional libraries.
 

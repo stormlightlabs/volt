@@ -1,5 +1,5 @@
 /**
- * Binder system for mounting and managing VoltX.js bindings
+ * Binder system for mounting and managing VoltX bindings
  */
 
 import { executeSurgeEnter, executeSurgeLeave, hasSurge } from "$plugins/surge";
@@ -46,8 +46,25 @@ export function registerDirective(name: string, handler: DirectiveHandler): void
   directiveRegistry.set(name, handler);
 }
 
+function scheduleTransitionTask(cb: () => void): void {
+  let executed = false;
+  const wrapped = () => {
+    if (executed) {
+      return;
+    }
+    executed = true;
+    cb();
+  };
+
+  if (typeof requestAnimationFrame === "function") {
+    requestAnimationFrame(wrapped);
+  }
+
+  setTimeout(wrapped, 16);
+}
+
 /**
- * Mount VoltX.js on a root element and its descendants and binds all data-volt-* attributes to the provided scope.
+ * Mount VoltX on a root element and its descendants and binds all data-volt-* attributes to the provided scope.
  *
  * @param root - Root element to mount on
  * @param scope - Scope object containing signals and data
@@ -313,7 +330,7 @@ function bindShow(ctx: BindingContext, expr: string): void {
 
     isTransitioning = true;
 
-    requestAnimationFrame(() => {
+    scheduleTransitionTask(() => {
       void (async () => {
         try {
           if (shouldShow) {
@@ -874,6 +891,7 @@ function bindIf(ctx: BindingContext, expr: string): void {
   let currentCleanup: Optional<CleanupFunction>;
   let currentBranch: Optional<"if" | "else">;
   let isTransitioning = false;
+  let pendingRender = false;
 
   const render = () => {
     const condition = evaluate(expr, ctx.scope);
@@ -882,6 +900,9 @@ function bindIf(ctx: BindingContext, expr: string): void {
     const targetBranch = shouldShow ? "if" : (elseTempl ? "else" : undefined);
 
     if (targetBranch === currentBranch || isTransitioning) {
+      if (isTransitioning) {
+        pendingRender = true;
+      }
       return;
     }
 
@@ -915,55 +936,57 @@ function bindIf(ctx: BindingContext, expr: string): void {
 
     isTransitioning = true;
 
-    requestAnimationFrame(() => {
-      void (async () => {
-        try {
-          if (currentElement) {
-            const currentEl = currentElement as HTMLElement;
-            const currentHasSurge = currentBranch === "if" ? ifHasSurge : elseHasSurge;
+    void (async () => {
+      try {
+        if (currentElement) {
+          const currentEl = currentElement as HTMLElement;
+          const currentHasSurge = currentBranch === "if" ? ifHasSurge : elseHasSurge;
 
-            if (currentHasSurge) {
-              await executeSurgeLeave(currentEl);
-            }
-
-            if (currentCleanup) {
-              currentCleanup();
-              currentCleanup = undefined;
-            }
-            currentElement.remove();
-            currentElement = undefined;
+          if (currentHasSurge) {
+            await executeSurgeLeave(currentEl);
           }
 
-          if (targetBranch === "if") {
-            currentElement = ifTempl.cloneNode(true) as Element;
-            delete (currentElement as HTMLElement).dataset.voltIf;
-            placeholder.before(currentElement);
-
-            if (ifHasSurge) {
-              await executeSurgeEnter(currentElement as HTMLElement);
-            }
-
-            currentCleanup = mount(currentElement, ctx.scope);
-            currentBranch = "if";
-          } else if (targetBranch === "else" && elseTempl) {
-            currentElement = elseTempl.cloneNode(true) as Element;
-            delete (currentElement as HTMLElement).dataset.voltElse;
-            placeholder.before(currentElement);
-
-            if (elseHasSurge) {
-              await executeSurgeEnter(currentElement as HTMLElement);
-            }
-
-            currentCleanup = mount(currentElement, ctx.scope);
-            currentBranch = "else";
-          } else {
-            currentBranch = undefined;
+          if (currentCleanup) {
+            currentCleanup();
+            currentCleanup = undefined;
           }
-        } finally {
-          isTransitioning = false;
+          currentElement.remove();
+          currentElement = undefined;
         }
-      })();
-    });
+
+        if (targetBranch === "if") {
+          currentElement = ifTempl.cloneNode(true) as Element;
+          delete (currentElement as HTMLElement).dataset.voltIf;
+          placeholder.before(currentElement);
+
+          if (ifHasSurge) {
+            await executeSurgeEnter(currentElement as HTMLElement);
+          }
+
+          currentCleanup = mount(currentElement, ctx.scope);
+          currentBranch = "if";
+        } else if (targetBranch === "else" && elseTempl) {
+          currentElement = elseTempl.cloneNode(true) as Element;
+          delete (currentElement as HTMLElement).dataset.voltElse;
+          placeholder.before(currentElement);
+
+          if (elseHasSurge) {
+            await executeSurgeEnter(currentElement as HTMLElement);
+          }
+
+          currentCleanup = mount(currentElement, ctx.scope);
+          currentBranch = "else";
+        } else {
+          currentBranch = undefined;
+        }
+      } finally {
+        isTransitioning = false;
+        if (pendingRender) {
+          pendingRender = false;
+          render();
+        }
+      }
+    })();
   };
 
   updateAndRegister(ctx, render, expr);

@@ -9,6 +9,12 @@ import { withViewTransition } from "$core/view-transitions";
 import type { Optional } from "$types/helpers";
 import type { PluginContext, Signal, TransitionPhase } from "$types/volt";
 
+type SurgeElement = HTMLElement & {
+  _vxSurgeConf?: SurgeConfig;
+  _vxSurgeEnter?: TransitionPhase;
+  _vxSurgeLeave?: TransitionPhase;
+};
+
 type SurgeConfig = {
   enterPreset?: TransitionPhase;
   leavePreset?: TransitionPhase;
@@ -205,6 +211,38 @@ function parseSurgeValue(value: string): Optional<SurgeConfig> {
   return { enterPreset: parsed.preset.enter, leavePreset: parsed.preset.leave, useViewTransitions: true };
 }
 
+function ensureInlineSurgeState(element: SurgeElement): void {
+  if (!element._vxSurgeConf) {
+    const attr = element.dataset.voltSurge;
+    if (attr) {
+      const parsed = parseSurgeValue(attr);
+      if (parsed) {
+        element._vxSurgeConf = parsed;
+      }
+    }
+  }
+
+  if (!element._vxSurgeEnter) {
+    const enterAttr = element.dataset["voltSurge:enter"];
+    if (enterAttr) {
+      const enterPhase = parsePhaseValue(enterAttr, "enter");
+      if (enterPhase) {
+        element._vxSurgeEnter = enterPhase;
+      }
+    }
+  }
+
+  if (!element._vxSurgeLeave) {
+    const leaveAttr = element.dataset["voltSurge:leave"];
+    if (leaveAttr) {
+      const leavePhase = parsePhaseValue(leaveAttr, "leave");
+      if (leavePhase) {
+        element._vxSurgeLeave = leavePhase;
+      }
+    }
+  }
+}
+
 function parsePhaseValue(value: string, phase: "enter" | "leave"): Optional<TransitionPhase> {
   const parsed = parseTransitionValue(value.trim());
   if (!parsed) {
@@ -238,7 +276,7 @@ function parsePhaseValue(value: string, phase: "enter" | "leave"): Optional<Tran
  * ```
  */
 export function surgePlugin(ctx: PluginContext, value: string): void {
-  const el = ctx.element as HTMLElement;
+  const el = ctx.element as SurgeElement;
 
   if (value.includes(":")) {
     const [phase, presetValue] = value.split(":", 2);
@@ -250,7 +288,7 @@ export function surgePlugin(ctx: PluginContext, value: string): void {
         return;
       }
 
-      (el as HTMLElement & { _voltSurgeEnter?: TransitionPhase })._voltSurgeEnter = enterPhase;
+      el._vxSurgeEnter = enterPhase;
       return;
     }
 
@@ -261,7 +299,7 @@ export function surgePlugin(ctx: PluginContext, value: string): void {
         return;
       }
 
-      (el as HTMLElement & { _voltSurgeLeave?: TransitionPhase })._voltSurgeLeave = leavePhase;
+      el._vxSurgeLeave = leavePhase;
       return;
     }
   }
@@ -273,7 +311,7 @@ export function surgePlugin(ctx: PluginContext, value: string): void {
   }
 
   if (!config.signalPath) {
-    (el as HTMLElement & { _voltSurgeConfig?: SurgeConfig })._voltSurgeConfig = config;
+    el._vxSurgeConf = config;
     return;
   }
 
@@ -322,8 +360,11 @@ export function surgePlugin(ctx: PluginContext, value: string): void {
  * @internal
  */
 export async function executeSurgeEnter(element: HTMLElement): Promise<void> {
-  const config = (element as HTMLElement & { _voltSurgeConfig?: SurgeConfig })._voltSurgeConfig;
-  const customEnter = (element as HTMLElement & { _voltSurgeEnter?: TransitionPhase })._voltSurgeEnter;
+  const surgeEl = element as SurgeElement;
+  ensureInlineSurgeState(surgeEl);
+
+  const config = surgeEl._vxSurgeConf;
+  const customEnter = surgeEl._vxSurgeEnter;
 
   const enterPhase = customEnter ?? config?.enterPreset;
   if (!enterPhase) {
@@ -338,8 +379,11 @@ export async function executeSurgeEnter(element: HTMLElement): Promise<void> {
  * @internal
  */
 export async function executeSurgeLeave(element: HTMLElement): Promise<void> {
-  const config = (element as HTMLElement & { _voltSurgeConfig?: SurgeConfig })._voltSurgeConfig;
-  const customLeave = (element as HTMLElement & { _voltSurgeLeave?: TransitionPhase })._voltSurgeLeave;
+  const surgeEl = element as SurgeElement;
+  ensureInlineSurgeState(surgeEl);
+
+  const config = surgeEl._vxSurgeConf;
+  const customLeave = surgeEl._vxSurgeLeave;
 
   const leavePhase = customLeave ?? config?.leavePreset;
   if (!leavePhase) {
@@ -354,9 +398,8 @@ export async function executeSurgeLeave(element: HTMLElement): Promise<void> {
  * @internal
  */
 export function hasSurge(element: HTMLElement): boolean {
-  const config = (element as HTMLElement & { _voltSurgeConfig?: SurgeConfig })._voltSurgeConfig;
-  const customEnter = (element as HTMLElement & { _voltSurgeEnter?: TransitionPhase })._voltSurgeEnter;
-  const customLeave = (element as HTMLElement & { _voltSurgeLeave?: TransitionPhase })._voltSurgeLeave;
+  const surgeEl = element as SurgeElement;
+  ensureInlineSurgeState(surgeEl);
 
-  return Boolean(config || customEnter || customLeave);
+  return Boolean(surgeEl._vxSurgeConf || surgeEl._vxSurgeEnter || surgeEl._vxSurgeLeave);
 }

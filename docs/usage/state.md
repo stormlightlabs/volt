@@ -64,6 +64,7 @@ The name becomes a signal in the scope, and the attribute value is the computati
 ```
 
 Computed values defined this way follow the same rules as programmatic computed signals: they track dependencies and update automatically.
+For multi-word signal names, prefer kebab-case in the attribute (e.g., `data-volt-computed:active-todos`) — HTML lowercases attribute names and Volt converts kebab-case back to camelCase (`activeTodos`) automatically.
 
 ## Programmatic State
 
@@ -105,6 +106,7 @@ VoltX automatically unwraps signals in read contexts, making expressions simpler
 ```
 
 **Read Contexts** (signals auto-unwrapped):
+
 - `data-volt-text`, `data-volt-html`
 - `data-volt-if`, `data-volt-else`
 - `data-volt-for`
@@ -113,6 +115,7 @@ VoltX automatically unwraps signals in read contexts, making expressions simpler
 - `data-volt-computed:*` expressions
 
 **Write Contexts** (signals not auto-unwrapped):
+
 - `data-volt-on-*` event handlers
 - `data-volt-init` initialization code
 - `data-volt-model` (handles both read and write automatically)

@@ -48,9 +48,7 @@ describe("Shift Plugin", () => {
 
     globalThis.matchMedia = vi.fn().mockReturnValue({ matches: false });
 
-    element.animate = vi.fn((keyframes: Keyframe[], options?: KeyframeAnimationOptions) => {
-      return { onfinish: null, cancel: vi.fn(), _keyframes: keyframes, _options: options };
-    }) as unknown as typeof element.animate;
+    element.style.animation = "";
   });
 
   afterEach(() => {
@@ -138,38 +136,27 @@ describe("Shift Plugin", () => {
     it("should apply animation on mount", () => {
       shiftPlugin(mockContext, "bounce");
 
-      expect(element.animate).toHaveBeenCalled();
-      const animateCall = (element.animate as ReturnType<typeof vi.fn>).mock.calls[0];
-      expect(animateCall).toBeDefined();
+      expect(element.style.animationName).toMatch(/^volt-shift-/);
     });
 
     it("should use default duration and iterations", () => {
       shiftPlugin(mockContext, "bounce");
 
-      expect(element.animate).toHaveBeenCalled();
-      const animateMock = element.animate as unknown as ReturnType<typeof vi.fn>;
-      const options = animateMock.mock.calls[0]?.[1] as KeyframeAnimationOptions;
-      expect(options?.duration).toBe(100);
-      expect(options?.iterations).toBe(1);
+      expect(element.style.animationDuration).toBe("100ms");
+      expect(element.style.animationIterationCount).toBe("1");
     });
 
     it("should apply custom duration", () => {
       shiftPlugin(mockContext, "bounce.1000");
 
-      expect(element.animate).toHaveBeenCalled();
-      const animateMock = element.animate as unknown as ReturnType<typeof vi.fn>;
-      const options = animateMock.mock.calls[0]?.[1] as KeyframeAnimationOptions;
-      expect(options?.duration).toBe(1000);
+      expect(element.style.animationDuration).toBe("1000ms");
     });
 
     it("should apply custom duration and iterations", () => {
       shiftPlugin(mockContext, "bounce.500.3");
 
-      expect(element.animate).toHaveBeenCalled();
-      const animateMock = element.animate as unknown as ReturnType<typeof vi.fn>;
-      const options = animateMock.mock.calls[0]?.[1] as KeyframeAnimationOptions;
-      expect(options?.duration).toBe(500);
-      expect(options?.iterations).toBe(3);
+      expect(element.style.animationDuration).toBe("500ms");
+      expect(element.style.animationIterationCount).toBe("3");
     });
 
     it("should handle unknown animation preset", () => {
@@ -177,7 +164,7 @@ describe("Shift Plugin", () => {
 
       shiftPlugin(mockContext, "unknown");
 
-      expect(element.animate).not.toHaveBeenCalled();
+      expect(element.style.animationName).toBe("");
       expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining("Unknown animation preset: \"unknown\""));
 
       consoleSpy.mockRestore();
@@ -188,10 +175,34 @@ describe("Shift Plugin", () => {
 
       shiftPlugin(mockContext, "");
 
-      expect(element.animate).not.toHaveBeenCalled();
+      expect(element.style.animationName).toBe("");
       expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining("Invalid shift value"));
 
       consoleSpy.mockRestore();
+    });
+
+    it("should work when Web Animations API is unavailable", () => {
+      // @ts-expect-error mutate for test
+      element.animate = undefined;
+
+      shiftPlugin(mockContext, "bounce");
+
+      expect(element.style.animationName).toMatch(/^volt-shift-/);
+    });
+
+    it("should normalize inline elements for transform animations", () => {
+      const span = document.createElement("span");
+      span.textContent = "⚙️";
+      container.append(span);
+
+      const context: PluginContext = { ...mockContext, element: span };
+
+      shiftPlugin(context, "spin");
+
+      expect(span.style.display).toBe("inline-block");
+      expect(span.dataset.voltShiftDisplayManaged).toBe("infinite");
+      expect(span.dataset.voltShiftRuns).toBe("1");
+      expect(span.style.transformOrigin).toBe("center center");
     });
   });
 
@@ -202,11 +213,11 @@ describe("Shift Plugin", () => {
 
       shiftPlugin(mockContext, "trigger:bounce");
 
-      expect(element.animate).not.toHaveBeenCalled();
+      expect(element.dataset.voltShiftRuns ?? "0").toBe("0");
 
       triggerSignal.set(true);
 
-      expect(element.animate).toHaveBeenCalled();
+      expect(element.dataset.voltShiftRuns).toBe("1");
     });
 
     it("should not trigger animation when signal stays truthy", () => {
@@ -215,11 +226,11 @@ describe("Shift Plugin", () => {
 
       shiftPlugin(mockContext, "trigger:bounce");
 
-      expect(element.animate).toHaveBeenCalledTimes(1);
+      expect(element.dataset.voltShiftRuns).toBe("1");
 
       triggerSignal.set(true);
 
-      expect(element.animate).toHaveBeenCalledTimes(1);
+      expect(element.dataset.voltShiftRuns).toBe("1");
     });
 
     it("should trigger animation on initial mount if signal is truthy", () => {
@@ -228,7 +239,7 @@ describe("Shift Plugin", () => {
 
       shiftPlugin(mockContext, "trigger:bounce");
 
-      expect(element.animate).toHaveBeenCalledTimes(1);
+      expect(element.dataset.voltShiftRuns).toBe("1");
     });
 
     it("should handle signal not found", () => {
@@ -249,11 +260,9 @@ describe("Shift Plugin", () => {
 
       triggerSignal.set(true);
 
-      expect(element.animate).toHaveBeenCalled();
-      const animateMock = element.animate as unknown as ReturnType<typeof vi.fn>;
-      const options = animateMock.mock.calls[0]?.[1] as KeyframeAnimationOptions;
-      expect(options?.duration).toBe(800);
-      expect(options?.iterations).toBe(2);
+      expect(element.dataset.voltShiftRuns).toBe("1");
+      expect(element.style.animationDuration).toBe("800ms");
+      expect(element.style.animationIterationCount).toBe("2");
     });
   });
 
@@ -263,7 +272,7 @@ describe("Shift Plugin", () => {
 
       shiftPlugin(mockContext, "bounce");
 
-      expect(element.animate).not.toHaveBeenCalled();
+      expect(element.style.animationName).toBe("");
     });
 
     it("should not animate when prefers-reduced-motion is active and signal triggers", () => {
@@ -276,23 +285,24 @@ describe("Shift Plugin", () => {
 
       triggerSignal.set(true);
 
-      expect(element.animate).not.toHaveBeenCalled();
+      expect(element.style.animationName).toBe("");
     });
   });
 
   describe("Animation Cleanup", () => {
-    it("should cancel animation on finish", () => {
-      const mockAnimation = { onfinish: null as (() => void) | null, cancel: vi.fn() };
-
-      element.animate = vi.fn().mockReturnValue(mockAnimation);
+    it("should clear inline animation after it completes", async () => {
+      vi.useFakeTimers();
 
       shiftPlugin(mockContext, "bounce");
 
-      expect(mockAnimation.onfinish).toBeDefined();
+      expect(element.style.animationName).toMatch(/^volt-shift-/);
 
-      mockAnimation.onfinish?.();
+      await vi.advanceTimersByTimeAsync(120);
 
-      expect(mockAnimation.cancel).toHaveBeenCalled();
+      expect(element.style.animationName).toBe("");
+      expect(element.style.animationFillMode).toBe("");
+
+      vi.useRealTimers();
     });
 
     it("should cleanup signal subscription", () => {
