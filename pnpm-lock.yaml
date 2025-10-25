@@ -37,7 +37,7 @@ importers:
         version: 8.46.1(eslint@9.38.0(jiti@2.6.1))(typescript@5.9.3)
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@24.8.1)(esbuild@0.25.11)(jiti@2.6.1)(jsdom@27.0.0)(terser@5.44.0)(yaml@2.8.1)
+        version: 3.2.4(@types/node@24.8.1)(esbuild@0.25.11)(jiti@2.6.1)(jsdom@27.0.0(postcss@8.5.6))(terser@5.44.0)(yaml@2.8.1)
 
   dev:
     dependencies:
@@ -74,6 +74,10 @@ importers:
         version: 3.5.22(typescript@5.9.3)
 
   lib:
+    dependencies:
+      wrangler:
+        specifier: ^4.45.0
+        version: 4.45.0
     devDependencies:
       '@testing-library/dom':
         specifier: ^10.4.1
@@ -111,9 +115,6 @@ importers:
       vite:
         specifier: npm:rolldown-vite@7.1.14
         version: rolldown-vite@7.1.14(@types/node@24.8.1)(esbuild@0.25.11)(jiti@2.6.1)(terser@5.44.0)(yaml@2.8.1)
-      wrangler:
-        specifier: ^4.45.0
-        version: 4.45.0
 
 packages:
 
@@ -4352,7 +4353,7 @@ snapshots:
       std-env: 3.10.0
       test-exclude: 7.0.1
       tinyrainbow: 2.0.0
-      vitest: 3.2.4(@types/node@24.8.1)(esbuild@0.25.11)(jiti@2.6.1)(jsdom@27.0.0)(terser@5.44.0)(yaml@2.8.1)
+      vitest: 3.2.4(@types/node@24.8.1)(esbuild@0.25.11)(jiti@2.6.1)(jsdom@27.0.0(postcss@8.5.6))(terser@5.44.0)(yaml@2.8.1)
     transitivePeerDependencies:
       - supports-color
 
@@ -6422,7 +6423,7 @@ snapshots:
       - universal-cookie
       - yaml
 
-  vitest@3.2.4(@types/node@24.8.1)(esbuild@0.25.11)(jiti@2.6.1)(jsdom@27.0.0)(terser@5.44.0)(yaml@2.8.1):
+  vitest@3.2.4(@types/node@24.8.1)(esbuild@0.25.11)(jiti@2.6.1)(jsdom@27.0.0(postcss@8.5.6))(terser@5.44.0)(yaml@2.8.1):
     dependencies:
       '@types/chai': 5.2.2
       '@vitest/expect': 3.2.4
