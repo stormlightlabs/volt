@@ -41,8 +41,7 @@
     "publish:npm": "npm publish --access=public",
     "publish:jsr": "npx jsr publish",
     "publish:all": "pnpm publish:npm && pnpm publish:jsr",
-    "lint": "eslint . --fix",
-    "wrangle": "wranger deploy --env=\"\""
+    "lint": "eslint . --fix"
   },
   "publishConfig": { "access": "public" },
   "devDependencies": {
@@ -58,6 +57,5 @@
     "postcss-import": "^16.1.1",
     "terser": "^5.44.0",
     "vite": "npm:rolldown-vite@7.1.14"
-  },
-  "dependencies": { "wrangler": "^4.45.0" }
+  }
 }
