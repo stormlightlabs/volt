@@ -7,6 +7,8 @@
 export { asyncEffect } from "$core/async-effect";
 export { mount } from "$core/binder";
 export { charge } from "$core/charge";
+export { clearErrorHandlers, onError, report } from "$core/error";
+export type { VoltError } from "$core/error";
 export { parseHttpConfig, request, serializeForm, serializeFormToJSON, swap } from "$core/http";
 export {
   clearAllGlobalHooks,
@@ -53,7 +55,15 @@ export {
   supportsViewTransitions,
   withViewTransition,
 } from "$core/view-transitions";
-export { goBack, goForward, getRouterMode, initNavigationListener, navigate, redirect, setRouterMode } from "$plugins/navigate";
+export {
+  getRouterMode,
+  goBack,
+  goForward,
+  initNavigationListener,
+  navigate,
+  redirect,
+  setRouterMode,
+} from "$plugins/navigate";
 export { persistPlugin, registerStorageAdapter } from "$plugins/persist";
 export { scrollPlugin } from "$plugins/scroll";
 export {
@@ -74,6 +84,9 @@ export type {
   ChargedRoot,
   ChargeResult,
   ComputedSignal,
+  ErrorContext,
+  ErrorHandler,
+  ErrorSource,
   GlobalHookName,
   GlobalStore,
   HydrateOptions,

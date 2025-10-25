@@ -245,7 +245,7 @@ describe("lifecycle hooks", () => {
           mount(root, {});
         }).not.toThrow();
 
-        expect(consoleErrorSpy).toHaveBeenCalledWith("Error in global beforeMount hook:", expect.any(Error));
+        expect(consoleErrorSpy).toHaveBeenCalledWith("Caused by:", expect.any(Error));
 
         consoleErrorSpy.mockRestore();
       });
@@ -331,7 +331,7 @@ describe("lifecycle hooks", () => {
       });
 
       notifyElementMounted(element);
-      expect(consoleErrorSpy).toHaveBeenCalledWith("Error in element onMount hook:", expect.any(Error));
+      expect(consoleErrorSpy).toHaveBeenCalledWith("Caused by:", expect.any(Error));
 
       consoleErrorSpy.mockRestore();
     });

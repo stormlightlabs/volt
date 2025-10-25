@@ -6,6 +6,7 @@
 
 import type { ChargedRoot, ChargeResult, Scope } from "$types/volt";
 import { mount } from "./binder";
+import { report } from "./error";
 import { evaluate } from "./evaluator";
 import { getComputedAttributes, isNil } from "./shared";
 import { computed, signal } from "./signal";
@@ -13,6 +14,7 @@ import { registerStore } from "./store";
 
 /**
  * Discover and mount all Volt roots in the document.
+ *
  * Parses data-volt-state for initial state and data-volt-computed for derived values.
  * Also parses declarative global store from script[data-volt-store] elements.
  *
@@ -54,7 +56,7 @@ export function charge(rootSelector = "[data-volt]"): ChargeResult {
 
       chargedRoots.push({ element, scope, cleanup });
     } catch (error) {
-      console.error("Error charging Volt root:", element, error);
+      report(error as Error, { source: "charge", element: element as HTMLElement });
     }
   }
 
@@ -65,7 +67,7 @@ export function charge(rootSelector = "[data-volt]"): ChargeResult {
         try {
           root.cleanup();
         } catch (error) {
-          console.error("Error cleaning up Volt root:", root.element, error);
+          report(error as Error, { source: "charge", element: root.element as HTMLElement });
         }
       }
     },
@@ -84,15 +86,24 @@ function createScopeFromElement(el: Element): Scope {
       const stateData = JSON.parse(stateAttr);
 
       if (typeof stateData !== "object" || isNil(stateData) || Array.isArray(stateData)) {
-        console.error(`data-volt-state must be a JSON object, got ${typeof stateData}:`, el);
+        report(new Error(`data-volt-state must be a JSON object, got ${typeof stateData}`), {
+          source: "charge",
+          element: el as HTMLElement,
+          directive: "data-volt-state",
+          expression: stateAttr,
+        });
       } else {
         for (const [key, value] of Object.entries(stateData)) {
           scope[key] = signal(value);
         }
       }
     } catch (error) {
-      console.error("Failed to parse data-volt-state JSON:", stateAttr, error);
-      console.error("Element:", el);
+      report(error as Error, {
+        source: "charge",
+        element: el as HTMLElement,
+        directive: "data-volt-state",
+        expression: stateAttr,
+      });
     }
   }
 
@@ -101,7 +112,12 @@ function createScopeFromElement(el: Element): Scope {
     try {
       scope[name] = computed(() => evaluate(expression, scope));
     } catch (error) {
-      console.error(`Failed to create computed "${name}" with expression "${expression}":`, error);
+      report(error as Error, {
+        source: "charge",
+        element: el as HTMLElement,
+        directive: `data-volt-computed:${name}`,
+        expression: expression,
+      });
     }
   }
 
@@ -125,14 +141,17 @@ function parseDeclarativeStore(): void {
       const data = JSON.parse(content);
 
       if (typeof data !== "object" || isNil(data) || Array.isArray(data)) {
-        console.error("data-volt-store script must contain a JSON object, got:", typeof data);
+        report(new Error(`data-volt-store script must contain a JSON object, got: ${typeof data}`), {
+          source: "charge",
+          element: script as HTMLElement,
+          directive: "data-volt-store",
+        });
         continue;
       }
 
       registerStore(data);
     } catch (error) {
-      console.error("Failed to parse data-volt-store script:", error);
-      console.error("Script element:", script);
+      report(error as Error, { source: "charge", element: script as HTMLElement, directive: "data-volt-store" });
     }
   }
 }

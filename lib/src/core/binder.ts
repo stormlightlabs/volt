@@ -16,6 +16,7 @@ import type {
 } from "$types/volt";
 import { BOOLEAN_ATTRS } from "./constants";
 import { getVoltAttrs, parseClassBinding, setHTML, setText, toggleClass, walkDOM } from "./dom";
+import { report } from "./error";
 import { evaluate } from "./evaluator";
 import { execGlobalHooks, notifyBindingCreated, notifyElementMounted, notifyElementUnmounted } from "./lifecycle";
 import { debounce, getModifierValue, hasModifier, parseModifiers, throttle } from "./modifiers";
@@ -132,7 +133,7 @@ export function mount(root: Element, scope: Scope): CleanupFunction {
       try {
         cleanup();
       } catch (error) {
-        console.error("Error during unmount:", error);
+        report(error as Error, { source: "binding", element: root as HTMLElement });
       }
     }
 
@@ -145,7 +146,12 @@ function execPlugin(plugin: PluginHandler, ctx: BindingContext, val: string, bas
   try {
     plugin(pluginCtx, val);
   } catch (error) {
-    console.error(`Error in plugin "${base}":`, error);
+    report(error as Error, {
+      source: "plugin",
+      element: ctx.element as HTMLElement,
+      directive: `data-volt-${base}`,
+      pluginName: base,
+    });
   }
 }
 
@@ -227,14 +233,12 @@ function bindAttribute(ctx: BindingContext, name: string, value: string): void {
       break;
     }
     default: {
-      // Check directive registry first (for HTTP and other optional directives)
       const directiveHandler = directiveRegistry.get(baseName);
       if (directiveHandler) {
         directiveHandler(ctx, value, modifiers);
         return;
       }
 
-      // Then check plugin registry
       const plugin = getPlugin(baseName);
       if (plugin) {
         execPlugin(plugin, ctx, value, baseName);
@@ -374,7 +378,12 @@ function bindStyle(ctx: BindingContext, expr: string): void {
           try {
             element.style.setProperty(cssKey, String(val));
           } catch (error) {
-            console.warn(`[Volt] Failed to set style property "${cssKey}":`, error);
+            report(error as Error, {
+              source: "binding",
+              element: element,
+              directive: "data-volt-style",
+              expression: expr,
+            });
           }
         }
       }
@@ -458,7 +467,12 @@ function bindEvent(ctx: BindingContext, eventName: string, expr: string, modifie
         result(event);
       }
     } catch (error) {
-      console.error(`Error in event handler (${eventName}):`, error);
+      report(error as Error, {
+        source: "binding",
+        element: ctx.element as HTMLElement,
+        directive: `data-volt-on-${eventName}`,
+        expression: expr,
+      });
     }
   };
 
@@ -598,7 +612,12 @@ function findModelSignal(scope: Scope, path: string): Nullable<{ signal: Signal<
 function bindModel(context: BindingContext, signalPath: string, modifiers: Modifier[] = []): void {
   const result = findModelSignal(context.scope, signalPath);
   if (!result) {
-    console.error(`Signal "${signalPath}" not found for data-volt-model`);
+    report(new Error(`Signal "${signalPath}" not found`), {
+      source: "binding",
+      element: context.element as HTMLElement,
+      directive: "data-volt-model",
+      expression: signalPath,
+    });
     return;
   }
 
@@ -766,7 +785,12 @@ function bindInit(ctx: BindingContext, expr: string): void {
       evaluate(stmt, ctx.scope, { unwrapSignals: false });
     }
   } catch (error) {
-    console.error("Error in data-volt-init:", error);
+    report(error as Error, {
+      source: "binding",
+      element: ctx.element as HTMLElement,
+      directive: "data-volt-init",
+      expression: expr,
+    });
   }
 }
 
@@ -791,7 +815,12 @@ function bindPin(ctx: BindingContext, name: string): void {
 function bindFor(ctx: BindingContext, expr: string): void {
   const parsed = parseForExpr(expr);
   if (!parsed) {
-    console.error(`Invalid data-volt-for expression: "${expr}"`);
+    report(new Error(`Invalid data-volt-for expression: "${expr}"`), {
+      source: "binding",
+      element: ctx.element as HTMLElement,
+      directive: "data-volt-for",
+      expression: expr,
+    });
     return;
   }
 
@@ -800,7 +829,12 @@ function bindFor(ctx: BindingContext, expr: string): void {
   const parent = templ.parentElement;
 
   if (!parent) {
-    console.error("data-volt-for element must have a parent");
+    report(new Error("data-volt-for element must have a parent"), {
+      source: "binding",
+      element: ctx.element as HTMLElement,
+      directive: "data-volt-for",
+      expression: expr,
+    });
     return;
   }
 
@@ -863,7 +897,12 @@ function bindIf(ctx: BindingContext, expr: string): void {
   const parent = ifTempl.parentElement;
 
   if (!parent) {
-    console.error("data-volt-if element must have a parent");
+    report(new Error("data-volt-if element must have a parent"), {
+      source: "binding",
+      element: ctx.element as HTMLElement,
+      directive: "data-volt-if",
+      expression: expr,
+    });
     return;
   }
 
@@ -1034,7 +1073,7 @@ function createPluginCtx(ctx: BindingContext): PluginContext {
       try {
         cb();
       } catch (error) {
-        console.error("Error in plugin onMount hook:", error);
+        report(error as Error, { source: "plugin", element: ctx.element as HTMLElement, hookName: "onMount" });
       }
     },
     onUnmount: (cb: () => void) => {
@@ -1045,7 +1084,7 @@ function createPluginCtx(ctx: BindingContext): PluginContext {
       try {
         cb();
       } catch (error) {
-        console.error("Error in plugin beforeBinding hook:", error);
+        report(error as Error, { source: "plugin", element: ctx.element as HTMLElement, hookName: "beforeBinding" });
       }
     },
     afterBinding: (cb: () => void) => {
@@ -1054,7 +1093,7 @@ function createPluginCtx(ctx: BindingContext): PluginContext {
         try {
           cb();
         } catch (error) {
-          console.error("Error in plugin afterBinding hook:", error);
+          report(error as Error, { source: "plugin", element: ctx.element as HTMLElement, hookName: "afterBinding" });
         }
       });
     },
@@ -1065,7 +1104,7 @@ function createPluginCtx(ctx: BindingContext): PluginContext {
       try {
         cb();
       } catch (error) {
-        console.error("Error in plugin onUnmount hook:", error);
+        report(error as Error, { source: "plugin", element: ctx.element as HTMLElement, hookName: "onUnmount" });
       }
     }
   });

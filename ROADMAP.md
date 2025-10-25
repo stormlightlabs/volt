@@ -128,7 +128,6 @@ directive parsing, and network operations, making it easier to debug apps withou
         - Differentiated error levels: warn, error, fatal.
     - v0.5.3
         - Runtime health monitor tracking evaluation and subscription failures.
-        - Optional integration hooks for external logging tools
     - v0.5.4
         - Documentation: "Understanding VoltX Errors" guide.
         - Configurable global error policy (silent, overlay, throw).

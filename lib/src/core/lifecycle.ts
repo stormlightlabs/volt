@@ -4,6 +4,7 @@
  */
 
 import type { ElementLifecycleState, GlobalHookName, MountHookCallback, Scope, UnmountHookCallback } from "$types/volt";
+import { report } from "./error";
 
 /**
  * Global lifecycle hooks registry
@@ -124,7 +125,7 @@ export function execGlobalHooks(hookName: GlobalHookName, root: Element, scope?:
         (callback as UnmountHookCallback)(root);
       }
     } catch (error) {
-      console.error(`Error in global ${hookName} hook:`, error);
+      report(error as Error, { source: "lifecycle", element: root as HTMLElement, hookName: hookName });
     }
   }
 }
@@ -181,7 +182,7 @@ export function notifyElementMounted(el: Element): void {
     try {
       callback();
     } catch (error) {
-      console.error("Error in element onMount hook:", error);
+      report(error as Error, { source: "lifecycle", element: el as HTMLElement, hookName: "onMount" });
     }
   }
 }
@@ -205,7 +206,7 @@ export function notifyElementUnmounted(el: Element): void {
     try {
       callback();
     } catch (error) {
-      console.error("Error in element onUnmount hook:", error);
+      report(error as Error, { source: "lifecycle", element: el as HTMLElement, hookName: "onUnmount" });
     }
   }
 

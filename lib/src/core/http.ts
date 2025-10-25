@@ -17,6 +17,7 @@ import type {
   SwapStrategy,
 } from "$types/volt";
 import { registerDirective } from "./binder";
+import { report } from "./error";
 import { evaluate } from "./evaluator";
 import { sleep } from "./shared";
 
@@ -228,7 +229,10 @@ export function swap(target: Element, content: string, strategy: SwapStrategy = 
       break;
     }
     default: {
-      console.error(`Unknown swap strategy: ${strategy as string}`);
+      report(new Error(`Unknown swap strategy: ${strategy as string}`), {
+        source: "http",
+        element: target as HTMLElement,
+      });
     }
   }
 }
@@ -308,7 +312,12 @@ export function parseHttpConfig(el: Element, scope: Scope): ParsedHttpConfig {
         headers = headersValue as Record<string, string>;
       }
     } catch (error) {
-      console.error("Failed to parse data-volt-headers:", error);
+      report(error as Error, {
+        source: "http",
+        element: el as HTMLElement,
+        directive: "data-volt-headers",
+        expression: dataset.voltHeaders,
+      });
     }
   }
 
@@ -499,7 +508,11 @@ function resolveTarget(targetConf: string | Element, defaultEl: Element): Option
 
   const target = document.querySelector(targetConf);
   if (!target) {
-    console.warn(`Target element not found: ${targetConf}`);
+    report(new Error(`Target element not found: ${targetConf}`), {
+      source: "http",
+      element: defaultEl as HTMLElement,
+      directive: "data-volt-target",
+    });
     return undefined;
   }
 
@@ -630,7 +643,7 @@ async function performRequest(
 
   const errorMessage = lastError instanceof Error ? lastError.message : String(lastError);
   setErrorState(target, errorMessage, conf.indicator);
-  console.error("HTTP request failed:", lastError);
+  report(lastError as Error, { source: "http", element: el as HTMLElement, httpMethod: method, httpUrl: url });
 }
 
 export function bindGet(ctx: BindingContext, url: string): void {
