@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "pnpm --filter voltx.js dev",
     "build": "pnpm -r build",
+    "build:demo": "pnpm --filter voltx.js build:demo",
     "preview": "pnpm --filter voltx.js preview",
     "test": "pnpm -r test",
     "test:ui": "pnpm --filter voltx.js test:ui",

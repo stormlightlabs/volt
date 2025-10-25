@@ -24,8 +24,17 @@ const test: ViteUserConfig["test"] = {
 const buildOptions = (mode: string): BuildEnvironmentOptions => {
   const [baseMode, ...flags] = mode.split(":");
   const isLibBuild = baseMode === "lib";
+  const isDemoBuild = baseMode === "demo";
   const shouldMinify = flags.includes("min");
   const target = flags.find((flag) => flag !== "min") ?? "all";
+
+  if (isDemoBuild) {
+    return {
+      minify: shouldMinify ? "oxc" : false,
+      outDir: path.resolve(__dirname, "dist-demo"),
+      rollupOptions: { input: path.resolve(__dirname, "index.html") },
+    };
+  }
 
   if (!isLibBuild) return { minify: shouldMinify ? "oxc" : false };
 

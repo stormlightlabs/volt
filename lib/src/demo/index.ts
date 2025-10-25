@@ -6,7 +6,7 @@
 
 import { charge } from "$core/charge";
 import { isSignal } from "$core/shared";
-import { initNavigationListener } from "$plugins/navigate";
+import { initNavigationListener, setRouterMode } from "$plugins/navigate";
 import { persistPlugin } from "$plugins/persist";
 import { scrollPlugin } from "$plugins/scroll";
 import { shiftPlugin } from "$plugins/shift";
@@ -22,6 +22,8 @@ import { createInteractivitySection } from "./sections/interactivity";
 import { createPluginsSection } from "./sections/plugins";
 import { createReactivitySection } from "./sections/reactivity";
 import * as dom from "./utils";
+
+setRouterMode(import.meta.env.DEV ? "history" : "hash");
 
 registerPlugin("persist", persistPlugin);
 registerPlugin("scroll", scrollPlugin);
@@ -88,9 +90,15 @@ const buildNav = () =>
   );
 
 /**
- * Get the current page from the URL pathname
+ * Get the current page from the URL (supports both hash and history routing)
  */
 function getCurrentPageFromPath(): string {
+  if (globalThis.location.hash) {
+    const hash = globalThis.location.hash.slice(1);
+    if (hash === "/" || hash === "") return "home";
+    return hash.slice(1);
+  }
+
   const path = globalThis.location.pathname;
   if (path === "/" || path === "") return "home";
   return path.slice(1);
@@ -197,13 +205,21 @@ export function setupDemo() {
     return;
   }
 
-  // Add helper functions to scope (not serializable, so added after charge)
   rootScope.$helpers = helpers;
 
   const handleNavigate = (event: Event) => {
     const customEvent = event as CustomEvent;
-    const url = customEvent.detail?.url || globalThis.location.pathname;
-    const page = url === "/" || url === "" ? "home" : url.slice(1);
+    const url = customEvent.detail?.url || "";
+
+    let page = "home";
+    if (url.startsWith("#")) {
+      const hash = url.slice(1);
+      page = hash === "/" || hash === "" ? "home" : hash.slice(1);
+    } else if (url) {
+      page = url === "/" || url === "" ? "home" : url.slice(1);
+    } else {
+      page = getCurrentPageFromPath();
+    }
 
     const currentPageSignal = rootScope.currentPage as Signal<string>;
     if (currentPageSignal && isSignal(currentPageSignal)) {

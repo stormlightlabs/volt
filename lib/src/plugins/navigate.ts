@@ -14,8 +14,50 @@ type NavigationState = { scrollPosition?: { x: number; y: number }; focusSelecto
 
 type NavigationOpts = { replace?: boolean; transition?: boolean; transitionName?: string };
 
+type RouterMode = "history" | "hash";
+
 const scrollPositions = new Map<string, { x: number; y: number }>();
 const focusSelectors = new Map<string, string>();
+
+/**
+ * Current router mode (history or hash)
+ * Defaults to history mode for backwards compatibility
+ */
+let currentRouterMode: RouterMode = "history";
+
+/**
+ * Set the router mode for navigation
+ *
+ * @param mode - Router mode to use ("history" or "hash")
+ *
+ * @example
+ * ```typescript
+ * import { setRouterMode } from 'voltx.js';
+ *
+ * // Use hash routing in production
+ * setRouterMode(import.meta.env.DEV ? 'history' : 'hash');
+ * ```
+ */
+export function setRouterMode(mode: RouterMode): void {
+  currentRouterMode = mode;
+}
+
+/**
+ * Get the current router mode
+ */
+export function getRouterMode(): RouterMode {
+  return currentRouterMode;
+}
+
+/**
+ * Get the current location key for storing scroll positions
+ */
+function getLocationKey(): string {
+  if (currentRouterMode === "hash") {
+    return globalThis.location.hash.slice(1) || "/";
+  }
+  return `${globalThis.location.pathname}${globalThis.location.search}`;
+}
 
 /**
  * Navigate directive handler for client-side navigation
@@ -110,7 +152,7 @@ function handleFormNavigation(ctx: BindingContext, value: string, modifiers: Mod
 
 async function navigateTo(url: string, options: NavigationOpts = {}): Promise<void> {
   const { replace = false, transition = true, transitionName = "page-transition" } = options;
-  const currentKey = `${globalThis.location.pathname}${globalThis.location.search}`;
+  const currentKey = getLocationKey();
   scrollPositions.set(currentKey, { x: window.scrollX, y: window.scrollY });
 
   const activeElement = document.activeElement;
@@ -128,10 +170,19 @@ async function navigateTo(url: string, options: NavigationOpts = {}): Promise<vo
   };
 
   const performNavigation = async () => {
-    if (replace) {
-      globalThis.history.replaceState(state, "", url);
+    if (currentRouterMode === "hash") {
+      const hash = url.startsWith("#") ? url : `#${url}`;
+      if (replace) {
+        globalThis.history.replaceState(state, "", hash);
+      } else {
+        globalThis.location.hash = hash;
+      }
     } else {
-      globalThis.history.pushState(state, "", url);
+      if (replace) {
+        globalThis.history.replaceState(state, "", url);
+      } else {
+        globalThis.history.pushState(state, "", url);
+      }
     }
 
     globalThis.dispatchEvent(
@@ -278,14 +329,13 @@ function setupPrefetch(element: HTMLElement, url: string, opts: { viewport?: boo
 }
 
 /**
- * Initialize popstate listener for back/forward navigation
+ * Initialize navigation listeners for back/forward navigation
  * Should be called once on app initialization
+ * Handles both popstate (history mode) and hashchange (hash mode) events
  */
 export function initNavigationListener(): () => void {
-  const handlePopState = (event: PopStateEvent) => {
-    const state = event.state as NavigationState | null;
-
-    const key = `${globalThis.location.pathname}${globalThis.location.search}`;
+  const handleNavigation = (state: NavigationState | null = null) => {
+    const key = getLocationKey();
     const savedPosition = scrollPositions.get(key);
     const savedFocus = focusSelectors.get(key);
 
@@ -306,10 +356,23 @@ export function initNavigationListener(): () => void {
     globalThis.dispatchEvent(new CustomEvent("volt:popstate", { detail: { state }, bubbles: true, cancelable: false }));
   };
 
+  const handlePopState = (event: PopStateEvent) => {
+    const state = event.state as NavigationState | null;
+    handleNavigation(state);
+  };
+
+  const handleHashChange = () => {
+    if (currentRouterMode === "hash") {
+      handleNavigation();
+    }
+  };
+
   globalThis.addEventListener("popstate", handlePopState);
+  globalThis.addEventListener("hashchange", handleHashChange);
 
   return () => {
     globalThis.removeEventListener("popstate", handlePopState);
+    globalThis.removeEventListener("hashchange", handleHashChange);
   };
 }
 
