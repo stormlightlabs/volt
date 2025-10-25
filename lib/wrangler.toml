@@ -1,4 +1,0 @@
-name = "voltx-demo"
-pages_build_output_dir = "dist-demo"
-compatibility_date = "2025-10-25"
-compatibility_flags = ["nodejs_compat"]
