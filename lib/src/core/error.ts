@@ -44,8 +44,10 @@ export class VoltError extends Error {
     this.context = context;
     this.timestamp = Date.now();
 
-    if (Error.captureStackTrace) {
-      Error.captureStackTrace(this);
+    // V8-specific feature
+    // See: https://github.com/microsoft/TypeScript/issues/3926
+    if ((Error as any).captureStackTrace) {
+      (Error as any).captureStackTrace(this, VoltError);
     }
   }
 
