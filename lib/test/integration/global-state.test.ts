@@ -457,7 +457,10 @@ describe("Global State Integration", () => {
       `;
 
       charge();
-      expect(consoleErrorSpy).toHaveBeenCalledWith("Caused by:", expect.any(Error));
+      expect(consoleErrorSpy).toHaveBeenCalledTimes(3);
+      expect(consoleErrorSpy).toHaveBeenNthCalledWith(1, expect.stringContaining("[binding]"));
+      expect(consoleErrorSpy).toHaveBeenNthCalledWith(2, "Caused by:", expect.any(Error));
+      expect(consoleErrorSpy).toHaveBeenNthCalledWith(3, "Element:", expect.any(HTMLElement));
       consoleErrorSpy.mockRestore();
     });
   });

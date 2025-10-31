@@ -19,7 +19,7 @@
 | v0.4.0  |   ✓   | [Animation & Transitions](#animation--transitions)                               |
 | v0.5.0  |   ✓   | [Navigation & History API Routing](#navigation--history-api-routing)             |
 |         |   ✓   | [Refactor](#evaluator--binder-hardening)                                         |
-| v0.5.1  |       | [Error Handling & Diagnostics](#error-handling--diagnostics)                     |
+| v0.5.1  |   ✓   | [Error Handling & Diagnostics](#error-handling--diagnostics)                     |
 | v0.5.2  |       |                                                                                  |
 | v0.5.3  |       |                                                                                  |
 | v0.5.4  |       |                                                                                  |
@@ -119,9 +119,9 @@ _NOTE_: `data-x-*` is now `data-volt-*`
 directive parsing, and network operations, making it easier to debug apps without opaque stack traces.
 **Deliverables**:
     - v0.5.1
-        - Centralized error boundary system for directives and effects.
-        - Sandbox error wrapping with contextual hints (directive name, expression, element).
-        - `$volt.report(error, context)` API for plugin and app-level reporting.
+        ✓ Centralized error boundary system for directives and effects.
+        ✓ Sandbox error wrapping with contextual hints (directive name, expression, element).
+        ✓ `$volt.report(error, context)` API for plugin and app-level reporting.
     - v0.5.2
         - Visual in-DOM error overlays for development mode.
         - Enhanced console messages with source map trace and directive path.
