@@ -1,0 +1,129 @@
+name: Feature Request
+description: Suggest a new feature or enhancement for VoltX.js
+title: "[Feature]: "
+labels: ["enhancement", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting a new feature! Please provide detailed information to help us understand and evaluate your proposal.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Statement
+      description: Describe the problem or use case this feature would solve
+      placeholder: |
+        What problem are you trying to solve? What use case would this enable?
+        Example: "As a developer, I need to..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: Describe your proposed solution or feature
+      placeholder: |
+        How would you like this to work? What API or attributes would you use?
+        Be specific about the implementation approach if possible.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: What alternative solutions or workarounds have you considered?
+      placeholder: |
+        - Alternative 1: ...
+        - Alternative 2: ...
+        - Current workaround: ...
+
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Feature Scope
+      description: What part of VoltX would this feature affect?
+      options:
+        - Core reactivity (signals, computed, effects)
+        - Binding system (data-volt-* attributes)
+        - Expression evaluator
+        - Plugin system
+        - HTTP bindings
+        - Lifecycle hooks
+        - SSR/Hydration
+        - Documentation/Examples
+        - Developer tooling
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority/Impact
+      description: How important is this feature to your workflow?
+      options:
+        - Critical - Blocking my adoption of VoltX
+        - High - Would significantly improve my development experience
+        - Medium - Nice to have, but not urgent
+        - Low - Minor improvement
+    validations:
+      required: true
+
+  - type: textarea
+    id: size-impact
+    attributes:
+      label: Size Constraint Consideration
+      description: How might this feature impact the 15 KB gzipped constraint?
+      placeholder: |
+        Consider:
+        - Could this be implemented as a plugin instead of core?
+        - Does this replace existing functionality?
+        - What's the estimated size impact?
+    validations:
+      required: true
+
+  - type: dropdown
+    id: mode
+    attributes:
+      label: Usage Mode
+      description: Which mode would primarily benefit from this feature?
+      options:
+        - Declarative (HTML attributes)
+        - Programmatic (JavaScript API)
+        - Both
+        - Plugin
+    validations:
+      required: true
+
+  - type: textarea
+    id: example
+    attributes:
+      label: Example Usage
+      description: Show how you'd like to use this feature
+      placeholder: |
+        <!-- Example HTML or JavaScript -->
+      render: html
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Any other context, mockups, or references
+      placeholder: |
+        - Links to similar features in other frameworks
+        - Mockups or diagrams
+        - Related issues or discussions
+
+  - type: checkboxes
+    id: confirmations
+    attributes:
+      label: Confirmations
+      description: Please confirm the following
+      options:
+        - label: I have searched existing issues to ensure this hasn't been requested
+          required: true
+        - label: I have considered whether this could be implemented as a plugin
+          required: true

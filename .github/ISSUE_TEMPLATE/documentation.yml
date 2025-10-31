@@ -1,0 +1,92 @@
+name: Documentation Improvement
+description: Report issues or suggest improvements to VoltX.js documentation
+title: "[Docs]: "
+labels: ["documentation"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve VoltX documentation! Clear docs are essential for a great developer experience.
+
+  - type: dropdown
+    id: doc-type
+    attributes:
+      label: Documentation Type
+      description: What type of documentation needs improvement?
+      options:
+        - API documentation
+        - Guide or tutorial
+        - Examples
+        - README
+        - Code comments
+        - Error messages
+        - Migration guide
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: issue-type
+    attributes:
+      label: Issue Type
+      description: What kind of issue is this?
+      options:
+        - Missing documentation
+        - Incorrect or outdated information
+        - Unclear or confusing explanation
+        - Broken link or example
+        - Typo or formatting issue
+        - Missing code example
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: location
+    attributes:
+      label: Documentation Location
+      description: Link or path to the documentation that needs improvement
+      placeholder: e.g., https://voltx.dev/guide/reactivity or docs/guide/reactivity.md
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What's Wrong or Missing?
+      description: Describe the current state of the documentation and what's problematic
+      placeholder: |
+        Current state: The documentation says...
+        Problem: This is confusing because...
+    validations:
+      required: true
+
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Suggested Improvement
+      description: How would you improve this documentation?
+      placeholder: |
+        Proposed change: Add an example showing...
+        Or: Clarify that...
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context
+      description: Why is this important? Who would benefit from this improvement?
+      placeholder: |
+        - This affects beginners trying to...
+        - This is a common question in discussions
+        - This would help with migration from...
+
+  - type: checkboxes
+    id: confirmations
+    attributes:
+      label: Confirmations
+      description: Please confirm the following
+      options:
+        - label: I have checked that this documentation issue hasn't already been reported
+          required: true
+        - label: I have reviewed the current documentation thoroughly
+          required: true

@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Question or Discussion
+    url: https://github.com/stormlightlabs/volt/discussions
+    about: Ask questions, share ideas, or discuss VoltX.js with the community
+  - name: Documentation
+    url: https://stormlightlabs.github.io/volt
+    about: Read the official VoltX.js documentation
+  - name: Security Vulnerability
+    url: https://github.com/stormlightlabs/volt/security/advisories/new
+    about: Report security vulnerabilities privately
