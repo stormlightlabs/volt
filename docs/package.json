@@ -1,6 +1,6 @@
 {
   "name": "@voltx/docs",
-  "version": "0.4.0",
+  "version": "0.5.1",
   "private": true,
   "type": "module",
   "scripts": { "dev": "vitepress dev", "build": "vitepress build", "preview": "vitepress preview" },
