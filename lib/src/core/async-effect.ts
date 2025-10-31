@@ -4,6 +4,7 @@
 
 import type { Optional, Timer } from "$types/helpers";
 import type { AsyncEffectFunction, AsyncEffectOptions, ComputedSignal, Signal } from "$types/volt";
+import { report } from "./error";
 
 /**
  * Creates an async side effect that runs when dependencies change.
@@ -73,7 +74,7 @@ export function asyncEffect(
       try {
         cleanup();
       } catch (error) {
-        console.error("Error in async effect cleanup:", error);
+        report(error as Error, { source: "effect" });
       }
       cleanup = undefined;
     }
@@ -115,7 +116,7 @@ export function asyncEffect(
           await executeEffect(currentExecutionId);
         }
       } else {
-        console.error("Error in async effect:", err);
+        report(err as Error, { source: "effect" });
 
         if (onError) {
           const retry = () => {
@@ -198,7 +199,7 @@ export function asyncEffect(
       try {
         cleanup();
       } catch (error) {
-        console.error("Error during async effect unmount:", error);
+        report(error as Error, { source: "effect" });
       }
       cleanup = undefined;
     }

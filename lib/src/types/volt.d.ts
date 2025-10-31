@@ -552,3 +552,37 @@ export type ViewTransitionOptions = {
    */
   forceFallback?: boolean;
 };
+
+/**
+ * Error source categories for identifying where errors occurred
+ */
+export type ErrorSource = "evaluator" | "binding" | "effect" | "http" | "plugin" | "lifecycle" | "charge" | "user";
+
+/**
+ * Context information for error reporting
+ */
+export type ErrorContext = {
+  /** Error source category */
+  source: ErrorSource;
+  /** DOM element where error occurred */
+  element?: HTMLElement;
+  /** Directive name (e.g., "data-volt-text", "data-volt-on-click") */
+  directive?: string;
+  /** Expression that failed */
+  expression?: string;
+  /** Plugin name (for plugin errors) */
+  pluginName?: string;
+  /** HTTP method and URL (for HTTP errors) */
+  httpMethod?: string;
+  httpUrl?: string;
+  httpStatus?: number;
+  /** Lifecycle hook name (for lifecycle errors) */
+  hookName?: string;
+  /** Additional custom context */
+  [key: string]: unknown;
+};
+
+/**
+ * Error handler function signature
+ */
+export type ErrorHandler = (error: VoltError) => void;

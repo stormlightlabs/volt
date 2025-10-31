@@ -1,4 +1,5 @@
 import type { ComputedSignal, Signal } from "$types/volt";
+import { report } from "./error";
 import { recordDep, startTracking, stopTracking } from "./tracker";
 
 /**
@@ -25,7 +26,7 @@ export function signal<T>(initialValue: T): Signal<T> {
       try {
         callback(value);
       } catch (error) {
-        console.error("Error in signal subscriber:", error);
+        report(error as Error, { source: "effect" });
       }
     }
   };
@@ -87,7 +88,7 @@ export function computed<T>(compute: () => T): ComputedSignal<T> {
       try {
         cb(value);
       } catch (error) {
-        console.error("Error in computed subscriber:", error);
+        report(error as Error, { source: "effect" });
       }
     }
   };
@@ -116,7 +117,7 @@ export function computed<T>(compute: () => T): ComputedSignal<T> {
           shouldNotify = subs.size > 0;
         }
       } catch (error) {
-        console.error("Error in computed:", error);
+        report(error as Error, { source: "effect" });
         throw error;
       } finally {
         const deps = stopTracking();
@@ -196,7 +197,7 @@ export function effect(cb: () => void | (() => void)): () => void {
       try {
         cleanup();
       } catch (error) {
-        console.error("Error in effect cleanup:", error);
+        report(error as Error, { source: "effect" });
       }
       cleanup = undefined;
     }
@@ -205,7 +206,7 @@ export function effect(cb: () => void | (() => void)): () => void {
     try {
       cleanup = cb();
     } catch (error) {
-      console.error("Error in effect:", error);
+      report(error as Error, { source: "effect" });
     } finally {
       const deps = stopTracking();
 
@@ -225,7 +226,7 @@ export function effect(cb: () => void | (() => void)): () => void {
       try {
         cleanup();
       } catch (error) {
-        console.error("Error in effect cleanup:", error);
+        report(error as Error, { source: "effect" });
       }
     }
 
@@ -233,7 +234,7 @@ export function effect(cb: () => void | (() => void)): () => void {
       try {
         unsubscribe();
       } catch (error) {
-        console.error("Error unsubscribing effect:", error);
+        report(error as Error, { source: "effect" });
       }
     }
   };

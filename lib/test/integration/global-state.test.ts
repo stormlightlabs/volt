@@ -449,8 +449,7 @@ describe("Global State Integration", () => {
     });
 
     it("handles errors gracefully", () => {
-      const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
-
+      const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
       document.body.innerHTML = `
         <div data-volt data-volt-init="nonExistentVariable.doSomething()">
           <p>Content</p>
@@ -458,10 +457,11 @@ describe("Global State Integration", () => {
       `;
 
       charge();
-
-      expect(consoleError).toHaveBeenCalledWith(expect.stringContaining("Error in data-volt-init"), expect.any(Error));
-
-      consoleError.mockRestore();
+      expect(consoleErrorSpy).toHaveBeenCalledTimes(3);
+      expect(consoleErrorSpy).toHaveBeenNthCalledWith(1, expect.stringContaining("[binding]"));
+      expect(consoleErrorSpy).toHaveBeenNthCalledWith(2, "Caused by:", expect.any(Error));
+      expect(consoleErrorSpy).toHaveBeenNthCalledWith(3, "Element:", expect.any(HTMLElement));
+      consoleErrorSpy.mockRestore();
     });
   });
 

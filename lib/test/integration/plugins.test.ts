@@ -32,15 +32,13 @@ describe("plugin integration with binder", () => {
   });
 
   it("warns when unknown binding is used without plugin", () => {
-    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
     const element = document.createElement("div");
     element.dataset.voltUnknown = "value";
 
     mount(element, {});
-
-    expect(warnSpy).toHaveBeenCalledWith("Unknown binding: data-volt-unknown");
-
-    warnSpy.mockRestore();
+    expect(consoleWarnSpy).toHaveBeenCalledWith("Unknown binding: data-volt-unknown");
+    consoleWarnSpy.mockRestore();
   });
 
   it("provides working findSignal utility to plugin", () => {
@@ -124,7 +122,7 @@ describe("plugin integration with binder", () => {
   });
 
   it("handles plugin errors gracefully", () => {
-    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     const badPlugin = vi.fn(() => {
       throw new Error("Plugin error");
     });
@@ -135,10 +133,11 @@ describe("plugin integration with binder", () => {
     element.dataset.voltBad = "value";
 
     mount(element, {});
-
-    expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining("Error in plugin \"bad\""), expect.any(Error));
-
-    errorSpy.mockRestore();
+    expect(consoleErrorSpy).toHaveBeenCalledTimes(3);
+    expect(consoleErrorSpy).toHaveBeenNthCalledWith(1, expect.stringContaining("[plugin]"));
+    expect(consoleErrorSpy).toHaveBeenNthCalledWith(2, "Caused by:", expect.any(Error));
+    expect(consoleErrorSpy).toHaveBeenNthCalledWith(3, "Element:", element);
+    consoleErrorSpy.mockRestore();
   });
 
   it("supports reactive updates from plugins", () => {

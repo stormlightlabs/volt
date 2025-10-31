@@ -19,14 +19,24 @@
 | v0.4.0  |   ✓   | [Animation & Transitions](#animation--transitions)                               |
 | v0.5.0  |   ✓   | [Navigation & History API Routing](#navigation--history-api-routing)             |
 |         |   ✓   | [Refactor](#evaluator--binder-hardening)                                         |
+| v0.5.1  |   ✓   | [Error Handling & Diagnostics](#error-handling--diagnostics)                     |
+| v0.5.2  |       |                                                                                  |
+| v0.5.3  |       |                                                                                  |
+| v0.5.4  |       |                                                                                  |
+| v0.6.1  |       | [Persistence & Offline](#persistence--offline)                                   |
+| v0.6.2  |       |                                                                                  |
+| v0.6.3  |       |                                                                                  |
+| v0.6.4  |       | [Background Requests & Reactive Polling](#background-requests--reactive-polling) |
+| v0.6.5  |       |                                                                                  |
+| v0.6.6  |       |                                                                                  |
+| v0.6.7  |       | [Streaming & Patch Engine](#streaming--patch-engine)                             |
+| v0.6.8  |       |                                                                                  |
+| v0.6.9  |       |                                                                                  |
+| v0.6.10 |       |                                                                                  |
+| v0.7.0  |       |                                                                                  |
+| v0.8.0  |       | Support `voltx-` & `vx-` attributes: recommend `vx-`                             |
+|         |       | Switch to `data-voltx`                                                           |
 |         |       | Update demo to be a multi page application with routing plugin                   |
-| v0.5.1  |       | Support `voltx-` & `vx-` attributes: recommend `vx-`                             |
-| v0.5.2  |       | Switch to `data-voltx`                                                           |
-| v0.5.3  |       | [Background Requests & Reactive Polling](#background-requests--reactive-polling) |
-| v0.5.4  |       | [Streaming & Patch Engine](#streaming--patch-engine)                             |
-| v0.5.5  |       | PWA Capabilities                                                                 |
-| v0.5.6  |       | [Persistence & Offline](#persistence--offline)                                   |
-|         |       |                                                                                  |
 | v0.9.0  |       | [Inspector & Developer Tools](#inspector--developer-tools)                       |
 | v1.0.0  |       | [Stable Release](#stable-release)                                                |
 
@@ -102,18 +112,42 @@ _NOTE_: `data-x-*` is now `data-volt-*`
 
 ## To-Do
 
+### Error Handling & Diagnostics
+
+**Goal**: Provide clear, actionable feedback when runtime or directive errors occur.
+**Outcome**: VoltX.js surfaces developer-friendly diagnostics for expression evaluation,
+directive parsing, and network operations, making it easier to debug apps without opaque stack traces.
+**Deliverables**:
+    - v0.5.1
+        ✓ Centralized error boundary system for directives and effects.
+        ✓ Sandbox error wrapping with contextual hints (directive name, expression, element).
+        ✓ `$volt.report(error, context)` API for plugin and app-level reporting.
+    - v0.5.2
+        - Visual in-DOM error overlays for development mode.
+        - Enhanced console messages with source map trace and directive path.
+        - Differentiated error levels: warn, error, fatal.
+    - v0.5.3
+        - Runtime health monitor tracking evaluation and subscription failures.
+    - v0.5.4
+        - Documentation: "Understanding VoltX Errors" guide.
+        - Configurable global error policy (silent, overlay, throw).
+
 ### Streaming & Patch Engine
 
 **Goal:** Enable real-time updates via SSE/WebSocket streaming with intelligent DOM patching.
 **Outcome:** VoltX.js can receive and apply live updates from the server
 **Deliverables:**
-    - Server-Sent Events (SSE) integration
-    - `data-volt-flow` attribute for SSE endpoints
-    - Signal patching from backend (`data-signals-*` merge system)
-    - Backend action system with `$$spark()` syntax
-    - JSON Patch parser and DOM morphing engine
-    - WebSocket as alternative to SSE
-    - `data-volt-ignore-morph` for selective patch exclusion
+    - v0.5.7
+        - Server-Sent Events (SSE) integration
+        - `data-volt-flow` attribute for SSE endpoints
+    - v0.5.8
+        - Signal patching from backend (`data-signals-*` merge system)
+        - Backend action system with `$$spark()` syntax
+    - v0.5.9
+        - JSON Patch parser and DOM morphing engine
+        - `data-volt-ignore-morph` for selective patch exclusion
+    - v0.5.10
+        - WebSocket as alternative to SSE
 
 ### Persistence & Offline
 
@@ -122,43 +156,55 @@ _NOTE_: `data-x-*` is now `data-volt-*`
 **Deliverables:**
     - ✓ Persistent signals (localStorage, sessionStorage, indexedDb)
     - ✓ Storage plugin (`data-volt-persist`)
-    - Storage modifiers on signals:
-        - `.local` modifier for localStorage persistence
-        - `.session` modifier for sessionStorage persistence
-        - `.ifmissing` modifier for conditional initialization
-    - Offline queue for deferred stream events and HTTP requests
-    - Sync strategy API (merge, overwrite, patch) for conflict resolution
-    - Service Worker integration for offline-first apps
-    - Background sync for deferred requests
-    - Cache invalidation strategies
-    - Cross-tab synchronization via `BroadcastChannel`
+    - v0.5.1
+        - Storage modifiers on signals:
+            - `.local` modifier for localStorage persistence
+            - `.session` modifier for sessionStorage persistence
+            - `.ifmissing` modifier for conditional initialization
+    - v0.5.2
+        - Sync strategy API (merge, overwrite, patch) for conflict resolution
+        - Cache invalidation strategies
+    - v0.5.3
+        - Offline queue for deferred stream events and HTTP requests
+        - Service Worker integration for offline-first apps
+        - Background sync for deferred requests
+        - Cross-tab synchronization via `BroadcastChannel`
 
 ### Background Requests & Reactive Polling
 
 **Goal:** Enable declarative background data fetching and periodic updates within the VoltX.js runtime.
 **Outcome:** VoltX.js elements can fetch or refresh data automatically based on time, visibility, or reactive conditions.
 **Deliverables:**
-    - `data-volt-visible` for fetching when an element enters the viewport (`IntersectionObserver`)
-    - `data-volt-fetch` attribute for declarative background requests
-        - Configurable polling intervals, delays, and signal-based triggers
-        - Automatic cancellation of requests when elements are unmounted
-        - Conditional execution tied to reactive signals
-        - Integration hooks for loading and pending states
-    - Background task scheduler with priority management
+    - v0.5.4
+        - `data-volt-visible` for fetching when an element enters the viewport (`IntersectionObserver`)
+    - v0.5.5
+        - `data-volt-fetch` attribute for declarative background requests
+            - Configurable polling intervals, delays, and signal-based triggers
+            - Automatic cancellation of requests when elements are unmounted
+            - Conditional execution tied to reactive signals
+            - Integration hooks for loading and pending states
+    - v0.5.6
+        - Background task scheduler with priority management
 
 ### Inspector & Developer Tools
 
 **Goal:** Improve developer experience and runtime introspection.
 **Outcome:** First-class developer ergonomics; VoltX.js is enjoyable to debug and extend.
 **Deliverables:**
-    - Developer overlay for inspecting signals, subscriptions, and effects
-    - Dev logging toggle (`Volt.debug = true`)
-    - Browser console integration (`window.$volt.inspect()`)
-    - Signal dependency graph visualization (graph data structure implemented in [proxy](#proxy-based-reactivity-enhancements) milestone)
-    - Performance profiling tools
-    - Request/response debugging (HTTP actions, SSE streams)
-    - Time-travel debugging for signal history
-    - Browser DevTools extension
+    - v0.9.1
+        - Developer overlay for inspecting signals, subscriptions, and effects
+        - Time-travel debugging for signal history
+    - v0.9.2
+        - Signal dependency graph visualization (graph data structure implemented in [proxy](#proxy-based-reactivity-enhancements) milestone)
+    - v0.9.3
+        - Browser console integration (`window.$volt.inspect()`)
+        - Dev logging toggle (`Volt.debug = true`)
+    - v0.9.4
+        - Request/response debugging (HTTP actions, SSE streams)
+    - v0.9.5
+        - Performance profiling tools
+    - v0.9.6 to v0.9.10
+        - Browser DevTools extension
 
 ### Stable Release
 
