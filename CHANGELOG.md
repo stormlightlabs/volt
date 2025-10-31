@@ -4,21 +4,24 @@ All notable changes to VoltX will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [v0.5.1] - 2025-10-31
 
 ### Added
 
 - Navigation and history API routing for client-side transitions (#6).
+- Centralized error boundary system with VoltError class, error handler registration, and contextual debugging information (#9).
 
 ### Changed
 
 - Refactored the binder and evaluator internals to reduce duplication and clarify runtime responsibilities (#3).
 - Split lifecycle and SSR documentation into dedicated guides (#5).
+- Refactored demo application structure with CSS showcase and improved Vite integration (#7).
 
 ### Fixed
 
 - Repaired broken documentation links (#4).
 - Stabilized JSR and Deno packaging by restoring CSS assets, removing redundant finalize steps, and keeping builds minified.
+- Fixed computed attribute keys to emit in kebab-case in markup, added shorthand attribute forms, and CSS fallback for shift animations (#8).
 
 ## [v0.4.0] - 2025-10-21
 
@@ -77,7 +80,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Plugin system, control flow directives (`if`, `for`), reactive markup utilities, and SSR/HTTP helpers.
 - Initial documentation set covering the runtime overview, reactivity spec, and roadmap.
 
-[Unreleased]: https://github.com/stormlightlabs/volt/compare/v0.4.0...HEAD
+[v0.5.1]: https://github.com/stormlightlabs/volt/compare/v0.4.0...v0.5.1
 [v0.4.0]: https://github.com/stormlightlabs/volt/compare/v0.3.2...v0.4.0
 [v0.3.2]: https://github.com/stormlightlabs/volt/compare/v0.3.1...v0.3.2
 [v0.3.1]: https://github.com/stormlightlabs/volt/compare/v0.3.0...v0.3.1
