@@ -370,7 +370,7 @@ function bindStyle(ctx: BindingContext, expr: string): void {
 
     if (typeof value === "object" && value !== null) {
       for (const [key, val] of Object.entries(value)) {
-        const cssKey = key.replaceAll(/[A-Z]/g, (m) => `-${m.toLowerCase()}`);
+        const cssKey = key.replaceAll(/[A-Z]/g, (m: string) => `-${m.toLowerCase()}`);
 
         if (isNil(val)) {
           element.style.removeProperty(cssKey);

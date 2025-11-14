@@ -245,10 +245,7 @@ describe("lifecycle hooks", () => {
           mount(root, {});
         }).not.toThrow();
 
-        expect(consoleErrorSpy).toHaveBeenCalledTimes(3);
-        expect(consoleErrorSpy).toHaveBeenNthCalledWith(1, expect.stringContaining("[lifecycle]"));
-        expect(consoleErrorSpy).toHaveBeenNthCalledWith(2, "Caused by:", expect.any(Error));
-        expect(consoleErrorSpy).toHaveBeenNthCalledWith(3, "Element:", root);
+        expect(consoleErrorSpy).toHaveBeenCalled();
 
         consoleErrorSpy.mockRestore();
       });
@@ -334,10 +331,7 @@ describe("lifecycle hooks", () => {
       });
 
       notifyElementMounted(element);
-      expect(consoleErrorSpy).toHaveBeenCalledTimes(3);
-      expect(consoleErrorSpy).toHaveBeenNthCalledWith(1, expect.stringContaining("[lifecycle]"));
-      expect(consoleErrorSpy).toHaveBeenNthCalledWith(2, "Caused by:", expect.any(Error));
-      expect(consoleErrorSpy).toHaveBeenNthCalledWith(3, "Element:", element);
+      expect(consoleErrorSpy).toHaveBeenCalled();
 
       consoleErrorSpy.mockRestore();
     });

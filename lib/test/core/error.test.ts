@@ -1,4 +1,15 @@
-import { clearErrorHandlers, getErrorHandlerCount, onError, report, VoltError } from "$core/error";
+import {
+  clearErrorHandlers,
+  clearErrorOverlay,
+  enableDevMode,
+  getErrorHandlerCount,
+  getErrorStack,
+  getOverlayContainer,
+  isDevMode,
+  onError,
+  report,
+  VoltError,
+} from "$core/error";
 import type { ErrorContext, ErrorSource } from "$types/volt";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -165,6 +176,10 @@ describe("Error Reporting", () => {
   beforeEach(() => {
     clearErrorHandlers();
     vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    vi.spyOn(console, "log").mockImplementation(() => {});
+    vi.spyOn(console, "group").mockImplementation(() => {});
+    vi.spyOn(console, "groupEnd").mockImplementation(() => {});
   });
 
   afterEach(() => {
@@ -229,9 +244,9 @@ describe("Error Reporting", () => {
 
     report(error, context);
 
-    expect(console.error).toHaveBeenCalledTimes(2);
-    expect(console.error).toHaveBeenCalledWith(expect.stringContaining("[http]"));
-    expect(console.error).toHaveBeenCalledWith("Caused by:", error);
+    expect(console.error).toHaveBeenCalled();
+    expect(console.group).toHaveBeenCalledWith("Error Details");
+    expect(console.groupEnd).toHaveBeenCalled();
   });
 
   it("converts non-Error values to Error", () => {
@@ -268,7 +283,8 @@ describe("Error Reporting", () => {
 
     report(new Error("Test"), { source: "binding", element: div });
 
-    expect(console.error).toHaveBeenCalledWith("Element:", div);
+    expect(console.log).toHaveBeenCalledWith("%cElement Path:", "font-weight: bold", "div#test-element");
+    expect(console.log).toHaveBeenCalledWith("%cElement:", "font-weight: bold", div);
   });
 
   it("handles all error sources", () => {
@@ -296,5 +312,333 @@ describe("Error Reporting", () => {
       const voltError: VoltError = handler.mock.calls[i][0];
       expect(voltError.source).toBe(source);
     }
+  });
+});
+
+describe("Error Levels", () => {
+  beforeEach(() => {
+    clearErrorHandlers();
+  });
+
+  afterEach(() => {
+    clearErrorHandlers();
+  });
+
+  it("defaults to error level when not specified", () => {
+    const handler = vi.fn();
+    onError(handler);
+
+    report(new Error("Test"), { source: "binding" });
+
+    const voltError: VoltError = handler.mock.calls[0][0];
+    expect(voltError.level).toBe("error");
+  });
+
+  it("supports warn level", () => {
+    const handler = vi.fn();
+    onError(handler);
+
+    const context: ErrorContext = { source: "binding", level: "warn" };
+    report(new Error("Warning"), context);
+
+    const voltError: VoltError = handler.mock.calls[0][0];
+    expect(voltError.level).toBe("warn");
+  });
+
+  it("supports error level", () => {
+    const handler = vi.fn();
+    onError(handler);
+
+    const context: ErrorContext = { source: "binding", level: "error" };
+    report(new Error("Error"), context);
+
+    const voltError: VoltError = handler.mock.calls[0][0];
+    expect(voltError.level).toBe("error");
+  });
+
+  it("supports fatal level", () => {
+    const handler = vi.fn();
+    onError(handler);
+
+    const context: ErrorContext = { source: "binding", level: "fatal" };
+    report(new Error("Fatal"), context);
+
+    const voltError: VoltError = handler.mock.calls[0][0];
+    expect(voltError.level).toBe("fatal");
+  });
+
+  it("includes level in JSON serialization", () => {
+    const handler = vi.fn();
+    onError(handler);
+
+    report(new Error("Test"), { source: "binding", level: "warn" });
+
+    const voltError: VoltError = handler.mock.calls[0][0];
+    const json = voltError.toJSON();
+
+    expect(json.level).toBe("warn");
+  });
+});
+
+describe("Element Path", () => {
+  it("returns empty string when no element", () => {
+    const cause = new Error("Test");
+    const context: ErrorContext = { source: "binding" };
+    const voltError = new VoltError(cause, context);
+
+    expect(voltError.getElementPath()).toBe("");
+  });
+
+  it("generates path for single element", () => {
+    const div = document.createElement("div");
+    div.id = "test";
+
+    const cause = new Error("Test");
+    const context: ErrorContext = { source: "binding", element: div, directive: "data-volt-text" };
+    const voltError = new VoltError(cause, context);
+
+    expect(voltError.getElementPath()).toBe("div#test[data-volt-text]");
+  });
+
+  it("generates path for nested elements", () => {
+    const parent = document.createElement("div");
+    parent.id = "parent";
+    document.body.append(parent);
+
+    const child = document.createElement("span");
+    child.className = "foo bar";
+    parent.append(child);
+
+    const cause = new Error("Test");
+    const context: ErrorContext = { source: "binding", element: child, directive: "data-volt-on-click" };
+    const voltError = new VoltError(cause, context);
+
+    expect(voltError.getElementPath()).toBe("div#parent > span.foo.bar[data-volt-on-click]");
+
+    parent.remove();
+  });
+
+  it("handles elements without id or class", () => {
+    const button = document.createElement("button");
+
+    const cause = new Error("Test");
+    const context: ErrorContext = { source: "binding", element: button };
+    const voltError = new VoltError(cause, context);
+
+    expect(voltError.getElementPath()).toBe("button");
+  });
+});
+
+describe("Development Mode", () => {
+  beforeEach(() => {
+    enableDevMode(false);
+    clearErrorHandlers();
+  });
+
+  afterEach(() => {
+    enableDevMode(false);
+    clearErrorHandlers();
+    clearErrorOverlay();
+  });
+
+  it("is disabled by default", () => {
+    expect(isDevMode()).toBe(false);
+  });
+
+  it("can be enabled", () => {
+    enableDevMode(true);
+    expect(isDevMode()).toBe(true);
+  });
+
+  it("can be disabled", () => {
+    enableDevMode(true);
+    expect(isDevMode()).toBe(true);
+
+    enableDevMode(false);
+    expect(isDevMode()).toBe(false);
+  });
+
+  it("defaults to true when called without argument", () => {
+    enableDevMode();
+    expect(isDevMode()).toBe(true);
+  });
+});
+
+describe("Visual Error Overlay", () => {
+  beforeEach(() => {
+    enableDevMode(false);
+    clearErrorHandlers();
+    clearErrorOverlay();
+    for (const el of document.querySelectorAll("[data-volt-error-overlay]")) el.remove();
+    if (!document.body) {
+      document.body = document.createElement("body");
+    }
+  });
+
+  afterEach(() => {
+    enableDevMode(false);
+    clearErrorHandlers();
+    clearErrorOverlay();
+    for (const el of document.querySelectorAll("[data-volt-error-overlay]")) el.remove();
+  });
+
+  it("does not create overlay when dev mode is disabled", () => {
+    enableDevMode(false);
+    const handler = vi.fn();
+    onError(handler);
+
+    report(new Error("Test"), { source: "binding" });
+
+    const overlay = document.querySelector("[data-volt-error-overlay]");
+    expect(overlay).toBeNull();
+  });
+
+  it("creates overlay when dev mode is enabled", () => {
+    enableDevMode(true);
+    const handler = vi.fn();
+    onError(handler);
+
+    report(new Error("Test"), { source: "binding" });
+
+    const overlay = document.querySelector("[data-volt-error-overlay]");
+    expect(overlay).toBeTruthy();
+  });
+
+  it("displays error information in overlay", () => {
+    enableDevMode(true);
+    const handler = vi.fn();
+    onError(handler);
+
+    report(new Error("Test error message"), { source: "binding", level: "error" });
+
+    const overlay = getOverlayContainer();
+    expect(overlay).toBeTruthy();
+    expect(overlay!.textContent).toContain("Test error message");
+    expect(overlay!.textContent).toContain("ERROR");
+    expect(overlay!.textContent).toContain("binding");
+  });
+
+  it("displays multiple errors", () => {
+    enableDevMode(true);
+    const handler = vi.fn();
+    onError(handler);
+
+    report(new Error("First error"), { source: "binding" });
+    report(new Error("Second error"), { source: "evaluator" });
+
+    const errorStack = getErrorStack();
+    expect(errorStack).toHaveLength(2);
+    expect(errorStack[0].cause.message).toBe("First error");
+    expect(errorStack[1].cause.message).toBe("Second error");
+  });
+
+  it("limits displayed errors to max count", () => {
+    enableDevMode(true);
+    const handler = vi.fn();
+    onError(handler);
+
+    for (let i = 0; i < 10; i++) {
+      report(new Error(`Error ${i}`), { source: "binding" });
+    }
+
+    const errorStack = getErrorStack();
+    expect(errorStack).toHaveLength(5);
+  });
+
+  it("can clear all errors", () => {
+    enableDevMode(true);
+    const handler = vi.fn();
+    onError(handler);
+
+    report(new Error("Test"), { source: "binding" });
+
+    let errorStack = getErrorStack();
+    expect(errorStack).toHaveLength(1);
+
+    clearErrorOverlay();
+
+    errorStack = getErrorStack();
+    expect(errorStack).toHaveLength(0);
+  });
+
+  it("shows different error levels in overlay", () => {
+    enableDevMode(true);
+    const handler = vi.fn();
+    onError(handler);
+
+    report(new Error("Warning"), { source: "binding", level: "warn" });
+    report(new Error("Error"), { source: "binding", level: "error" });
+    report(new Error("Fatal"), { source: "binding", level: "fatal" });
+
+    const errorStack = getErrorStack();
+    expect(errorStack).toHaveLength(3);
+    expect(errorStack[0].level).toBe("warn");
+    expect(errorStack[1].level).toBe("error");
+    expect(errorStack[2].level).toBe("fatal");
+  });
+});
+
+describe("Enhanced Console Logging", () => {
+  beforeEach(() => {
+    clearErrorHandlers();
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.spyOn(console, "log").mockImplementation(() => {});
+    vi.spyOn(console, "group").mockImplementation(() => {});
+    vi.spyOn(console, "groupEnd").mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    clearErrorHandlers();
+    vi.restoreAllMocks();
+  });
+
+  it("uses console.warn for warn level", () => {
+    report(new Error("Warning"), { source: "binding", level: "warn" });
+
+    expect(console.warn).toHaveBeenCalled();
+    expect(console.error).not.toHaveBeenCalled();
+  });
+
+  it("uses console.error for error level", () => {
+    report(new Error("Error"), { source: "binding", level: "error" });
+
+    expect(console.error).toHaveBeenCalled();
+    expect(console.warn).not.toHaveBeenCalled();
+  });
+
+  it("uses console.error for fatal level", () => {
+    report(new Error("Fatal"), { source: "binding", level: "fatal" });
+
+    expect(console.error).toHaveBeenCalled();
+    expect(console.warn).not.toHaveBeenCalled();
+  });
+
+  it("uses console groups for details", () => {
+    report(new Error("Test"), { source: "binding" });
+
+    expect(console.group).toHaveBeenCalledWith("Error Details");
+    expect(console.groupEnd).toHaveBeenCalled();
+  });
+
+  it("logs directive when present", () => {
+    report(new Error("Test"), { source: "binding", directive: "data-volt-text" });
+
+    expect(console.log).toHaveBeenCalledWith("%cDirective:", "font-weight: bold", "data-volt-text");
+  });
+
+  it("logs expression when present", () => {
+    report(new Error("Test"), { source: "evaluator", expression: "count * 2" });
+
+    expect(console.log).toHaveBeenCalledWith("%cExpression:", "font-weight: bold", "count * 2");
+  });
+
+  it("logs element path when present", () => {
+    const div = document.createElement("div");
+    div.id = "test";
+
+    report(new Error("Test"), { source: "binding", element: div });
+
+    expect(console.log).toHaveBeenCalledWith("%cElement Path:", "font-weight: bold", "div#test");
   });
 });

@@ -559,11 +559,18 @@ export type ViewTransitionOptions = {
 export type ErrorSource = "evaluator" | "binding" | "effect" | "http" | "plugin" | "lifecycle" | "charge" | "user";
 
 /**
+ * Error severity levels
+ */
+export type ErrorLevel = "warn" | "error" | "fatal";
+
+/**
  * Context information for error reporting
  */
 export type ErrorContext = {
   /** Error source category */
   source: ErrorSource;
+  /** Error severity level (defaults to "error" if not specified) */
+  level?: ErrorLevel;
   /** DOM element where error occurred */
   element?: HTMLElement;
   /** Directive name (e.g., "data-volt-text", "data-volt-on-click") */

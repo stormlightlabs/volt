@@ -7,7 +7,7 @@ import type { None, Optional } from "$types/helpers";
 import type { BindingContext, Dep, Scope, Signal } from "$types/volt";
 
 export function kebabToCamel(str: string): string {
-  return str.replaceAll(/-([a-z])/g, (_, letter) => letter.toUpperCase());
+  return str.replaceAll(/-([a-z])/g, (_: string, letter: string) => letter.toUpperCase());
 }
 
 /**

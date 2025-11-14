@@ -7,7 +7,7 @@
 export { asyncEffect } from "$core/async-effect";
 export { mount } from "$core/binder";
 export { charge } from "$core/charge";
-export { clearErrorHandlers, onError, report } from "$core/error";
+export { clearErrorHandlers, clearErrorOverlay, enableDevMode, isDevMode, onError, report } from "$core/error";
 export type { VoltError } from "$core/error";
 export { parseHttpConfig, request, serializeForm, serializeFormToJSON, swap } from "$core/http";
 export {
@@ -86,6 +86,7 @@ export type {
   ComputedSignal,
   ErrorContext,
   ErrorHandler,
+  ErrorLevel,
   ErrorSource,
   GlobalHookName,
   GlobalStore,
