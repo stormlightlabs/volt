@@ -131,6 +131,7 @@ directive parsing, and network operations, making it easier to debug apps withou
     - v0.5.4
         - Documentation: "Understanding VoltX Errors" guide.
         - Configurable global error policy (silent, overlay, throw).
+        - Add error handling & examples to demo
 
 ### Streaming & Patch Engine
 
@@ -242,6 +243,8 @@ directive parsing, and network operations, making it easier to debug apps withou
     - Copy-paste ready patterns for common use cases
 
 ## Parking Lot
+
+- Add fstring directive for string interpolation
 
 ### Evaluator & Binder Hardening
 
