@@ -1,7 +1,5 @@
 # Better Demo Implementation TODO
 
-This document tracks the implementation of the Better Demo deliverables from ROADMAP.md.
-
 ## Existing Issues
 
 - [x] **FIXME** (lib/src/demo/sections/plugins.ts:68): Sidenotes need stylesheet constraints - RESOLVED
@@ -172,14 +170,25 @@ This document tracks the implementation of the Better Demo deliverables from ROA
 
 ## Phase 5: Polish & Documentation
 
-### 14. View-Source Friendly Code
+### 14. Framework Capabilities Showcase
+
+**Note:** Showcase framework capabilities as features are completed from ROADMAP.md
+
+- [ ] Add bundle size widget/badge highlighting <15KB achievement (from Bundle Size Optimization milestone)
+- [ ] Demonstrate CSP-safe mode when available (from CSP Compatibility milestone)
+- [ ] Showcase DOM morphing features (from DOM Morphing & Streaming milestone)
+- [ ] Demonstrate SSE streaming (from DOM Morphing & Streaming milestone)
+- [ ] Show scope inheritance patterns (from Scope Inheritance & State Management milestone)
+- [ ] Display reactive polling examples (from Background Requests & Reactive Polling milestone)
+
+### 15. View-Source Friendly Code
 
 - [ ] Ensure all HTML is readable and well-commented
 - [ ] Add explanatory comments to complex bindings
 - [ ] Include inline documentation where helpful
 - [ ] Make examples copy-paste ready
 
-### 15. Copy-Paste Ready Patterns
+### 16. Copy-Paste Ready Patterns
 
 - [ ] Extract reusable patterns into clearly marked sections
 - [ ] Provide minimal examples for each feature
@@ -212,3 +221,48 @@ lib/
       components.css     # Add tooltip styles here
       ...
 ```
+
+## Example Ideas
+
+Many of these are ideas, not planned to be implemented
+
+### Components
+
+- Modal Dialog - Conditional rendering, focus trapping, backdrop, keyboard escape
+- Tabs & Accordion - Conditional rendering, active state management, keyboard navigation
+- Form Validation - Model binding, computed validation, conditional messages, error states
+
+### Client-Side (SPA/Static)
+
+- ✓ Counter - Basic signals, computed, event handling
+- ✓ TodoMVC - List rendering, persistence, filtering, CRUD operations
+- Search with Autocomplete - Async effects, debouncing, API integration, keyboard navigation
+- Calculator - Event handling, computed expressions, button grid, operation state
+- Image Gallery - For loops, filtering, lightbox, category selection
+
+- Multi-Step Wizard - Form state across steps, validation per step, progress tracking, navigation
+- Note-Taking App - Rich CRUD, categories/tags, search/filter, localStorage persistence, markdown preview
+- Expense Tracker - Date handling, categories, computed totals/charts, filtering by date range, CSV export
+- Kanban Board - Drag-and-drop (via events), column management, task editing, state persistence
+- Timer/Stopwatch - Async effects, intervals, lap times, pause/resume, localStorage for history
+
+- Real-time Chat - SSE for messages, typing indicators, user presence, message history
+- Live Dashboard - SSE for metrics, charts updating in real-time, WebSocket fallback
+- Collaborative Editor - Operational transforms, SSE for changes, conflict resolution, cursor positions
+- Infinite Scroll Feed - Polling for new items, intersection observer, virtualized rendering
+- Admin Panel/CMS - CRUD operations, data tables, filters, pagination, bulk actions
+
+### Server-Side Rendered (SSR)
+
+These will live in an example repo.
+
+- Authentication Flows - Login, signup, password reset, email verification (Go, Python, Rust, Node)
+- File Upload with Progress - Chunked uploads, progress bars, validation (Go, Python, Rust, Node)
+- Search with Server-Side Filtering - Debounced search, paginated results (Go, Python, Rust, Node)
+
+### Desktop Apps
+
+- Note Editor - Local file system, syntax highlighting, multi-tab, settings persistence
+- System Monitor - CPU/memory graphs, process list, real-time updates
+- Database Client - Table browser, query editor, result grid, export
+- Media Player - File browser, playlists, controls, metadata display

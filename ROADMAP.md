@@ -3,7 +3,6 @@
 - [Completed](#completed)
 - [TODO](#to-do)
     - [Parking Lot](#parking-lot)
-- [Examples (Planned)](#examples)
 
 | Version | State | Milestone                                                                        |
 | ------- | ----- | -------------------------------------------------------------------------------- |
@@ -19,25 +18,16 @@
 | v0.4.0  |   ✓   | [Animation & Transitions](#animation--transitions)                               |
 | v0.5.0  |   ✓   | [Navigation & History API Routing](#navigation--history-api-routing)             |
 |         |   ✓   | [Refactor](#evaluator--binder-hardening)                                         |
-| v0.5.1  |   ✓   | [Error Handling & Diagnostics](#error-handling--diagnostics)                     |
-| v0.5.2  |       |                                                                                  |
-| v0.5.3  |       |                                                                                  |
-| v0.5.4  |       |                                                                                  |
-| v0.6.1  |       | [Persistence & Offline](#persistence--offline)                                   |
-| v0.6.2  |       |                                                                                  |
-| v0.6.3  |       |                                                                                  |
-| v0.6.4  |       | [Background Requests & Reactive Polling](#background-requests--reactive-polling) |
-| v0.6.5  |       |                                                                                  |
-| v0.6.6  |       |                                                                                  |
-| v0.6.7  |       | [Streaming & Patch Engine](#streaming--patch-engine)                             |
-| v0.6.8  |       |                                                                                  |
-| v0.6.9  |       |                                                                                  |
-| v0.6.10 |       |                                                                                  |
-| v0.7.0  |       |                                                                                  |
-| v0.8.0  |       | Support `voltx-` & `vx-` attributes: recommend `vx-`                             |
-|         |       | Switch to `data-voltx`                                                           |
-|         |       | Update demo to be a multi page application with routing plugin                   |
-| v0.9.0  |       | [Inspector & Developer Tools](#inspector--developer-tools)                       |
+| v0.5.1  |   ✓   | [Error Handling & Diagnostics](#error-handling--diagnostics) (partial)           |
+| v0.6.0  |       | [Error Handling & Diagnostics](#error-handling--diagnostics)                     |
+| v0.7.0  |       | [Bundle Size Optimization](#bundle-size-optimization)                            |
+| v0.8.0  |       | [CSP Compatibility](#csp-compatibility)                                          |
+| v0.9.0  |       | [DOM Morphing & Streaming](#dom-morphing--streaming)                             |
+| v0.10.0 |       | [Scope Inheritance & State Management](#scope-inheritance--state-management)     |
+| v0.11.0 |       | [Background Requests & Reactive Polling](#background-requests--reactive-polling) |
+| v0.12.0 |       | [Attribute Prefix Support](#attribute-prefix-support)                            |
+| v0.13.0 |       | [Persistence & Offline](#persistence--offline) (advanced features)               |
+| v0.14.0 |       | [Inspector & Developer Tools](#inspector--developer-tools)                       |
 | v1.0.0  |       | [Stable Release](#stable-release)                                                |
 
 ## Completed
@@ -112,42 +102,31 @@ _NOTE_: `data-x-*` is now `data-volt-*`
 
 ## To-Do
 
+**Focus:** Versions v0.5.5 through v0.9.x prioritize core framework capabilities and performance:
+
+- Bundle size reduction to <15KB gzipped (currently 19KB)
+- CSP compatibility (removing Function constructor dependency)
+- DOM morphing and SSE streaming support
+- Optional scope inheritance for improved ergonomics
+
+These milestones strengthen VoltX.js as a signals-based reactive framework with declarative-first design.
+
 ### Error Handling & Diagnostics
 
 **Goal**: Provide clear, actionable feedback when runtime or directive errors occur.
 **Outcome**: VoltX.js surfaces developer-friendly diagnostics for expression evaluation,
 directive parsing, and network operations, making it easier to debug apps without opaque stack traces.
 **Deliverables**:
-    - v0.5.1
-        ✓ Centralized error boundary system for directives and effects.
-        ✓ Sandbox error wrapping with contextual hints (directive name, expression, element).
-        ✓ `$volt.report(error, context)` API for plugin and app-level reporting.
-    - v0.5.2
-        - Visual in-DOM error overlays for development mode.
-        - Enhanced console messages with source map trace and directive path.
-        - Differentiated error levels: warn, error, fatal.
-    - v0.5.3
-        - Runtime health monitor tracking evaluation and subscription failures.
-    - v0.5.4
-        - Documentation: "Understanding VoltX Errors" guide.
-        - Configurable global error policy (silent, overlay, throw).
-
-### Streaming & Patch Engine
-
-**Goal:** Enable real-time updates via SSE/WebSocket streaming with intelligent DOM patching.
-**Outcome:** VoltX.js can receive and apply live updates from the server
-**Deliverables:**
-    - v0.5.7
-        - Server-Sent Events (SSE) integration
-        - `data-volt-flow` attribute for SSE endpoints
-    - v0.5.8
-        - Signal patching from backend (`data-signals-*` merge system)
-        - Backend action system with `$$spark()` syntax
-    - v0.5.9
-        - JSON Patch parser and DOM morphing engine
-        - `data-volt-ignore-morph` for selective patch exclusion
-    - v0.5.10
-        - WebSocket as alternative to SSE
+    - ✓ v0.5.1: Centralized error boundary system for directives and effects
+    - ✓ v0.5.1: Sandbox error wrapping with contextual hints (directive name, expression, element)
+    - ✓ v0.5.1: `$volt.report(error, context)` API for plugin and app-level reporting
+    - v0.6.0: Enhanced console error messages with directive context
+    - v0.6.0: Differentiated error levels: warn, error, fatal
+    - v0.6.0: Documentation: "Understanding VoltX Errors" guide
+    - v0.6.0: Add error handling examples to demo
+    - v0.14.0: Visual in-DOM error overlays for development mode
+    - v0.14.0: Runtime health monitor tracking failures
+    - v0.14.0: Configurable global error policy
 
 ### Persistence & Offline
 
@@ -156,55 +135,110 @@ directive parsing, and network operations, making it easier to debug apps withou
 **Deliverables:**
     - ✓ Persistent signals (localStorage, sessionStorage, indexedDb)
     - ✓ Storage plugin (`data-volt-persist`)
-    - v0.5.1
-        - Storage modifiers on signals:
-            - `.local` modifier for localStorage persistence
-            - `.session` modifier for sessionStorage persistence
-            - `.ifmissing` modifier for conditional initialization
-    - v0.5.2
-        - Sync strategy API (merge, overwrite, patch) for conflict resolution
-        - Cache invalidation strategies
-    - v0.5.3
-        - Offline queue for deferred stream events and HTTP requests
-        - Service Worker integration for offline-first apps
-        - Background sync for deferred requests
-        - Cross-tab synchronization via `BroadcastChannel`
+    - v0.13.0: Storage modifiers on signals (`.local`, `.session`, `.ifmissing`)
+    - v0.13.0: Sync strategy API (merge, overwrite, patch) for conflict resolution
+    - v0.13.0: Cache invalidation strategies
+    - v0.13.0: Offline queue for deferred stream events and HTTP requests
+    - v0.13.0: Service Worker integration for offline-first apps
+    - v0.13.0: Background sync for deferred requests
+    - v0.13.0: Cross-tab synchronization via `BroadcastChannel`
+
+### Bundle Size Optimization
+
+**Goal:** Reduce bundle size to <15KB gzipped while maintaining full feature set.
+**Outcome:** Lightweight runtime footprint with comprehensive declarative capabilities.
+**Deliverables:**
+    - v0.7.0: Audit and tree-shake unused code paths
+    - v0.7.0: Optimize evaluator and binder implementations
+    - v0.7.0: Minimize plugin footprint, ensure lazy loading
+    - v0.7.0: Refactor expression compiler for smaller output
+    - v0.7.0: Compress constant strings and reduce runtime helpers
+    - v0.7.0: Optimize signal subscription management
+    - v0.7.0: Production mode stripping (remove dev-only error messages)
+    - v0.7.0: Aggressive minification pipeline tuning
+    - v0.7.0: Target: <15KB gzipped sustained
+
+### CSP Compatibility
+
+**Goal:** Make VoltX.js Content Security Policy compliant without 'unsafe-eval'.
+**Outcome:** VoltX.js can run in strict CSP environments (no Function constructor).
+**Deliverables:**
+    - v0.8.0: Research and design CSP-safe evaluator architecture
+    - v0.8.0: Evaluate trade-offs: AST interpreter vs limited expression subset
+    - v0.8.0: Implement CSP-safe expression evaluator (AST-based or restricted syntax)
+    - v0.8.0: Maintain expression feature parity where possible
+    - v0.8.0: Fallback mode detection for environments requiring CSP
+    - v0.8.0: Full test coverage for CSP mode
+    - v0.8.0: Documentation on CSP limitations and alternatives
+    - v0.8.0: Bundle split: standard build vs CSP build
+
+### DOM Morphing & Streaming
+
+**Goal:** Add intelligent DOM morphing and Server-Sent Events for real-time updates.
+**Outcome:** Built-in morphing and SSE streaming for seamless server-driven UI updates.
+**Deliverables:**
+    - v0.9.0: Integrate Idiomorph or implement lightweight morphing algorithm
+    - v0.9.0: `data-volt-morph` attribute for morphing-based swaps
+    - v0.9.0: Preserve focus, scroll, and input state during morphs
+    - v0.9.0: Server-Sent Events (SSE) integration
+    - v0.9.0: `data-volt-stream` attribute for SSE endpoints
+    - v0.9.0: Automatic reconnection with exponential backoff
+    - v0.9.0: Signal patching from backend SSE events
+    - v0.9.0: JSON Patch support for partial updates
+    - v0.9.0: `data-volt-ignore-morph` for selective exclusion
+    - v0.9.0: WebSocket as alternative to SSE
+    - v0.9.0: Unified streaming API across SSE/WebSocket
+
+### Scope Inheritance & State Management
+
+**Goal:** Improve data scoping with optional inheritance for ergonomic nested components.
+**Outcome:** Flexible scoping patterns for complex component hierarchies.
+**Deliverables:**
+    - v0.10.0: Optional scope inheritance via `data-volt-scope="inherit"`
+    - v0.10.0: Child scopes inherit parent signals with override capability
+    - v0.10.0: $parent accessor for explicit parent scope access
+    - v0.10.0: Scoped context providers for dependency injection
+    - v0.10.0: Enhanced $store with namespacing and modules
+    - v0.10.0: Cross-scope signal sharing patterns
 
 ### Background Requests & Reactive Polling
 
-**Goal:** Enable declarative background data fetching and periodic updates within the VoltX.js runtime.
+**Goal:** Enable declarative background data fetching and periodic updates.
 **Outcome:** VoltX.js elements can fetch or refresh data automatically based on time, visibility, or reactive conditions.
 **Deliverables:**
-    - v0.5.4
-        - `data-volt-visible` for fetching when an element enters the viewport (`IntersectionObserver`)
-    - v0.5.5
-        - `data-volt-fetch` attribute for declarative background requests
-            - Configurable polling intervals, delays, and signal-based triggers
-            - Automatic cancellation of requests when elements are unmounted
-            - Conditional execution tied to reactive signals
-            - Integration hooks for loading and pending states
-    - v0.5.6
-        - Background task scheduler with priority management
+    - v0.11.0: `data-volt-visible` for fetching when element enters viewport (IntersectionObserver)
+    - v0.11.0: `data-volt-poll` attribute for periodic background requests
+    - v0.11.0: Configurable intervals, delays, and signal-based triggers
+    - v0.11.0: Automatic cancellation when elements unmount
+    - v0.11.0: Conditional polling tied to reactive signals
+    - v0.11.0: Background task scheduler with priority management
+
+### Attribute Prefix Support
+
+**Goal:** Support multiple attribute prefix options for developer preference.
+**Outcome:** VoltX.js supports `voltx-`, `vx-`, and `data-volt-` prefixes.
+**Deliverables:**
+    - v0.12.0: Add support for `voltx-*` and `vx-*` attribute prefixes
+    - v0.12.0: Recommend `vx-*` as primary in documentation
+    - v0.12.0: Maintain backward compatibility with `data-volt-*`
+    - v0.12.0: Update demo to use recommended prefix
 
 ### Inspector & Developer Tools
 
 **Goal:** Improve developer experience and runtime introspection.
 **Outcome:** First-class developer ergonomics; VoltX.js is enjoyable to debug and extend.
 **Deliverables:**
-    - v0.9.1
-        - Developer overlay for inspecting signals, subscriptions, and effects
-        - Time-travel debugging for signal history
-    - v0.9.2
-        - Signal dependency graph visualization (graph data structure implemented in [proxy](#proxy-based-reactivity-enhancements) milestone)
-    - v0.9.3
-        - Browser console integration (`window.$volt.inspect()`)
-        - Dev logging toggle (`Volt.debug = true`)
-    - v0.9.4
-        - Request/response debugging (HTTP actions, SSE streams)
-    - v0.9.5
-        - Performance profiling tools
-    - v0.9.6 to v0.9.10
-        - Browser DevTools extension
+    - v0.14.0: Visual in-DOM error overlays for development mode
+    - v0.14.0: Runtime health monitor tracking failures
+    - v0.14.0: Configurable global error policy (silent, overlay, throw)
+    - v0.14.0: Developer overlay for inspecting signals, subscriptions, and effects
+    - v0.14.0: Time-travel debugging for signal history
+    - v0.14.0: Signal dependency graph visualization
+    - v0.14.0: Performance profiling tools
+    - v0.14.0: Browser console integration (`window.$volt.inspect()`)
+    - v0.14.0: Dev logging toggle (`Volt.debug = true`)
+    - v0.14.0: Request/response debugging (HTTP actions, SSE streams)
+    - v0.14.0: Browser DevTools extension with full integration
 
 ### Stable Release
 
@@ -219,77 +253,8 @@ directive parsing, and network operations, making it easier to debug apps withou
     - Announcement post and release notes
     - Community contribution guide & governance doc
 
-### Better Demo
-
-**Goal:** Transform the current programmatic demo into a declarative multi-page SPA showcasing all framework and CSS features.
-**Outcome:** Production-quality reference application demonstrating VoltX.js best practices and real-world patterns.
-**Deliverables:**
-    - Convert demo from programmatic to declarative mode (charge() + data-volt attributes)
-    - Implement multi-page routing using Navigation & History API plugin
-    - Add tooltips to VoltX css using data attributes
-        - Example: data-vx-tooltip="Right" data-placement="right"
-    - Page: Home - Framework overview and feature highlights
-    - Page: Getting Started - Installation and first examples
-    - Page: Reactivity - Signals, computed, effects, bindings, conditional/list rendering
-    - Page: HTTP - Backend integration with all methods, swap strategies, retry logic
-    - Page: State - Global stores and scope helpers ($store, $scope, $pulse, $uid, $probe, $pins, $arc)
-    - Page: Persistence - localStorage/sessionStorage/IndexedDB, persist plugin, URL sync
-    - Page: Animations - Surge directive, shift plugin, View Transitions
-    - Page: Forms - Model binding, validation, event modifiers, multi-step forms
-    - Page: CSS - Complete Volt CSS showcase (typography, layout, Tufte sidenotes, tables)
-    - Page: Patterns - Real-world components (tabs, accordion, modal, autocomplete)
-    - View-source friendly code with clear examples
-    - Copy-paste ready patterns for common use cases
-
 ## Parking Lot
 
 ### Evaluator & Binder Hardening
 
 All expression evaluation now flows through a cached `new Function` compiler guarded by a hardened scope proxy, with the binder slimmed into a directive registry so plugins self-register while tests verify the sandboxed error surfaces.
-
-### Naming
-
-## Examples
-
-Many of these are ideas, not planned to be implemented
-
-### Components
-
-- Modal Dialog - Conditional rendering, focus trapping, backdrop, keyboard escape
-- Tabs & Accordion - Conditional rendering, active state management, keyboard navigation
-- Form Validation - Model binding, computed validation, conditional messages, error states
-
-### Client-Side (SPA/Static)
-
-- ✓ Counter - Basic signals, computed, event handling
-- ✓ TodoMVC - List rendering, persistence, filtering, CRUD operations
-- Search with Autocomplete - Async effects, debouncing, API integration, keyboard navigation
-- Calculator - Event handling, computed expressions, button grid, operation state
-- Image Gallery - For loops, filtering, lightbox, category selection
-
-- Multi-Step Wizard - Form state across steps, validation per step, progress tracking, navigation
-- Note-Taking App - Rich CRUD, categories/tags, search/filter, localStorage persistence, markdown preview
-- Expense Tracker - Date handling, categories, computed totals/charts, filtering by date range, CSV export
-- Kanban Board - Drag-and-drop (via events), column management, task editing, state persistence
-- Timer/Stopwatch - Async effects, intervals, lap times, pause/resume, localStorage for history
-
-- Real-time Chat - SSE for messages, typing indicators, user presence, message history
-- Live Dashboard - SSE for metrics, charts updating in real-time, WebSocket fallback
-- Collaborative Editor - Operational transforms, SSE for changes, conflict resolution, cursor positions
-- Infinite Scroll Feed - Polling for new items, intersection observer, virtualized rendering
-- Admin Panel/CMS - CRUD operations, data tables, filters, pagination, bulk actions
-
-### Server-Side Rendered (SSR)
-
-These will live in an example repo.
-
-- Authentication Flows - Login, signup, password reset, email verification (Go, Python, Rust, Node)
-- File Upload with Progress - Chunked uploads, progress bars, validation (Go, Python, Rust, Node)
-- Search with Server-Side Filtering - Debounced search, paginated results (Go, Python, Rust,  Node)
-
-### Desktop Apps
-
-- Note Editor - Local file system, syntax highlighting, multi-tab, settings persistence
-- System Monitor - CPU/memory graphs, process list, real-time updates
-- Database Client - Table browser, query editor, result grid, export
-- Media Player - File browser, playlists, controls, metadata display
