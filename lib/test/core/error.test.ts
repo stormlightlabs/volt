@@ -1,5 +1,5 @@
 import { clearErrorHandlers, getErrorHandlerCount, onError, report, VoltError } from "$core/error";
-import type { ErrorContext, ErrorSource } from "$types/volt";
+import type { ErrorContext, ErrorLevel, ErrorSource } from "$types/volt";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 describe("VoltError", () => {
@@ -295,6 +295,147 @@ describe("Error Reporting", () => {
     for (const [i, source] of sources.entries()) {
       const voltError: VoltError = handler.mock.calls[i][0];
       expect(voltError.source).toBe(source);
+    }
+  });
+});
+
+describe("Error Levels", () => {
+  beforeEach(() => {
+    clearErrorHandlers();
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    clearErrorHandlers();
+    vi.restoreAllMocks();
+  });
+
+  it("defaults to error level when not specified", () => {
+    const cause = new Error("Test error");
+    const context: ErrorContext = { source: "binding" };
+
+    const voltError = new VoltError(cause, context);
+
+    expect(voltError.level).toBe("error");
+  });
+
+  it("includes error level in VoltError", () => {
+    const levels: Array<ErrorLevel> = ["warn", "error", "fatal"];
+
+    for (const level of levels) {
+      const cause = new Error(`Test ${level}`);
+      const context: ErrorContext = { source: "binding", level };
+
+      const voltError = new VoltError(cause, context);
+
+      expect(voltError.level).toBe(level);
+    }
+  });
+
+  it("includes error level in message", () => {
+    const levels: Array<ErrorLevel> = ["warn", "error", "fatal"];
+
+    for (const level of levels) {
+      const cause = new Error(`Test ${level}`);
+      const context: ErrorContext = { source: "binding", level };
+
+      const voltError = new VoltError(cause, context);
+
+      expect(voltError.message).toContain(`[${level.toUpperCase()}]`);
+    }
+  });
+
+  it("includes error level in JSON serialization", () => {
+    const cause = new Error("Test error");
+    const context: ErrorContext = { source: "binding", level: "warn" };
+
+    const voltError = new VoltError(cause, context);
+    const json = voltError.toJSON();
+
+    expect(json.level).toBe("warn");
+  });
+
+  it("uses console.warn for warn level without handlers", () => {
+    const error = new Error("Warning message");
+    const context: ErrorContext = { source: "binding", level: "warn" };
+
+    report(error, context);
+
+    expect(console.warn).toHaveBeenCalledTimes(2);
+    expect(console.warn).toHaveBeenCalledWith(expect.stringContaining("[WARN]"));
+    expect(console.warn).toHaveBeenCalledWith("Caused by:", error);
+    expect(console.error).not.toHaveBeenCalled();
+  });
+
+  it("uses console.error for error level without handlers", () => {
+    const error = new Error("Error message");
+    const context: ErrorContext = { source: "binding", level: "error" };
+
+    report(error, context);
+
+    expect(console.error).toHaveBeenCalledTimes(2);
+    expect(console.error).toHaveBeenCalledWith(expect.stringContaining("[ERROR]"));
+    expect(console.error).toHaveBeenCalledWith("Caused by:", error);
+    expect(console.warn).not.toHaveBeenCalled();
+  });
+
+  it("uses console.error for fatal level without handlers", () => {
+    const error = new Error("Fatal error");
+    const context: ErrorContext = { source: "charge", level: "fatal" };
+
+    expect(() => report(error, context)).toThrow(VoltError);
+
+    expect(console.error).toHaveBeenCalledTimes(2);
+    expect(console.error).toHaveBeenCalledWith(expect.stringContaining("[FATAL]"));
+    expect(console.error).toHaveBeenCalledWith("Caused by:", error);
+  });
+
+  it("throws error for fatal level after handlers", () => {
+    const handler = vi.fn();
+    onError(handler);
+
+    const error = new Error("Fatal error");
+    const context: ErrorContext = { source: "charge", level: "fatal" };
+
+    expect(() => report(error, context)).toThrow(VoltError);
+
+    expect(handler).toHaveBeenCalledTimes(1);
+    const voltError = handler.mock.calls[0][0];
+    expect(voltError.level).toBe("fatal");
+  });
+
+  it("does not throw for warn level", () => {
+    const error = new Error("Warning");
+    const context: ErrorContext = { source: "http", level: "warn" };
+
+    expect(() => report(error, context)).not.toThrow();
+  });
+
+  it("does not throw for error level", () => {
+    const error = new Error("Error");
+    const context: ErrorContext = { source: "binding", level: "error" };
+
+    expect(() => report(error, context)).not.toThrow();
+  });
+
+  it("passes error level to handlers", () => {
+    const handler = vi.fn();
+    onError(handler);
+
+    const levels: Array<ErrorLevel> = ["warn", "error", "fatal"];
+
+    for (const level of levels) {
+      try {
+        report(new Error(`Test ${level}`), { source: "binding", level });
+      } catch { /* No-op */ }
+    }
+
+    expect(handler).toHaveBeenCalledTimes(3);
+
+    for (const [i, level] of levels.entries()) {
+      const voltError: VoltError = handler.mock.calls[i][0];
+      expect(voltError.level).toBe(level);
     }
   });
 });

@@ -88,6 +88,7 @@ function createScopeFromElement(el: Element): Scope {
       if (typeof stateData !== "object" || isNil(stateData) || Array.isArray(stateData)) {
         report(new Error(`data-volt-state must be a JSON object, got ${typeof stateData}`), {
           source: "charge",
+          level: "fatal",
           element: el as HTMLElement,
           directive: "data-volt-state",
           expression: stateAttr,
@@ -100,6 +101,7 @@ function createScopeFromElement(el: Element): Scope {
     } catch (error) {
       report(error as Error, {
         source: "charge",
+        level: "fatal",
         element: el as HTMLElement,
         directive: "data-volt-state",
         expression: stateAttr,
@@ -143,6 +145,7 @@ function parseDeclarativeStore(): void {
       if (typeof data !== "object" || isNil(data) || Array.isArray(data)) {
         report(new Error(`data-volt-store script must contain a JSON object, got: ${typeof data}`), {
           source: "charge",
+          level: "fatal",
           element: script as HTMLElement,
           directive: "data-volt-store",
         });
@@ -151,7 +154,12 @@ function parseDeclarativeStore(): void {
 
       registerStore(data);
     } catch (error) {
-      report(error as Error, { source: "charge", element: script as HTMLElement, directive: "data-volt-store" });
+      report(error as Error, {
+        source: "charge",
+        level: "fatal",
+        element: script as HTMLElement,
+        directive: "data-volt-store",
+      });
     }
   }
 }

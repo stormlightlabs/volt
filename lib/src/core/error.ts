@@ -6,7 +6,7 @@
  *
  * @module core/error
  */
-import type { ErrorContext, ErrorHandler, ErrorSource } from "$types/volt";
+import type { ErrorContext, ErrorHandler, ErrorLevel, ErrorSource } from "$types/volt";
 
 /**
  * Enhanced error class with VoltX context
@@ -17,6 +17,8 @@ import type { ErrorContext, ErrorHandler, ErrorSource } from "$types/volt";
 export class VoltError extends Error {
   /** Error source category */
   public readonly source: ErrorSource;
+  /** Error severity level */
+  public readonly level: ErrorLevel;
   /** DOM element where error occurred */
   public readonly element?: HTMLElement;
   /** Directive name */
@@ -38,6 +40,7 @@ export class VoltError extends Error {
     this.name = "VoltError";
     this.cause = cause;
     this.source = context.source;
+    this.level = context.level ?? "error";
     this.element = context.element;
     this.directive = context.directive;
     this.expression = context.expression;
@@ -67,8 +70,9 @@ export class VoltError extends Error {
 
   private static buildMessage(cause: Error, context: ErrorContext): string {
     const parts: string[] = [];
+    const level = context.level ?? "error";
 
-    parts.push(`[${context.source}] ${cause.message}`);
+    parts.push(`[${level.toUpperCase()}] [${context.source}] ${cause.message}`);
 
     if (context.directive) {
       parts.push(`Directive: ${context.directive}`);
@@ -112,6 +116,7 @@ export class VoltError extends Error {
       name: this.name,
       message: this.message,
       source: this.source,
+      level: this.level,
       directive: this.directive,
       expression: this.expression,
       timestamp: this.timestamp,
@@ -183,32 +188,37 @@ export function clearErrorHandlers(): void {
  * If no error handlers are registered, errors are logged to console as fallback.
  * Once handlers are registered, console logging is disabled.
  *
+ * Error levels determine console output and behavior:
+ * - warn: Non-critical issues logged with console.warn
+ * - error: Recoverable errors logged with console.error (default)
+ * - fatal: Unrecoverable errors logged with console.error and thrown to halt execution
+ *
  * @param error - Error to report (can be Error, unknown, or string)
  * @param context - Error context with source and additional details
  *
  * @example
  * ```ts
- * // Internal usage (by VoltX)
- * try {
- *   evaluate(expression, scope);
- * } catch (err) {
- *   report(err, {
- *     source: ErrorSource.Evaluator,
- *     element: ctx.element,
- *     directive: 'data-volt-text',
- *     expression: expression
- *   });
- * }
+ * // Warning for non-critical issues
+ * report(err, {
+ *   source: "binding",
+ *   level: "warn",
+ *   directive: "data-volt-deprecated"
+ * });
  *
- * // External usage (by plugins/apps)
- * try {
- *   myCustomLogic();
- * } catch (err) {
- *   report(err, {
- *     source: ErrorSource.User,
- *     customContext: 'My feature failed'
- *   });
- * }
+ * // Error for recoverable issues (default)
+ * report(err, {
+ *   source: "evaluator",
+ *   level: "error",
+ *   directive: "data-volt-text",
+ *   expression: expression
+ * });
+ *
+ * // Fatal error that halts execution
+ * report(err, {
+ *   source: "charge",
+ *   level: "fatal",
+ *   directive: "data-volt-state"
+ * });
  * ```
  */
 export function report(error: unknown, context: ErrorContext): void {
@@ -216,10 +226,16 @@ export function report(error: unknown, context: ErrorContext): void {
   const voltError = new VoltError(errorObj, context);
 
   if (errorHandlers.length === 0) {
-    console.error(voltError.message);
-    console.error("Caused by:", voltError.cause);
+    const logFn = voltError.level === "warn" ? console.warn : console.error;
+
+    logFn(voltError.message);
+    logFn("Caused by:", voltError.cause);
     if (voltError.element) {
-      console.error("Element:", voltError.element);
+      logFn("Element:", voltError.element);
+    }
+
+    if (voltError.level === "fatal") {
+      throw voltError;
     }
     return;
   }
@@ -233,6 +249,10 @@ export function report(error: unknown, context: ErrorContext): void {
     } catch (handlerError) {
       console.error("Error in error handler:", handlerError);
     }
+  }
+
+  if (voltError.level === "fatal") {
+    throw voltError;
   }
 }
 

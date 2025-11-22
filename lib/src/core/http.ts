@@ -231,6 +231,7 @@ export function swap(target: Element, content: string, strategy: SwapStrategy = 
     default: {
       report(new Error(`Unknown swap strategy: ${strategy as string}`), {
         source: "http",
+        level: "warn",
         element: target as HTMLElement,
       });
     }
@@ -510,6 +511,7 @@ function resolveTarget(targetConf: string | Element, defaultEl: Element): Option
   if (!target) {
     report(new Error(`Target element not found: ${targetConf}`), {
       source: "http",
+      level: "warn",
       element: defaultEl as HTMLElement,
       directive: "data-volt-target",
     });

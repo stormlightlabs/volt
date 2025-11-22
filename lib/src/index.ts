@@ -86,6 +86,7 @@ export type {
   ComputedSignal,
   ErrorContext,
   ErrorHandler,
+  ErrorLevel,
   ErrorSource,
   GlobalHookName,
   GlobalStore,
