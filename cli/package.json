@@ -19,7 +19,7 @@
     "test:run": "vitest run",
     "typecheck": "tsc --noEmit"
   },
-  "devDependencies": { "tsdown": "^0.15.6" },
+  "devDependencies": { "tsdown": "^0.15.6", "@vitest/coverage-v8": "^3.2.4" },
   "dependencies": { "chalk": "^5.6.2", "commander": "^14.0.1", "@inquirer/prompts": "^8.0.1" },
   "keywords": ["voltx", "reactive", "framework", "cli", "scaffold", "create"]
 }
