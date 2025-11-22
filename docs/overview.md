@@ -55,7 +55,7 @@ It combines HTML-driven behavior via `data-volt-*` attributes with signal-based 
 
 VoltX ships with an optional classless CSS framework inspired by Pico CSS and Tufte CSS. It provides beautiful, semantic styling for HTML elements without requiring any CSS classes—just write semantic markup and it looks great out of the box.
 
-Features include typography with modular scale, Tufte-style sidenotes, styled form elements, dialogs, accordions, tooltips, tables, and more. See the framework's [README](../lib/README.md#voltxcss) for installation and usage details.
+Features include typography with modular scale, Tufte-style sidenotes, styled form elements, dialogs, accordions, tooltips, tables, and more.
 
 Here are some highlights
 

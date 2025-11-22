@@ -333,5 +333,3 @@ Check for syntax errors in your HTML, CSS, or JavaScript files.
 
 - Read the [Installation Guide](./installation) for framework setup
 - Explore [Usage Patterns](./usage/state) for state management
-- Check the [API Reference](./api) for detailed documentation
-- Learn about [Plugins](./plugins) for extended functionality
