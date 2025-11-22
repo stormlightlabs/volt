@@ -1,5 +1,7 @@
 # CLI
 
+⚠️ This CLI is unreleased as of writing. The documentation may change before the CLI is published in v0.6.0.
+
 The VoltX.js CLI provides tools for creating and managing VoltX.js applications. Use it to scaffold new projects, run development servers, build for production, and download framework assets.
 
 ## Installation

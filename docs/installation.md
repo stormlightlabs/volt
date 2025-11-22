@@ -26,7 +26,7 @@ You can optionally pin to a specific version:
 </script>
 ```
 
-## CLI (Recommended)
+## CLI (⚠️ Unreleased as of v0.5.0)
 
 The fastest way to create a new VoltX.js project is with the CLI:
 
