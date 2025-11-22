@@ -2,3 +2,4 @@ packages:
   - 'lib'
   - 'dev'
   - 'docs'
+  - 'cli'

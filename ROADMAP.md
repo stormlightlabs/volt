@@ -255,6 +255,20 @@ directive parsing, and network operations, making it easier to debug apps withou
 
 ## Parking Lot
 
+### IIFE Build Support
+
+Provide an IIFE (Immediately Invoked Function Expression) build target for VoltX.js to support direct `<script>` tag usage without module systems.
+
+**Deliverables:**
+
+- IIFE build output (voltx.iife.js) alongside ESM build
+- Global `Volt` namespace for browser environments
+- CDN-friendly distribution (unpkg, jsdelivr)
+- Update build pipeline to generate IIFE bundle
+- Document usage: `<script src="voltx.iife.min.js"></script>`
+- Ensure plugins work with IIFE build
+- Add IIFE examples to documentation
+
 ### Evaluator & Binder Hardening
 
 All expression evaluation now flows through a cached `new Function` compiler guarded by a hardened scope proxy, with the binder slimmed into a directive registry so plugins self-register while tests verify the sandboxed error surfaces.

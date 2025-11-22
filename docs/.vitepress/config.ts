@@ -30,9 +30,9 @@ export default defineConfig({
       {
         text: "Getting Started",
         items:
-          ([{ text: "Overview", link: "/overview" }, {
-            text: "Installation",
-            link: "/installation",
+          ([{ text: "Overview", link: "/overview" }, { text: "Installation", link: "/installation" }, {
+            text: "CLI",
+            link: "/cli",
           }] as DefaultTheme.SidebarItem[]).concat(...u.scanDir("usage", "/usage")),
       },
       {

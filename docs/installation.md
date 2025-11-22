@@ -26,6 +26,19 @@ You can optionally pin to a specific version:
 </script>
 ```
 
+## CLI (Recommended)
+
+The fastest way to create a new VoltX.js project is with the CLI:
+
+```bash
+pnpm create voltx my-app
+cd my-app
+pnpm install
+pnpm dev
+```
+
+This scaffolds a complete project with development server, build tools, and framework assets. See the [CLI Guide](./cli) for all available commands and templates.
+
 ## Package Manager
 
 For applications using node based tools, install VoltX.js via npm or JSR:
