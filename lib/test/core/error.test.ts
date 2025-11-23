@@ -1,4 +1,18 @@
-import { clearErrorHandlers, getErrorHandlerCount, onError, report, VoltError } from "$core/error";
+import {
+  BindingError,
+  ChargeError,
+  clearErrorHandlers,
+  EffectError,
+  EvaluatorError,
+  getErrorHandlerCount,
+  HttpError,
+  LifecycleError,
+  onError,
+  PluginError,
+  report,
+  UserError,
+  VoltError,
+} from "$core/error";
 import type { ErrorContext, ErrorLevel, ErrorSource } from "$types/volt";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -295,6 +309,35 @@ describe("Error Reporting", () => {
     for (const [i, source] of sources.entries()) {
       const voltError: VoltError = handler.mock.calls[i][0];
       expect(voltError.source).toBe(source);
+    }
+  });
+
+  it("creates correct error types based on source", () => {
+    const handler = vi.fn();
+    onError(handler);
+
+    const testCases: Array<{ source: ErrorSource; errorType: typeof VoltError; name: string }> = [
+      { source: "evaluator", errorType: EvaluatorError, name: "EvaluatorError" },
+      { source: "binding", errorType: BindingError, name: "BindingError" },
+      { source: "effect", errorType: EffectError, name: "EffectError" },
+      { source: "http", errorType: HttpError, name: "HttpError" },
+      { source: "plugin", errorType: PluginError, name: "PluginError" },
+      { source: "lifecycle", errorType: LifecycleError, name: "LifecycleError" },
+      { source: "charge", errorType: ChargeError, name: "ChargeError" },
+      { source: "user", errorType: UserError, name: "UserError" },
+    ];
+
+    for (const { source } of testCases) {
+      report(new Error(`Test ${source}`), { source });
+    }
+
+    expect(handler).toHaveBeenCalledTimes(testCases.length);
+
+    for (const [i, { errorType, name }] of testCases.entries()) {
+      const voltError = handler.mock.calls[i][0];
+      expect(voltError).toBeInstanceOf(errorType);
+      expect(voltError).toBeInstanceOf(VoltError);
+      expect(voltError.name).toBe(name);
     }
   });
 });

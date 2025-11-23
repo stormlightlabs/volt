@@ -7,8 +7,20 @@
 export { asyncEffect } from "$core/async-effect";
 export { mount } from "$core/binder";
 export { charge } from "$core/charge";
-export { clearErrorHandlers, onError, report } from "$core/error";
-export type { VoltError } from "$core/error";
+export {
+  BindingError,
+  ChargeError,
+  clearErrorHandlers,
+  EffectError,
+  EvaluatorError,
+  HttpError,
+  LifecycleError,
+  onError,
+  PluginError,
+  report,
+  UserError,
+  VoltError,
+} from "$core/error";
 export { parseHttpConfig, request, serializeForm, serializeFormToJSON, swap } from "$core/http";
 export {
   clearAllGlobalHooks,

@@ -9,10 +9,9 @@
 import type { ErrorContext, ErrorHandler, ErrorLevel, ErrorSource } from "$types/volt";
 
 /**
- * Enhanced error class with VoltX context
+ * Base error class with VoltX context
  *
- * Wraps original errors with rich debugging information including
- * source, element, directive, and expression details.
+ * Wraps original errors with rich debugging information including ource, element, directive, and expression details.
  */
 export class VoltError extends Error {
   /** Error source category */
@@ -50,7 +49,7 @@ export class VoltError extends Error {
     // V8-specific feature
     // See: https://github.com/microsoft/TypeScript/issues/3926
     if ((Error as any).captureStackTrace) {
-      (Error as any).captureStackTrace(this, VoltError);
+      (Error as any).captureStackTrace(this, this.constructor);
     }
   }
 
@@ -128,6 +127,103 @@ export class VoltError extends Error {
 }
 
 /**
+ * Error during expression evaluation
+ *
+ * Thrown when evaluating expressions in directives like data-volt-text, data-volt-if, or any other binding that uses the expression evaluator.
+ */
+export class EvaluatorError extends VoltError {
+  constructor(cause: Error, context: ErrorContext) {
+    super(cause, { ...context, source: "evaluator" });
+    this.name = "EvaluatorError";
+  }
+}
+
+/**
+ * Error during directive binding
+ *
+ * Thrown when setting up or executing DOM bindings like data-volt-text, data-volt-class, data-volt-model, etc.
+ */
+export class BindingError extends VoltError {
+  constructor(cause: Error, context: ErrorContext) {
+    super(cause, { ...context, source: "binding" });
+    this.name = "BindingError";
+  }
+}
+
+/**
+ * Error during effect execution
+ *
+ * Thrown when effects, computed signals, or async effects fail during execution or cleanup.
+ */
+export class EffectError extends VoltError {
+  constructor(cause: Error, context: ErrorContext) {
+    super(cause, { ...context, source: "effect" });
+    this.name = "EffectError";
+  }
+}
+
+/**
+ * Error during HTTP operations
+ *
+ * Thrown when HTTP directives (data-volt-get, data-volt-post, etc.) encounter network errors, parsing failures, or swap strategy issues.
+ */
+export class HttpError extends VoltError {
+  constructor(cause: Error, context: ErrorContext) {
+    super(cause, { ...context, source: "http" });
+    this.name = "HttpError";
+  }
+}
+
+/**
+ * Error in plugin execution
+ *
+ * Thrown when custom plugins registered via registerPlugin fail during initialization or execution.
+ */
+export class PluginError extends VoltError {
+  constructor(cause: Error, context: ErrorContext) {
+    super(cause, { ...context, source: "plugin" });
+    this.name = "PluginError";
+  }
+}
+
+/**
+ * Error in lifecycle hooks
+ *
+ * Thrown when lifecycle hooks (beforeMount, afterMount, onMount, etc.) fail during execution.
+ */
+export class LifecycleError extends VoltError {
+  constructor(cause: Error, context: ErrorContext) {
+    super(cause, { ...context, source: "lifecycle" });
+    this.name = "LifecycleError";
+  }
+}
+
+/**
+ * Error during charge/initialization
+ *
+ * Thrown when charge() encounters errors during auto-discovery and mounting of [data-volt] elements, or when parsing data-volt-state.
+ */
+export class ChargeError extends VoltError {
+  constructor(cause: Error, context: ErrorContext) {
+    super(cause, { ...context, source: "charge" });
+    this.name = "ChargeError";
+  }
+}
+
+/**
+ * User-triggered error
+ *
+ * Errors explicitly reported by user code via the report() function
+ * with source: "user".
+ */
+export class UserError extends VoltError {
+  constructor(cause: Error, context: ErrorContext) {
+    super(cause, { ...context, source: "user" });
+    this.name = "UserError";
+  }
+}
+
+/**
  * Global error handler registry
  */
 let errorHandlers: ErrorHandler[] = [];
@@ -136,8 +232,7 @@ let errorHandlers: ErrorHandler[] = [];
  * Register an error handler
  *
  * Multiple handlers can be registered and will be called in registration order.
- * Handlers can call `error.stopPropagation()` to prevent subsequent handlers
- * from being called.
+ * Handlers can call `error.stopPropagation()` to prevent subsequent handlers from being called.
  *
  * @param handler - Error handler function
  * @returns Cleanup function to unregister the handler
@@ -223,7 +318,8 @@ export function clearErrorHandlers(): void {
  */
 export function report(error: unknown, context: ErrorContext): void {
   const errorObj = error instanceof Error ? error : new Error(String(error));
-  const voltError = new VoltError(errorObj, context);
+
+  const voltError = createErrorBySource(errorObj, context);
 
   if (errorHandlers.length === 0) {
     const logFn = voltError.level === "warn" ? console.warn : console.error;
@@ -253,6 +349,41 @@ export function report(error: unknown, context: ErrorContext): void {
 
   if (voltError.level === "fatal") {
     throw voltError;
+  }
+}
+
+/**
+ * Create the appropriate error type based on the source
+ */
+function createErrorBySource(cause: Error, context: ErrorContext): VoltError {
+  switch (context.source) {
+    case "evaluator": {
+      return new EvaluatorError(cause, context);
+    }
+    case "binding": {
+      return new BindingError(cause, context);
+    }
+    case "effect": {
+      return new EffectError(cause, context);
+    }
+    case "http": {
+      return new HttpError(cause, context);
+    }
+    case "plugin": {
+      return new PluginError(cause, context);
+    }
+    case "lifecycle": {
+      return new LifecycleError(cause, context);
+    }
+    case "charge": {
+      return new ChargeError(cause, context);
+    }
+    case "user": {
+      return new UserError(cause, context);
+    }
+    default: {
+      return new VoltError(cause, context);
+    }
   }
 }
 
