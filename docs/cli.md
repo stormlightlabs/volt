@@ -9,7 +9,7 @@ The VoltX.js CLI provides tools for creating and managing VoltX.js applications.
 The CLI is available as `create-voltx` on npm:
 
 ```bash
-# Use with pnpm (recommended)
+# Use with pnpm
 pnpm create voltx my-app
 
 # Use with npm
@@ -242,8 +242,6 @@ A basic VoltX.js application demonstrating:
 - Event handlers
 - Counter example
 
-Best for: Learning VoltX.js basics, simple interactive pages.
-
 ### With Router
 
 A multi-page application featuring:
@@ -252,8 +250,6 @@ A multi-page application featuring:
 - Multiple routes (home, about, contact, 404)
 - Navigation with `data-volt-navigate`
 - Route matching with `data-volt-url`
-
-Best for: Multi-page applications, documentation sites, dashboards.
 
 ### With Plugins
 
@@ -275,8 +271,6 @@ HTML and CSS using VoltX.js styles without the reactive framework:
 - Semantic HTML
 - No JavaScript required
 
-Best for: Static sites, progressively enhanced pages, CSS-only projects.
-
 ## Configuration
 
 ### Vite Configuration
@@ -287,7 +281,6 @@ The CLI uses Vite as the dev server and build tool. To customize Vite, create a 
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-  // Custom Vite configuration
   server: {
     port: 3000,
   },
@@ -298,40 +291,3 @@ export default defineConfig({
 ```
 
 See the [Vite documentation](https://vitejs.dev/config/) for all available options.
-
-## Troubleshooting
-
-### Dev Server Won't Start
-
-Ensure you're in a VoltX.js project directory with an `index.html` file:
-
-```bash
-ls index.html
-```
-
-If `index.html` is missing, you may not be in a VoltX.js project.
-
-### Download Fails
-
-Check your internet connection and try again. The CLI downloads assets from:
-
-```text
-https://cdn.jsdelivr.net/npm/voltx.js@{version}/dist/
-```
-
-If jsDelivr is blocked, manually download from the [npm package](https://www.npmjs.com/package/voltx.js).
-
-### Build Fails
-
-Ensure all dependencies are installed:
-
-```bash
-pnpm install
-```
-
-Check for syntax errors in your HTML, CSS, or JavaScript files.
-
-## Next Steps
-
-- Read the [Installation Guide](./installation) for framework setup
-- Explore [Usage Patterns](./usage/state) for state management

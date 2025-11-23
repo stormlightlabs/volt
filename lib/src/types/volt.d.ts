@@ -559,11 +559,22 @@ export type ViewTransitionOptions = {
 export type ErrorSource = "evaluator" | "binding" | "effect" | "http" | "plugin" | "lifecycle" | "charge" | "user";
 
 /**
+ * Error severity level
+ *
+ * - `warn`: Non-critical issues that don't prevent operation (e.g., deprecated usage, missing optional features)
+ * - `error`: Recoverable errors that prevent specific operations (e.g., failed evaluations, missing elements)
+ * - `fatal`: Unrecoverable errors that should halt execution (e.g., critical initialization failures)
+ */
+export type ErrorLevel = "warn" | "error" | "fatal";
+
+/**
  * Context information for error reporting
  */
 export type ErrorContext = {
   /** Error source category */
   source: ErrorSource;
+  /** Error severity level (defaults to "error") */
+  level?: ErrorLevel;
   /** DOM element where error occurred */
   element?: HTMLElement;
   /** Directive name (e.g., "data-volt-text", "data-volt-on-click") */
